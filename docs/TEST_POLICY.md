@@ -69,6 +69,20 @@ Purpose:
 
 Never run by default.
 
+## Default commands
+
+When the corresponding scripts exist, use:
+
+```matlab
+addpath(genpath(pwd));
+run("scripts/run_smoke.m");
+run("scripts/run_source_tests.m");
+run("scripts/run_equation_tests.m");
+run("scripts/run_sanity_tests.m");
+```
+
+The default smoke command must not run Tier 4 validation or Tier 5 sensitivity/optimisation.
+
 ## Hard failures
 
 Hard failures include:
@@ -92,3 +106,13 @@ Soft failures include:
 - productivity mismatch.
 
 Soft failures should be reported, not automatically patched by changing physics.
+
+## New test rule
+
+Every new test must state:
+
+- test tier;
+- named failure mode caught;
+- source or policy basis;
+- required runtime class;
+- whether it is included in default smoke.

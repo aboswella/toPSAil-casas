@@ -22,6 +22,21 @@ Examples of forbidden uncontrolled hybrids:
 
 A separate Schell-reproduction mode may be created if needed. It must be labelled clearly and must not replace the default toPSAil-native mode.
 
+## Pressure equalisation
+
+Use toPSAil-native pressure equalisation first.
+
+Do not reproduce Schell or Casas iterative equalisation calculations unless a task explicitly authorises a separate comparison mode.
+
+Useful diagnostics for future equalisation tasks include:
+
+- final equalisation pressure,
+- total mass transfer,
+- component mass transfer,
+- energy transfer if available,
+- pressure trajectory,
+- component conservation residual.
+
 ## Required diagnostics for pressure-changing steps
 
 For pressurisation, blowdown, and pressure equalisation, report:

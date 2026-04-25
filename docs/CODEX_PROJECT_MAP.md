@@ -78,6 +78,20 @@ Avoid:
 
 Human and Codex-facing project instructions.
 
+Required instruction files:
+
+- `docs/PROJECT_CHARTER.md`
+- `docs/MODEL_SCOPE.md`
+- `docs/SOURCE_LEDGER.md`
+- `docs/VALIDATION_STRATEGY.md`
+- `docs/TEST_POLICY.md`
+- `docs/BOUNDARY_CONDITION_POLICY.md`
+- `docs/THERMAL_MODEL_POLICY.md`
+- `docs/TASK_PROTOCOL.md`
+- `docs/KNOWN_UNCERTAINTIES.md`
+- `docs/REPORT_POSITIONING.md`
+- `docs/GIT_WORKFLOW.md`
+
 ### cases/
 
 Project-specific case definitions and run scripts.
@@ -88,11 +102,32 @@ Expected subfolders:
 - cases/schell_2bed_validation/
 - cases/delgado_layered_extension/
 
+Each case folder must have a `case_spec.md` before implementation.
+
+### params/
+
+Project-specific parameter packs.
+
+Expected subfolders:
+
+- params/casas2012_ap360_sips_binary/
+- params/schell2013_ap360_sips_binary/
+- params/delgado2014_bpl13x_lf_four_component/
+
 ### validation/
 
 Validation manifests, expected targets, and generated reports.
 
 Raw source data and generated reports must be kept separate.
+
+Expected subfolders:
+
+- validation/manifests/
+- validation/reports/
+
+### sources/
+
+Local literature sources and source notes. PDFs are ignored by Git by default, so source availability must also be recorded in `docs/SOURCE_LEDGER.md` and unresolved gaps in `docs/KNOWN_UNCERTAINTIES.md`.
 
 ### tests/
 
@@ -120,11 +155,18 @@ Before editing, read:
 
 1. AGENTS.md
 2. docs/CODEX_PROJECT_MAP.md
-3. docs/TASK_PROTOCOL.md
-4. docs/TEST_POLICY.md
-5. docs/VALIDATION_STRATEGY.md
-6. docs/GIT_WORKFLOW.md
-7. relevant case_spec.md
+3. docs/PROJECT_CHARTER.md
+4. docs/MODEL_SCOPE.md
+5. docs/SOURCE_LEDGER.md
+6. docs/VALIDATION_STRATEGY.md
+7. docs/TEST_POLICY.md
+8. docs/BOUNDARY_CONDITION_POLICY.md
+9. docs/THERMAL_MODEL_POLICY.md
+10. docs/TASK_PROTOCOL.md
+11. docs/KNOWN_UNCERTAINTIES.md
+12. docs/REPORT_POSITIONING.md
+13. docs/GIT_WORKFLOW.md
+14. relevant case_spec.md
 
 ## Default task order
 

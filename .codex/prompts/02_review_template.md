@@ -11,3 +11,6 @@ Check:
 6. Are any validation changes explained?
 7. What should be reverted?
 8. What is the next smallest useful task?
+
+Report findings first, ordered by severity.
+If there are no findings, say so and note remaining test gaps or residual risk.

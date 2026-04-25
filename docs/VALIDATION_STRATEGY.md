@@ -9,6 +9,8 @@
 5. Sensitivity.
 6. Optimisation.
 
+Do not skip stages without recording the reason in the relevant task report.
+
 ## Casas-lite objective
 
 Casas-lite is used to check:
@@ -32,6 +34,8 @@ Required comparisons:
 - pressure evolution;
 - temperature profiles;
 - CSS convergence.
+
+The default comparison should use toPSAil-native pressure-flow and boundary-condition handling. A separate Schell-reproduction mode is allowed only if it is explicitly labelled and justified.
 
 ## Delgado objective
 
@@ -59,3 +63,16 @@ Every validation report must say:
 - hard failures;
 - soft discrepancies;
 - interpretation.
+
+## Validation numbers policy
+
+Validation numbers may change only in tasks that explicitly allow validation outputs or manifests to change.
+
+When validation numbers change, report:
+
+- which case and manifest changed;
+- whether the change came from parameters, physics, numerics, metrics, or reporting;
+- whether any threshold changed;
+- why the change is physically and numerically defensible.
+
+Do not tune physical constants or weaken thresholds to improve agreement.
