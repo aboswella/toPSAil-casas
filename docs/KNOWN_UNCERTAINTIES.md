@@ -12,6 +12,9 @@ This register records unresolved source, modelling, and workflow uncertainties. 
 - Exact breakthrough front shape is not a validation target because Casas includes axial dispersion and detector/piping effects that are outside the near-term toPSAil-native scope.
 - Acceptable breakthrough timing and thermal-response tolerances still need to be defined in `validation/manifests/casas_lite_breakthrough.md`.
 - Any Casas parameters not directly transcribed from the source must be recorded before implementation.
+- The first Casas-lite runner transports source `He` as a nonadsorbing void-gas state while keeping adsorption binary CO2/H2. This is documented as an approximation, not a source correction.
+- The reported `10 cm3/s` feed flow is used directly as an inlet volumetric flow in the first wrapper. No standard-state molar-flow conversion is applied until the source basis is explicitly audited.
+- The first thermal wrapper uses a single lumped bed/wall temperature with source `hW` and `C_w`; it does not reproduce the source detector piping, exact axial dispersion, or a separate wall-temperature field.
 
 ## Schell validation
 

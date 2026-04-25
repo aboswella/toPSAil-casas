@@ -28,6 +28,18 @@ Do not mix Schell or Delgado constants into this parameter pack.
 
 Finite wall heat transfer or another documented non-adiabatic mode is preferred when source information permits. If a required thermal parameter is missing, record it in `docs/KNOWN_UNCERTAINTIES.md`.
 
+Current Casas-lite wrapper:
+
+- tracks binary CO2/H2 gas and adsorbed inventories;
+- transports source initial gas `He` as a nonadsorbing void-gas state while
+  keeping adsorption binary CO2/H2;
+- uses the reported `10 cm3/s` feed as a direct inlet volumetric flow,
+  without standard-state conversion;
+- uses exact source competitive Sips and LDF equations in project-local
+  wrappers because toPSAil's public custom-isotherm path is disabled;
+- uses a simplified single lumped bed/wall temperature with source
+  `hW` and `C_w`.
+
 ## Validation targets
 
 Hard checks:

@@ -1,0 +1,13 @@
+function result = run_casas_lite_breakthrough_sanity()
+%RUN_CASAS_LITE_BREAKTHROUGH_SANITY Run a short Tier 3 Casas sanity case.
+
+    c = build_casas_lite_breakthrough_case( ...
+        "n_cells", 24, ...
+        "final_time_s", 180, ...
+        "n_time_points", 91, ...
+        "max_step_s", 2);
+    result = simulate_casas_lite_breakthrough(c);
+
+    assert(result.health.all_hard_pass, "Casas-lite sanity hard checks failed.");
+    fprintf("Tier 3 Casas-lite sanity case passed.\n");
+end
