@@ -1,0 +1,23 @@
+# .codex/config.toml
+
+model_reasoning_effort = "high"
+plan_mode_reasoning_effort = "xhigh"
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+web_search = "disabled"
+
+[sandbox_workspace_write]
+network_access = false
+
+[profiles.readonly_audit]
+sandbox_mode = "read-only"
+approval_policy = "on-request"
+model_reasoning_effort = "xhigh"
+web_search = "disabled"
+
+[profiles.implement]
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+model_reasoning_effort = "high"
+web_search = "disabled"
