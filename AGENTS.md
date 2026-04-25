@@ -171,6 +171,14 @@ Stop and report instead of editing if:
 
 ## MATLAB commands
 
+Use MATLAB R2026a for this repository when launching MATLAB from the shell:
+
+```powershell
+& 'C:\Program Files\MATLAB\R2026a\bin\matlab.exe' -batch "<matlab command>"
+```
+
+The bare `matlab` command may still resolve to R2025b on this machine, which previously lacked visible Optimization Toolbox functions needed by toPSAil (`linprog`, `fsolve`).
+
 Use these commands when available:
 
 ```matlab
@@ -182,3 +190,7 @@ run("scripts/run_sanity_tests.m");
 ```
 
 Do not make Tier 4 validation or Tier 5 sensitivity/optimisation part of the default smoke command.
+
+## Search commands
+
+`rg` is available and working on this machine. Use `rg` and `rg --files` as the first-choice repository search commands.
