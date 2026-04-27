@@ -18,11 +18,16 @@ This register records unresolved source, modelling, and workflow uncertainties. 
 - The extent to which Schell boundary-condition details must be reproduced is unresolved. Default policy is to use toPSAil-native handling first.
 - Thermal wall parameters and any source gaps must be made explicit before running Schell validation.
 - CO2 capture/purity metrics may require reconstruction from available source outputs; record assumptions before comparing.
+- Flow-rate basis is a first-order modelling choice: treating `20 cm3/s` as actual flow at 20 bar gives about `0.01614 mol/s`, while a standard-volume interpretation is about 20 times smaller.
+- The Schell case-input route is not yet chosen. The native toPSAil runner appears Excel/example-centred, so decide the route before building a runnable case.
+- Schell Sips core registration is not yet authorised. Equation-local tests must pass before any toPSAil core isotherm dispatch changes.
+- Temperature-profile comparisons remain qualitative until Schell curves are digitized or source-derived profile targets are added explicitly.
 
 ## Pressure equalisation
 
 - Whether a Schell/Casas-style iterative equalisation comparison is needed is unknown. Use toPSAil-native equalisation first.
 - Equalisation diagnostics are desired but should be added only under a dedicated task.
+- Schell `p_peq` is not a table-given source parameter. Do not invent it for default validation.
 
 ## Delgado extension
 

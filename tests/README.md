@@ -13,5 +13,8 @@ Test tiers:
 
 Every new test must state the named failure mode it catches.
 
+Fixtures:
+- `fixtures/schell_2013_sips_anchor_cases.json` contains independent numerical anchors for future Tier 2 Schell Sips equation tests.
+
 Status:
-- scaffold only; no tests have been added in this documentation pass.
+- no executable MATLAB tests have been added in this integration pass.

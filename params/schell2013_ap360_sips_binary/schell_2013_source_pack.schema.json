@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Schell 2013 toPSAil Source Pack",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "canonical",
+    "paper",
+    "units_policy",
+    "gas_constant_J_per_mol_K",
+    "components_order",
+    "geometry",
+    "bed_and_adsorbent",
+    "feed_and_process",
+    "cycle_cases",
+    "model_parameters",
+    "isotherm",
+    "validation_policy",
+    "unresolved_assumptions"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "canonical": {
+      "const": true
+    },
+    "paper": {
+      "type": "object",
+      "required": [
+        "title",
+        "authors",
+        "year",
+        "primary_source_files"
+      ]
+    },
+    "units_policy": {
+      "type": "object"
+    },
+    "gas_constant_J_per_mol_K": {
+      "type": "number"
+    },
+    "components_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2
+    },
+    "geometry": {
+      "type": "object",
+      "required": [
+        "column_length_m",
+        "internal_radius_m",
+        "external_radius_m",
+        "thermocouple_positions_m_from_bottom"
+      ]
+    },
+    "bed_and_adsorbent": {
+      "type": "object",
+      "required": [
+        "bed_density_kg_per_m3",
+        "particle_diameter_m",
+        "adsorbent_heat_capacity_J_per_kg_K",
+        "wall_heat_capacity_J_per_m3_K"
+      ]
+    },
+    "feed_and_process": {
+      "type": "object",
+      "required": [
+        "feed_mole_fraction",
+        "feed_temperature_K",
+        "ambient_temperature_K",
+        "low_pressure_Pa",
+        "flow_rate_conversion_basis"
+      ]
+    },
+    "cycle_cases": {
+      "type": "array",
+      "minItems": 8
+    },
+    "model_parameters": {
+      "type": "object",
+      "required": [
+        "LDF_mass_transfer_coefficient_per_s",
+        "gas_heat_capacity_J_per_mol_K",
+        "fluid_viscosity_Pa_s",
+        "fluid_thermal_conductivity_W_per_m_K",
+        "wall_heat_transfer_coefficient_W_per_m2_K",
+        "leva_eta1",
+        "leva_eta2"
+      ]
+    },
+    "isotherm": {
+      "type": "object",
+      "required": [
+        "model_name",
+        "equation",
+        "parameters",
+        "anchor_cases"
+      ]
+    },
+    "validation_policy": {
+      "type": "object"
+    },
+    "unresolved_assumptions": {
+      "type": "array"
+    }
+  }
+}

@@ -3,5 +3,8 @@
 *.eps
 .DS_Store
 *.csv
+!params/schell2013_ap360_sips_binary/schell_2013_sips_anchor_cases.csv
+!validation/targets/
+!validation/targets/*.csv
 *.mat
 *.pdf

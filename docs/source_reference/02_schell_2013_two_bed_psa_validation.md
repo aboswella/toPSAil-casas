@@ -10,6 +10,14 @@ Primary parameter-pack target:
 params/schell2013_ap360_sips_binary/
 ```
 
+Canonical implementation source pack once added:
+
+```text
+params/schell2013_ap360_sips_binary/schell_2013_source_pack.json
+```
+
+JSON is the canonical hand-edited source pack for Schell. Do not maintain a parallel YAML duplicate.
+
 Keep this pack separate from Casas 2012 even though both use AP3-60. Schell 2013 changes the PSA heat-of-adsorption value for CO2 and uses full-cycle timing/performance data.
 
 ## Source anchors and check status
@@ -72,6 +80,14 @@ Source: Schell 2013 Table 1.
 | Initial full regeneration | 150 degC under vacuum for 8 h before first experiment | Experimental context. |
 | Between-experiment regeneration | vacuum for 45 min | Experimental context. |
 
+Flow-rate conversion warning:
+
+```text
+n_dot = P * Q / (R * T)
+```
+
+The canonical source pack treats the reported volumetric flows as actual volumetric setpoints at step pressure and 298.15 K because the paper states that molar feed flow changes with pressure. Under this assumption, `20 cm3/s` corresponds to approximately `0.01614 mol/s` at 20 bar and `0.000807 mol/s` at 1 bar. A standard-volume interpretation changes the central feed molar flow by about a factor of 20, so it must be a labelled sensitivity or diagnostic choice rather than a silent substitution.
+
 ## Cycle steps
 
 The one-column step sequence is:
@@ -85,6 +101,8 @@ The one-column step sequence is:
 | Pressurization | Pressure increased from `p_peq` to `p_high`; cocurrent with adsorption. |
 
 Idle steps exist in the two-column schedule and depend on the timings. Preserve them if toPSAil cycle scheduling requires explicit idle periods.
+
+The intermediate equalization pressure `p_peq` is not given as a simple table parameter. Use native toPSAil equalization first. Do not invent `p_peq`; derive or digitize it only in a separate authorised task.
 
 ## Cycle timing and experimental performance
 
@@ -118,12 +136,14 @@ Do not tune physics separately for each adsorption time. The series is meant to 
 | LDF mass-transfer coefficient `k_i` | 0.15 | 1.0 | s^-1 | Values from Casas breakthrough fitting. |
 | Gas heat capacity `Cg_i` | 42.5 | 29.0 | J/(K mol) | Average values for encountered conditions. |
 | Fluid viscosity `mu` | 1.46e-5 | 1.46e-5 | Pa s | Average for equimolar CO2/H2 at 30 degC and 15 bar. |
-| Axial thermal conductivity `K_L` | 0.04 | 0.04 | W/(m K) | Average for equimolar mixture. |
+| Fluid thermal conductivity `K_L` | 0.04 | 0.04 | W/(m K) | Used in the heat-transfer correlation; do not treat it as an active axial-dispersion coefficient. |
 | Wall heat-transfer coefficient `hW` | 5 | 5 | W/(m2 K) | Hard transcription. |
 | Nusselt eta1 | 0.813 | 0.813 | dimensionless | Original Leva value used in PSA model. |
 | Nusselt eta2 | 0.9 | 0.9 | dimensionless | Original Leva value used in PSA model. |
 
 The paper discusses using a nonzero heat-transfer coefficient during idle steps because the velocity-based Leva correlation would otherwise produce zero heat exchange. If this detail is implemented, label it as a Schell reproduction detail.
+
+Implementation naming rule: keep Table 3 LDF rates separate from the Sips affinity term. Recommended internal names are `ldf_rate_per_s` for the Table 3 mass-transfer coefficient and `sips_affinity_inv_Pa` for the temperature-corrected Sips affinity.
 
 ## Sips adsorption model and parameters
 
@@ -139,6 +159,8 @@ s_i = alpha_i * atan(beta_i * (T - Tref_i)) + sref_i
 ```
 
 `T` is in K and `p` is in Pa.
+
+The symbol `k_i` in the Sips equation is the temperature-corrected adsorption affinity with units `1/Pa`, not the Table 3 LDF mass-transfer coefficient with units `s^-1`.
 
 | Component | a_i | b_i | A_i | B_i | alpha_i | beta_i | sref_i | Tref_i | DeltaH_i |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -169,9 +191,11 @@ xi = 0.28
 
 Only implement these in a labelled Schell reproduction mode.
 
+`p_peq` is intentionally unresolved in the source pack. For the default validation path, let toPSAil-native equalization determine the intermediate pressure and report the endpoint. A source-reproduction task may later digitize Figure 7 or inspect the prior Casas equalization method.
+
 ## Piping and stagnant-tank diagnostics
 
-Do not include these in default validation unless the task specifically targets detector/composition profile reproduction.
+Do not include these in default validation unless the task specifically targets detector/composition profile reproduction. Piping and stagnant-tank effects are diagnostic-only by default because the source uses them to explain distorted detector concentration traces, not to define the table-performance validation.
 
 Source: Schell 2013 Table 4 and discussion.
 

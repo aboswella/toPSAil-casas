@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Schell 2013 validation summary output",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "case_id",
+    "model_mode",
+    "source_pack_sha256",
+    "run",
+    "hard_checks",
+    "performance",
+    "raw_outputs",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "model_mode": {
+      "enum": [
+        "topsail_native",
+        "schell_reproduction",
+        "diagnostic_only"
+      ]
+    },
+    "source_pack_sha256": {
+      "type": "string"
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "matlab_version",
+        "cycles_requested",
+        "cycles_completed",
+        "css_metric_name",
+        "css_residual"
+      ]
+    },
+    "hard_checks": {
+      "type": "object"
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "h2_purity_pct": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "h2_recovery_pct": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "co2_purity_pct": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "co2_recovery_pct": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "classification": {
+          "enum": [
+            "not_evaluated",
+            "in_band",
+            "near_band",
+            "out_of_band",
+            "blocked"
+          ]
+        }
+      }
+    },
+    "temperature_profiles": {
+      "type": "object"
+    },
+    "pressure_profiles": {
+      "type": "object"
+    },
+    "stream_accounting": {
+      "type": "object"
+    },
+    "raw_outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

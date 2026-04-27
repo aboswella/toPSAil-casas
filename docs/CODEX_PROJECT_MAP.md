@@ -123,6 +123,7 @@ Raw source data and generated reports must be kept separate.
 Expected subfolders:
 
 - validation/manifests/
+- validation/targets/
 - validation/reports/
 
 ### sources/

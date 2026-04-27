@@ -15,3 +15,5 @@ Each pack should eventually include:
 - transcription notes;
 - unresolved source ambiguities;
 - a Tier 1 source-transcription test plan.
+
+Small canonical source packs may be stored as JSON when they are source-derived inputs rather than generated outputs. Avoid maintaining hand-edited duplicate formats for the same parameter pack.

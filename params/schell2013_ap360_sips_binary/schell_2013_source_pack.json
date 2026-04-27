@@ -1,0 +1,602 @@
+{
+  "schema_version": "1.0.0",
+  "canonical": true,
+  "intended_repo_path": "params/schell2013_ap360_sips_binary/schell_2013_source_pack.json",
+  "paper": {
+    "title": "Precombustion CO2 Capture by Pressure Swing Adsorption (PSA): Comparison of Laboratory PSA Experiments and Simulations",
+    "authors": [
+      "Johanna Schell",
+      "Nathalie Casas",
+      "Dorian Marx",
+      "Marco Mazzotti"
+    ],
+    "year": 2013,
+    "journal": "Industrial & Engineering Chemistry Research",
+    "primary_source_files": [
+      "sources/Schell 2013.pdf",
+      "sources/Schell 2013 SI.pdf"
+    ],
+    "supporting_sources_required_later": [
+      "Casas et al. 2012 Adsorption breakthrough paper for pressure-changing implementation detail",
+      "Schell et al. 2012 Adsorption equilibrium paper if isotherm origin must be audited"
+    ]
+  },
+  "units_policy": {
+    "canonical_pressure": "Pa",
+    "canonical_temperature": "K",
+    "canonical_length": "m",
+    "canonical_amount": "mol",
+    "canonical_mass": "kg",
+    "canonical_time": "s",
+    "canonical_flow": "mol/s",
+    "canonical_loading": "mol/kg"
+  },
+  "gas_constant_J_per_mol_K": 8.31446261815324,
+  "components_order": [
+    "CO2",
+    "H2"
+  ],
+  "geometry": {
+    "column_length_m": 1.2,
+    "internal_radius_m": 0.0125,
+    "external_radius_m": 0.02,
+    "thermocouple_positions_m_from_bottom": [
+      0.1,
+      0.35,
+      0.6,
+      0.85,
+      1.1
+    ],
+    "provenance": "Schell 2013 main paper Table 1 and setup text."
+  },
+  "bed_and_adsorbent": {
+    "adsorbent": "AP3-60 activated carbon",
+    "adsorbent_mass_per_bed_kg_approx": 0.28,
+    "material_density_kg_per_m3": 1965.0,
+    "particle_density_kg_per_m3": 850.0,
+    "bed_density_kg_per_m3": 480.0,
+    "particle_diameter_m": 0.003,
+    "adsorbent_heat_capacity_J_per_kg_K": 1000.0,
+    "wall_heat_capacity_J_per_m3_K": 4000000.0,
+    "provenance": "Schell 2013 main paper Table 1."
+  },
+  "feed_and_process": {
+    "feed_mole_fraction": {
+      "CO2": 0.5,
+      "H2": 0.5
+    },
+    "feed_temperature_K": 298.15,
+    "ambient_temperature_K": 298.15,
+    "low_pressure_Pa": 100000.0,
+    "adsorption_pressure_cases_bar": [
+      10.0,
+      20.0,
+      30.0
+    ],
+    "cycles_to_css_experimental": "20-30 cycles",
+    "regeneration_initial": "vacuum at 150 degC for 8 h before first experiment",
+    "regeneration_between_experiments": "vacuum for 45 min",
+    "flow_rate_conversion_basis": {
+      "reported_unit": "cm3/s",
+      "adsorption_flow_cm3_per_s": 20.0,
+      "purge_flow_cm3_per_s": 50.0,
+      "pressurization_setpoint": "same as adsorption; actual flow only approximately 20 cm3/s during changing pressure",
+      "primary_conversion_assumption": "actual volumetric flow at the step pressure and 298.15 K, converted by n_dot = P*Q/(R*T)",
+      "why_primary_assumption": "Main paper states that the adsorption feed molar flow changes depending on pressure; that is inconsistent with treating 20 cm3/s as a fixed standard volumetric flow without qualification.",
+      "alternative_to_report": "standard or near-atmospheric volumetric basis; use only as an explicit sensitivity/diagnostic, not silently",
+      "conversion_formula": "n_dot_mol_per_s = pressure_Pa * (flow_cm3_per_s * 1e-6) / (R_J_per_mol_K * temperature_K)",
+      "examples_mol_per_s_at_298p15K": {
+        "20_cm3_per_s_at_1_bar": 0.0008067909109020699,
+        "20_cm3_per_s_at_10_bar": 0.008067909109020699,
+        "20_cm3_per_s_at_20_bar": 0.016135818218041397,
+        "20_cm3_per_s_at_30_bar": 0.024203727327062097,
+        "50_cm3_per_s_at_1_bar": 0.0020169772772551746
+      },
+      "hard_warning": "A feed-pressure versus standard-pressure interpretation changes molar flow by approximately p_high / 1 bar. At 20 bar this is about a factor of 20. Do not tune around this ambiguity."
+    },
+    "provenance": "Schell 2013 main paper experimental procedure and Table 2."
+  },
+  "cycle_steps": {
+    "one_column_sequence": [
+      "adsorption",
+      "pressure_equalization_depressurization",
+      "blowdown",
+      "purge",
+      "pressure_equalization_pressurization",
+      "pressurization"
+    ],
+    "directions": {
+      "adsorption": "bottom-up at p_high with H2-rich high-pressure product",
+      "pressure_equalization": "high-pressure column after adsorption connected to low-pressure column after purge until intermediate pressure; directions same as pressurization/blowdown",
+      "blowdown": "countercurrent to adsorption, from p_peq to p_low, CO2-rich low-pressure product",
+      "purge": "countercurrent to adsorption at p_low using equimolar CO2/H2 feed, not pure H2 purge",
+      "pressurization": "cocurrent with adsorption, from p_peq to p_high"
+    },
+    "idle_steps": "exist in two-column schedule and depend on step timing; preserve explicitly if scheduler requires them",
+    "provenance": "Schell 2013 Figure 2, Figure 3, and cycle-step text."
+  },
+  "cycle_cases": [
+    {
+      "case_id": "schell_10bar_tads40_profile",
+      "case_no": 1,
+      "p_high_bar": 10.0,
+      "t_press_s": 30.0,
+      "t_ads_s": 40.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 30.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": null,
+      "h2_purity_unc_pct": null,
+      "h2_recovery_pct": null,
+      "h2_recovery_unc_pct": null,
+      "co2_purity_pct": null,
+      "co2_purity_unc_pct": null,
+      "co2_recovery_pct": null,
+      "co2_recovery_unc_pct": null,
+      "target_role": "pressure and temperature profile validation only; Table 2 has no purity/recovery metrics"
+    },
+    {
+      "case_id": "schell_20bar_tads40_profile_only",
+      "case_no": 2,
+      "p_high_bar": 20.0,
+      "t_press_s": 24.0,
+      "t_ads_s": 40.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 50.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": null,
+      "h2_purity_unc_pct": null,
+      "h2_recovery_pct": null,
+      "h2_recovery_unc_pct": null,
+      "co2_purity_pct": null,
+      "co2_purity_unc_pct": null,
+      "co2_recovery_pct": null,
+      "co2_recovery_unc_pct": null,
+      "target_role": "central profile validation only as reported in first Table 2 block; performance metrics provided by case 5 for same timing"
+    },
+    {
+      "case_id": "schell_30bar_tads35_profile",
+      "case_no": 3,
+      "p_high_bar": 30.0,
+      "t_press_s": 28.0,
+      "t_ads_s": 35.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 55.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": null,
+      "h2_purity_unc_pct": null,
+      "h2_recovery_pct": null,
+      "h2_recovery_unc_pct": null,
+      "co2_purity_pct": null,
+      "co2_purity_unc_pct": null,
+      "co2_recovery_pct": null,
+      "co2_recovery_unc_pct": null,
+      "target_role": "pressure and temperature profile validation only; Table 2 has no purity/recovery metrics"
+    },
+    {
+      "case_id": "schell_20bar_tads20_performance",
+      "case_no": 4,
+      "p_high_bar": 20.0,
+      "t_press_s": 24.0,
+      "t_ads_s": 20.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 50.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": 95.2,
+      "h2_purity_unc_pct": 1.5,
+      "h2_recovery_pct": 62.0,
+      "h2_recovery_unc_pct": 5.8,
+      "co2_purity_pct": 71.9,
+      "co2_purity_unc_pct": 4.3,
+      "co2_recovery_pct": 96.9,
+      "co2_recovery_unc_pct": 5.8,
+      "target_role": "20 bar performance validation"
+    },
+    {
+      "case_id": "schell_20bar_tads40_performance_central",
+      "case_no": 5,
+      "p_high_bar": 20.0,
+      "t_press_s": 24.0,
+      "t_ads_s": 40.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 50.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": 93.4,
+      "h2_purity_unc_pct": 1.5,
+      "h2_recovery_pct": 74.4,
+      "h2_recovery_unc_pct": 5.7,
+      "co2_purity_pct": 78.7,
+      "co2_purity_unc_pct": 4.7,
+      "co2_recovery_pct": 94.8,
+      "co2_recovery_unc_pct": 5.7,
+      "target_role": "first full Schell validation target"
+    },
+    {
+      "case_id": "schell_20bar_tads60_performance",
+      "case_no": 6,
+      "p_high_bar": 20.0,
+      "t_press_s": 24.0,
+      "t_ads_s": 60.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 50.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": 88.5,
+      "h2_purity_unc_pct": 1.5,
+      "h2_recovery_pct": 93.0,
+      "h2_recovery_unc_pct": 5.5,
+      "co2_purity_pct": 92.6,
+      "co2_purity_unc_pct": 5.7,
+      "co2_recovery_pct": 88.0,
+      "co2_recovery_unc_pct": 5.4,
+      "target_role": "20 bar performance validation"
+    },
+    {
+      "case_id": "schell_20bar_tads100_performance_repeat_a",
+      "case_no": 7,
+      "p_high_bar": 20.0,
+      "t_press_s": 24.0,
+      "t_ads_s": 100.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 50.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": 71.8,
+      "h2_purity_unc_pct": 1.5,
+      "h2_recovery_pct": 93.8,
+      "h2_recovery_unc_pct": 3.5,
+      "co2_purity_pct": 91.1,
+      "co2_purity_unc_pct": 5.1,
+      "co2_recovery_pct": 63.1,
+      "co2_recovery_unc_pct": 3.5,
+      "target_role": "20 bar long-adsorption repeat A"
+    },
+    {
+      "case_id": "schell_20bar_tads100_performance_repeat_b",
+      "case_no": 8,
+      "p_high_bar": 20.0,
+      "t_press_s": 24.0,
+      "t_ads_s": 100.0,
+      "t_peq_s": 3.0,
+      "t_blow_s": 50.0,
+      "t_purge_s": 15.0,
+      "h2_purity_pct": 72.5,
+      "h2_purity_unc_pct": 1.5,
+      "h2_recovery_pct": 95.4,
+      "h2_recovery_unc_pct": 3.7,
+      "co2_purity_pct": 93.4,
+      "co2_purity_unc_pct": 5.4,
+      "co2_recovery_pct": 63.9,
+      "co2_recovery_unc_pct": 3.7,
+      "target_role": "20 bar long-adsorption repeat B"
+    }
+  ],
+  "model_parameters": {
+    "LDF_mass_transfer_coefficient_per_s": {
+      "CO2": 0.15,
+      "H2": 1.0
+    },
+    "gas_heat_capacity_J_per_mol_K": {
+      "CO2": 42.5,
+      "H2": 29.0
+    },
+    "fluid_viscosity_Pa_s": 1.46e-05,
+    "fluid_thermal_conductivity_W_per_m_K": 0.04,
+    "wall_heat_transfer_coefficient_W_per_m2_K": 5.0,
+    "leva_eta1": 0.813,
+    "leva_eta2": 0.9,
+    "provenance": "Schell 2013 main paper Table 3. K_L is fluid thermal conductivity for heat-transfer correlation, not an axial-dispersion coefficient."
+  },
+  "isotherm": {
+    "model_name": "competitive_temperature_dependent_sips",
+    "equation": "n_i_star = n_inf_i*(k_i*y_i*p)^s_i/(1 + sum_j (k_j*y_j*p)^s_j); n_inf_i=a_i*exp(-b_i/(R*T)); k_i=A_i*exp(-B_i/(R*T)); s_i=alpha_i*atan(beta_i*(T-Tref_i))+sref_i",
+    "pressure_unit_in_equation": "Pa",
+    "temperature_unit_in_equation": "K",
+    "parameters": {
+      "CO2": {
+        "a": 1.38,
+        "b": -5628.0,
+        "A": 1.68e-08,
+        "B": -9159.0,
+        "alpha": 0.072,
+        "beta": 0.106,
+        "sref": 0.83,
+        "Tref": 329.0,
+        "deltaH": -21000.0
+      },
+      "H2": {
+        "a": 6.66,
+        "b": 0.0,
+        "A": 6.97e-10,
+        "B": -9826.0,
+        "alpha": 0.0,
+        "beta": 0.0,
+        "sref": 0.96,
+        "Tref": 273.0,
+        "deltaH": -9800.0
+      }
+    },
+    "anchor_cases": [
+      {
+        "case_id": "pure_CO2_298p15K_1bar",
+        "purpose": "low-pressure pure-CO2 Pa/bar unit trap",
+        "temperature_K": 298.15,
+        "total_pressure_Pa": 100000.0,
+        "mole_fraction": {
+          "CO2": 1.0,
+          "H2": 0.0
+        },
+        "expected_loading_mol_per_kg": {
+          "CO2": 1.608119107203827,
+          "H2": 0.0
+        },
+        "intermediates": {
+          "denominator": 1.1368193924244652,
+          "CO2": {
+            "n_inf_mol_per_kg": 13.361709579341264,
+            "k_inv_Pa": 6.759221203918438e-07,
+            "s": 0.7382701275914949,
+            "term": 0.13681939242446517
+          },
+          "H2": {
+            "n_inf_mol_per_kg": 6.66,
+            "k_inv_Pa": 3.67006283820357e-08,
+            "s": 0.96,
+            "term": 0.0
+          }
+        },
+        "tolerance": {
+          "relative": 1e-08,
+          "absolute_mol_per_kg": 1e-10
+        },
+        "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+      },
+      {
+        "case_id": "pure_CO2_298p15K_20bar",
+        "purpose": "central-pressure pure-CO2 capacity anchor",
+        "temperature_K": 298.15,
+        "total_pressure_Pa": 2000000.0,
+        "mole_fraction": {
+          "CO2": 1.0,
+          "H2": 0.0
+        },
+        "expected_loading_mol_per_kg": {
+          "CO2": 7.421266878124588,
+          "H2": 0.0
+        },
+        "intermediates": {
+          "denominator": 2.2492784210517875,
+          "CO2": {
+            "n_inf_mol_per_kg": 13.361709579341264,
+            "k_inv_Pa": 6.759221203918438e-07,
+            "s": 0.7382701275914949,
+            "term": 1.2492784210517878
+          },
+          "H2": {
+            "n_inf_mol_per_kg": 6.66,
+            "k_inv_Pa": 3.67006283820357e-08,
+            "s": 0.96,
+            "term": 0.0
+          }
+        },
+        "tolerance": {
+          "relative": 1e-08,
+          "absolute_mol_per_kg": 1e-10
+        },
+        "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+      },
+      {
+        "case_id": "pure_H2_298p15K_20bar",
+        "purpose": "central-pressure pure-H2 anchor",
+        "temperature_K": 298.15,
+        "total_pressure_Pa": 2000000.0,
+        "mole_fraction": {
+          "CO2": 0.0,
+          "H2": 1.0
+        },
+        "expected_loading_mol_per_kg": {
+          "CO2": 0.0,
+          "H2": 0.5017983851142225
+        },
+        "intermediates": {
+          "denominator": 1.0814845658676164,
+          "CO2": {
+            "n_inf_mol_per_kg": 13.361709579341264,
+            "k_inv_Pa": 6.759221203918438e-07,
+            "s": 0.7382701275914949,
+            "term": 0.0
+          },
+          "H2": {
+            "n_inf_mol_per_kg": 6.66,
+            "k_inv_Pa": 3.67006283820357e-08,
+            "s": 0.96,
+            "term": 0.0814845658676165
+          }
+        },
+        "tolerance": {
+          "relative": 1e-08,
+          "absolute_mol_per_kg": 1e-10
+        },
+        "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+      },
+      {
+        "case_id": "binary_50_50_298p15K_20bar",
+        "purpose": "central Schell feed composition anchor",
+        "temperature_K": 298.15,
+        "total_pressure_Pa": 2000000.0,
+        "mole_fraction": {
+          "CO2": 0.5,
+          "H2": 0.5
+        },
+        "expected_loading_mol_per_kg": {
+          "CO2": 5.5877663430451445,
+          "H2": 0.15578269535226913
+        },
+        "intermediates": {
+          "denominator": 1.7907772796262829,
+          "CO2": {
+            "n_inf_mol_per_kg": 13.361709579341264,
+            "k_inv_Pa": 6.759221203918438e-07,
+            "s": 0.7382701275914949,
+            "term": 0.7488895752125011
+          },
+          "H2": {
+            "n_inf_mol_per_kg": 6.66,
+            "k_inv_Pa": 3.67006283820357e-08,
+            "s": 0.96,
+            "term": 0.04188770441378175
+          }
+        },
+        "tolerance": {
+          "relative": 1e-08,
+          "absolute_mol_per_kg": 1e-10
+        },
+        "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+      },
+      {
+        "case_id": "binary_40_60_298p15K_30bar",
+        "purpose": "high-pressure mixed-gas sanity anchor",
+        "temperature_K": 298.15,
+        "total_pressure_Pa": 3000000.0,
+        "mole_fraction": {
+          "CO2": 0.4,
+          "H2": 0.6
+        },
+        "expected_loading_mol_per_kg": {
+          "CO2": 5.930363990732104,
+          "H2": 0.2540778364651347
+        },
+        "intermediates": {
+          "denominator": 1.9304369053479447,
+          "CO2": {
+            "n_inf_mol_per_kg": 13.361709579341264,
+            "k_inv_Pa": 6.759221203918438e-07,
+            "s": 0.7382701275914949,
+            "term": 0.8567910746657741
+          },
+          "H2": {
+            "n_inf_mol_per_kg": 6.66,
+            "k_inv_Pa": 3.67006283820357e-08,
+            "s": 0.96,
+            "term": 0.07364583068217054
+          }
+        },
+        "tolerance": {
+          "relative": 1e-08,
+          "absolute_mol_per_kg": 1e-10
+        },
+        "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+      },
+      {
+        "case_id": "binary_50_50_323p15K_20bar",
+        "purpose": "temperature-dependence anchor",
+        "temperature_K": 323.15,
+        "total_pressure_Pa": 2000000.0,
+        "mole_fraction": {
+          "CO2": 0.5,
+          "H2": 0.5
+        },
+        "expected_loading_mol_per_kg": {
+          "CO2": 4.059638604172986,
+          "H2": 0.1285509784880695
+        },
+        "intermediates": {
+          "denominator": 1.6167239330105212,
+          "CO2": {
+            "n_inf_mol_per_kg": 11.209415888820713,
+            "k_inv_Pa": 5.078789797735528e-07,
+            "s": 0.7900351070555224,
+            "term": 0.5855180105580314
+          },
+          "H2": {
+            "n_inf_mol_per_kg": 6.66,
+            "k_inv_Pa": 2.70082783571465e-08,
+            "s": 0.96,
+            "term": 0.031205922452489886
+          }
+        },
+        "tolerance": {
+          "relative": 1e-08,
+          "absolute_mol_per_kg": 1e-10
+        },
+        "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+      }
+    ],
+    "provenance": "Schell 2013 SI Table 2 equation and SI Table 3 parameters."
+  },
+  "pressure_boundary_reproduction_details": {
+    "default_mode": "do not use these forms in toPSAil-native mode unless a labelled Schell reproduction mode is explicitly authorised",
+    "blowdown_pressure_function": "p(x=0,t)=p_low+(p_peq-p_low)*exp(-xi*t)",
+    "blowdown_xi_per_s": 0.28,
+    "pressurization_pressure_function": "p(x=0,t)=p_peq+((p_high-p_peq)/t_press)*t",
+    "p_peq": null,
+    "p_peq_note": "Intermediate equalization pressure is not given as a table parameter. Do not invent it; use native equalization, digitize/derive from Figure 7, or implement the prior Casas equalization method in a separate authorised task.",
+    "provenance": "Schell 2013 modeling section and pressure equalization discussion."
+  },
+  "piping_diagnostics": {
+    "include_by_default": false,
+    "pipe_length_before_BPR_m": 1.5,
+    "pipe_length_after_BPR_m": 4.0,
+    "pipe_diameter_m": 0.008,
+    "pipe_temperature_K": 298.0,
+    "pipe_dispersion_coefficient_m2_per_s": 0.001,
+    "optional_stagnant_tank_volume_m3": 2e-05,
+    "optional_stagnant_tank_exchange_fraction": 0.98,
+    "note": "Piping and stagnant tank are detector/composition-profile diagnostics. They should not be blended into default table-performance validation.",
+    "provenance": "Schell 2013 Table 4 and Figure 8 discussion."
+  },
+  "performance_calculation": {
+    "basis": "H2-rich product measured during adsorption; CO2-rich product calculated by subtraction from component feed inventory",
+    "steps": [
+      "Integrate MFC feed rates over pressurization, adsorption, and purge for each column.",
+      "Calculate H2-rich product flow from rotameter reading, product composition, density, and calibration.",
+      "Integrate component-specific H2-rich product rates over adsorption.",
+      "Calculate CO2-rich product component amounts by subtraction.",
+      "Average over two columns and three process loops, giving six values."
+    ],
+    "provenance": "Schell 2013 SI section 3.2."
+  },
+  "validation_policy": {
+    "hard_checks": [
+      "MATLAB completes",
+      "no NaN or Inf",
+      "positive absolute pressure",
+      "positive absolute temperature",
+      "mole fractions finite and within tolerance of [0,1]",
+      "CSS metric reported"
+    ],
+    "soft_performance_band_policy": "report-only at first; classify in_band if within published +/- uncertainty, near_band if within 2x uncertainty, out_of_band otherwise; never tune in the same task",
+    "temperature_profile_policy": "primary qualitative/profile validation target; scalar thresholds require digitized curves and a separate manifest update",
+    "composition_profile_policy": "treat MS profiles cautiously because source shows piping/detector distortion"
+  },
+  "unresolved_assumptions": [
+    {
+      "id": "FLOW_BASIS",
+      "status": "open",
+      "risk": "factor-of-pressure molar-flow error",
+      "proposed_handling": "use primary conversion assumption and report alternative as sensitivity before tuning"
+    },
+    {
+      "id": "P_PEQ",
+      "status": "open",
+      "risk": "pressure equalization cannot be exactly reproduced from Table 2 alone",
+      "proposed_handling": "native equalization first; digitize Figure 7 or inspect Casas prior method only in separate task"
+    },
+    {
+      "id": "CASE_INPUT_ROUTE",
+      "status": "open",
+      "risk": "toPSAil native runner is Excel/example driven and Linux getExcelParams errors",
+      "proposed_handling": "perform SCHELL-05 strategy review before native scaffold"
+    },
+    {
+      "id": "SIPS_CORE_REGISTRATION",
+      "status": "open",
+      "risk": "native extended Langmuir-Freundlich is not Schell SI Sips",
+      "proposed_handling": "equation-local tests first; core edit only after explicit model-registration audit"
+    },
+    {
+      "id": "TEMPERATURE_DIGITIZATION",
+      "status": "open",
+      "risk": "profile validation thresholds cannot be hard without digitized paper curves",
+      "proposed_handling": "initial soft report includes qualitative/profile diagnostics; add digitized targets later"
+    }
+  ]
+}

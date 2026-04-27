@@ -1,0 +1,210 @@
+{
+  "schema_version": "1.0.0",
+  "source": "Schell 2013 SI Table 2 and Table 3",
+  "anchor_cases": [
+    {
+      "case_id": "pure_CO2_298p15K_1bar",
+      "purpose": "low-pressure pure-CO2 Pa/bar unit trap",
+      "temperature_K": 298.15,
+      "total_pressure_Pa": 100000.0,
+      "mole_fraction": {
+        "CO2": 1.0,
+        "H2": 0.0
+      },
+      "expected_loading_mol_per_kg": {
+        "CO2": 1.608119107203827,
+        "H2": 0.0
+      },
+      "intermediates": {
+        "denominator": 1.1368193924244652,
+        "CO2": {
+          "n_inf_mol_per_kg": 13.361709579341264,
+          "k_inv_Pa": 6.759221203918438e-07,
+          "s": 0.7382701275914949,
+          "term": 0.13681939242446517
+        },
+        "H2": {
+          "n_inf_mol_per_kg": 6.66,
+          "k_inv_Pa": 3.67006283820357e-08,
+          "s": 0.96,
+          "term": 0.0
+        }
+      },
+      "tolerance": {
+        "relative": 1e-08,
+        "absolute_mol_per_kg": 1e-10
+      },
+      "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+    },
+    {
+      "case_id": "pure_CO2_298p15K_20bar",
+      "purpose": "central-pressure pure-CO2 capacity anchor",
+      "temperature_K": 298.15,
+      "total_pressure_Pa": 2000000.0,
+      "mole_fraction": {
+        "CO2": 1.0,
+        "H2": 0.0
+      },
+      "expected_loading_mol_per_kg": {
+        "CO2": 7.421266878124588,
+        "H2": 0.0
+      },
+      "intermediates": {
+        "denominator": 2.2492784210517875,
+        "CO2": {
+          "n_inf_mol_per_kg": 13.361709579341264,
+          "k_inv_Pa": 6.759221203918438e-07,
+          "s": 0.7382701275914949,
+          "term": 1.2492784210517878
+        },
+        "H2": {
+          "n_inf_mol_per_kg": 6.66,
+          "k_inv_Pa": 3.67006283820357e-08,
+          "s": 0.96,
+          "term": 0.0
+        }
+      },
+      "tolerance": {
+        "relative": 1e-08,
+        "absolute_mol_per_kg": 1e-10
+      },
+      "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+    },
+    {
+      "case_id": "pure_H2_298p15K_20bar",
+      "purpose": "central-pressure pure-H2 anchor",
+      "temperature_K": 298.15,
+      "total_pressure_Pa": 2000000.0,
+      "mole_fraction": {
+        "CO2": 0.0,
+        "H2": 1.0
+      },
+      "expected_loading_mol_per_kg": {
+        "CO2": 0.0,
+        "H2": 0.5017983851142225
+      },
+      "intermediates": {
+        "denominator": 1.0814845658676164,
+        "CO2": {
+          "n_inf_mol_per_kg": 13.361709579341264,
+          "k_inv_Pa": 6.759221203918438e-07,
+          "s": 0.7382701275914949,
+          "term": 0.0
+        },
+        "H2": {
+          "n_inf_mol_per_kg": 6.66,
+          "k_inv_Pa": 3.67006283820357e-08,
+          "s": 0.96,
+          "term": 0.0814845658676165
+        }
+      },
+      "tolerance": {
+        "relative": 1e-08,
+        "absolute_mol_per_kg": 1e-10
+      },
+      "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+    },
+    {
+      "case_id": "binary_50_50_298p15K_20bar",
+      "purpose": "central Schell feed composition anchor",
+      "temperature_K": 298.15,
+      "total_pressure_Pa": 2000000.0,
+      "mole_fraction": {
+        "CO2": 0.5,
+        "H2": 0.5
+      },
+      "expected_loading_mol_per_kg": {
+        "CO2": 5.5877663430451445,
+        "H2": 0.15578269535226913
+      },
+      "intermediates": {
+        "denominator": 1.7907772796262829,
+        "CO2": {
+          "n_inf_mol_per_kg": 13.361709579341264,
+          "k_inv_Pa": 6.759221203918438e-07,
+          "s": 0.7382701275914949,
+          "term": 0.7488895752125011
+        },
+        "H2": {
+          "n_inf_mol_per_kg": 6.66,
+          "k_inv_Pa": 3.67006283820357e-08,
+          "s": 0.96,
+          "term": 0.04188770441378175
+        }
+      },
+      "tolerance": {
+        "relative": 1e-08,
+        "absolute_mol_per_kg": 1e-10
+      },
+      "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+    },
+    {
+      "case_id": "binary_40_60_298p15K_30bar",
+      "purpose": "high-pressure mixed-gas sanity anchor",
+      "temperature_K": 298.15,
+      "total_pressure_Pa": 3000000.0,
+      "mole_fraction": {
+        "CO2": 0.4,
+        "H2": 0.6
+      },
+      "expected_loading_mol_per_kg": {
+        "CO2": 5.930363990732104,
+        "H2": 0.2540778364651347
+      },
+      "intermediates": {
+        "denominator": 1.9304369053479447,
+        "CO2": {
+          "n_inf_mol_per_kg": 13.361709579341264,
+          "k_inv_Pa": 6.759221203918438e-07,
+          "s": 0.7382701275914949,
+          "term": 0.8567910746657741
+        },
+        "H2": {
+          "n_inf_mol_per_kg": 6.66,
+          "k_inv_Pa": 3.67006283820357e-08,
+          "s": 0.96,
+          "term": 0.07364583068217054
+        }
+      },
+      "tolerance": {
+        "relative": 1e-08,
+        "absolute_mol_per_kg": 1e-10
+      },
+      "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+    },
+    {
+      "case_id": "binary_50_50_323p15K_20bar",
+      "purpose": "temperature-dependence anchor",
+      "temperature_K": 323.15,
+      "total_pressure_Pa": 2000000.0,
+      "mole_fraction": {
+        "CO2": 0.5,
+        "H2": 0.5
+      },
+      "expected_loading_mol_per_kg": {
+        "CO2": 4.059638604172986,
+        "H2": 0.1285509784880695
+      },
+      "intermediates": {
+        "denominator": 1.6167239330105212,
+        "CO2": {
+          "n_inf_mol_per_kg": 11.209415888820713,
+          "k_inv_Pa": 5.078789797735528e-07,
+          "s": 0.7900351070555224,
+          "term": 0.5855180105580314
+        },
+        "H2": {
+          "n_inf_mol_per_kg": 6.66,
+          "k_inv_Pa": 2.70082783571465e-08,
+          "s": 0.96,
+          "term": 0.031205922452489886
+        }
+      },
+      "tolerance": {
+        "relative": 1e-08,
+        "absolute_mol_per_kg": 1e-10
+      },
+      "calculation_note": "Independent calculation from Schell 2013 SI Table 2 equation and Table 3 parameters using R = 8.31446261815324 J/(mol K), p in Pa, T in K."
+    }
+  ]
+}
