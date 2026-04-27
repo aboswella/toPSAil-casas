@@ -12,4 +12,4 @@ Expected future runners:
 Tier 4 validation and Tier 5 sensitivity/optimisation must not be part of the default smoke runner.
 
 Status:
-- scaffold only; no MATLAB scripts have been added in this documentation pass.
+- `run_smoke.m` is a Tier 0 runner for the unchanged toPSAil `case_study_1.0` baseline example.
