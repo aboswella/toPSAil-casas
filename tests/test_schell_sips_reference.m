@@ -1,7 +1,8 @@
 % Tier 2 equation-local test for the Schell 2013 competitive Sips equation.
 % Failure mode caught: Pa/bar unit mistakes, component cross-talk in pure
 % cases, incorrect temperature dependence, or confusing Sips affinity with
-% the LDF mass-transfer coefficient.
+% the LDF mass-transfer coefficient, including after source-to-native
+% component-order mapping.
 
 repoRoot = fileparts(fileparts(mfilename("fullpath")));
 sourcePackPath = fullfile(repoRoot, "params", "schell2013_ap360_sips_binary", ...
@@ -75,18 +76,19 @@ function loading = computeSchellSipsLoading(sourcePack, anchor)
 end
 
 function loading = computeSchellSipsCoreLoading(sourcePack, anchor)
-    params = makeCoreSipsParams(sourcePack, anchor);
+    components = ["H2"; "CO2"];
+    params = makeCoreSipsParams(sourcePack, anchor, components);
     states = [
-        anchor.mole_fraction.CO2, anchor.mole_fraction.H2, ...
+        anchor.mole_fraction.H2, anchor.mole_fraction.CO2, ...
         0.0, 0.0, ...
         1.0, 1.0
     ];
     newStates = calcIsothermSchellSips(params, states, 0);
-    loading.CO2 = newStates(1, 3);
-    loading.H2 = newStates(1, 4);
+    loading.H2 = newStates(1, 3);
+    loading.CO2 = newStates(1, 4);
 end
 
-function params = makeCoreSipsParams(sourcePack, anchor)
+function params = makeCoreSipsParams(sourcePack, anchor, components)
     isoParams = sourcePack.isotherm.parameters;
     params.nComs = 2;
     params.nVols = 1;
@@ -101,14 +103,14 @@ function params = makeCoreSipsParams(sourcePack, anchor)
     params.gConScaleFac = (anchor.total_pressure_Pa/1e5) ...
         / (params.gasCons * anchor.temperature_K);
     params.aConScaleFac = 1;
-    params.schellSipsNInfA_molPerKg = [isoParams.CO2.a, isoParams.H2.a];
-    params.schellSipsNInfB_JPerMol = [isoParams.CO2.b, isoParams.H2.b];
-    params.schellSipsAffA_invPa = [isoParams.CO2.A, isoParams.H2.A];
-    params.schellSipsAffB_JPerMol = [isoParams.CO2.B, isoParams.H2.B];
-    params.schellSipsAlpha = [isoParams.CO2.alpha, isoParams.H2.alpha];
-    params.schellSipsBeta_invK = [isoParams.CO2.beta, isoParams.H2.beta];
-    params.schellSipsSref = [isoParams.CO2.sref, isoParams.H2.sref];
-    params.schellSipsTref_K = [isoParams.CO2.Tref, isoParams.H2.Tref];
+    params.schellSipsNInfA_molPerKg = componentValues(isoParams, components, "a");
+    params.schellSipsNInfB_JPerMol = componentValues(isoParams, components, "b");
+    params.schellSipsAffA_invPa = componentValues(isoParams, components, "A");
+    params.schellSipsAffB_JPerMol = componentValues(isoParams, components, "B");
+    params.schellSipsAlpha = componentValues(isoParams, components, "alpha");
+    params.schellSipsBeta_invK = componentValues(isoParams, components, "beta");
+    params.schellSipsSref = componentValues(isoParams, components, "sref");
+    params.schellSipsTref_K = componentValues(isoParams, components, "Tref");
 end
 
 function component = computeSipsComponent(params, moleFraction, totalPressurePa, temperatureK, R)
@@ -116,6 +118,14 @@ function component = computeSipsComponent(params, moleFraction, totalPressurePa,
     sipsAffinityInvPa = params.A * exp(-params.B / (R * temperatureK));
     exponent = params.alpha * atan(params.beta * (temperatureK - params.Tref)) + params.sref;
     component.term = (sipsAffinityInvPa * moleFraction * totalPressurePa) ^ exponent;
+end
+
+function values = componentValues(componentStruct, components, fieldName)
+    values = zeros(1, numel(components));
+    for i = 1:numel(components)
+        componentName = char(components(i));
+        values(i) = componentStruct.(componentName).(char(fieldName));
+    end
 end
 
 function assertAnchorLoading(caseId, componentName, actual, expected, tolerance)

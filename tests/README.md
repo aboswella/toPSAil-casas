@@ -29,10 +29,10 @@ Tier 1 tests:
 - `tests/test_schell_source_pack.m`: Tier 1; catches Schell source-pack or validation-target drift, text-encoded numeric constants, flow-conversion unit mistakes, missing unresolved-assumption guardrails, and accidental YAML source-of-truth duplication; runtime class is seconds; not included in default smoke.
 
 Tier 2 tests:
-- `tests/test_schell_sips_reference.m`: Tier 2; catches Schell Sips equation mistakes, Pa/bar unit errors, component cross-talk in pure-gas anchors, incorrect temperature or pressure trends, and optional core isotherm dispatch drift; runtime class is seconds; not included in default smoke.
+- `tests/test_schell_sips_reference.m`: Tier 2; catches Schell Sips equation mistakes, Pa/bar unit errors, component cross-talk in pure-gas anchors, incorrect temperature or pressure trends, optional core isotherm dispatch drift, and source/native component-order mapping drift in the core route; runtime class is seconds; not included in default smoke.
 
 Tier 3 tests:
-- `tests/test_schell_case_scaffold.m`: Tier 3; catches Schell route-B scaffold drift before a health run by requiring traceable source-pack mapping, optional core Sips selector readiness, and explicit run-readiness blocking; runtime class is seconds; not included in default smoke.
+- `tests/test_schell_case_scaffold.m`: Tier 3; catches Schell route-B scaffold drift before a health run by requiring traceable source-pack mapping, H2/CO2 native runtime ordering with one light key, optional core Sips selector readiness, explicit run-readiness blocking, and an SCHELL-08 command guardrail that runs the health script and parses its summary JSON; runtime class is seconds; not included in default smoke.
 
 Fixtures:
 - `fixtures/schell_2013_sips_anchor_cases.json` contains independent numerical anchors for Tier 2 Schell Sips equation tests.

@@ -45,6 +45,11 @@ function params = makeParamsScaffold(sourcePack, cycleCase, caseId, cyclesReques
     pressureHighPa = cycleCase.p_high_bar * 1e5;
     pressureLowPa = sourcePack.feed_and_process.low_pressure_Pa;
     flowBasis = sourcePack.feed_and_process.flow_rate_conversion_basis;
+    sourceComponents = asStringArray(sourcePack.components_order);
+    topsailComponents = ["H2"; "CO2"];
+    assertSameComponentSet(sourceComponents, topsailComponents);
+    topsailNativeToSourceIndex = componentIndices(sourceComponents, topsailComponents);
+    sourceToTopsailNativeIndex = componentIndices(topsailComponents, sourceComponents);
 
     params.case_id = caseId;
     params.model_mode = "topsail_native";
@@ -52,15 +57,24 @@ function params = makeParamsScaffold(sourcePack, cycleCase, caseId, cyclesReques
     params.nCycles_requested = cyclesRequested;
     params.modSp_isotherm_selector = 7;
     params.nCols = 2;
-    params.components = asStringArray(sourcePack.components_order);
+    params.component_order.source = sourceComponents;
+    params.component_order.topsail_native = topsailComponents;
+    params.component_order.note = ...
+        "source order is preserved for traceability; topsail_native order puts the light product first";
+    params.component_mapping.topsail_native_to_source_index = topsailNativeToSourceIndex;
+    params.component_mapping.source_to_topsail_native_index = sourceToTopsailNativeIndex;
+    params.components = topsailComponents;
     params.nComs = numel(params.components);
+    params.nLKs = 1;
+    params.component_roles.light_product = "H2";
+    params.component_roles.heavy_product = "CO2";
+    params.component_roles.raffinate_product = "H2";
+    params.component_roles.extract_product = "CO2";
 
     params.geometry = sourcePack.geometry;
     params.bed_and_adsorbent = sourcePack.bed_and_adsorbent;
-    params.feed.mole_fraction = [
-        sourcePack.feed_and_process.feed_mole_fraction.CO2
-        sourcePack.feed_and_process.feed_mole_fraction.H2
-    ];
+    params.feed.mole_fraction = componentValues( ...
+        sourcePack.feed_and_process.feed_mole_fraction, topsailComponents).';
     params.feed.temperature_K = sourcePack.feed_and_process.feed_temperature_K;
     params.feed.ambient_temperature_K = sourcePack.feed_and_process.ambient_temperature_K;
     params.pressure.low_Pa = pressureLowPa;
@@ -91,14 +105,27 @@ function params = makeParamsScaffold(sourcePack, cycleCase, caseId, cyclesReques
             sourcePack.gas_constant_J_per_mol_K);
 
     params.model_parameters = sourcePack.model_parameters;
+    params.topsail_native_vectors.ldf_rate_per_s = componentValues( ...
+        sourcePack.model_parameters.LDF_mass_transfer_coefficient_per_s, ...
+        topsailComponents);
+    params.topsail_native_vectors.gas_heat_capacity_J_per_mol_K = ...
+        componentValues(sourcePack.model_parameters.gas_heat_capacity_J_per_mol_K, ...
+        topsailComponents);
+    params.topsail_native_vectors.heat_of_adsorption_J_per_mol = ...
+        componentValues(sourcePack.isotherm.parameters, topsailComponents, "deltaH");
     params.isotherm.model_name = string(sourcePack.isotherm.model_name);
     params.isotherm.selector = 7;
     params.isotherm.parameters = sourcePack.isotherm.parameters;
+    params.isotherm.parameters_component_order = "source";
+    params.isotherm.topsail_native_component_order = topsailComponents;
+    params.isotherm.heat_of_adsorption_J_per_mol = ...
+        params.topsail_native_vectors.heat_of_adsorption_J_per_mol;
     params.isotherm.core_integration_status = ...
         "ready_optional_nondefault_core_sips";
     params.isotherm.do_not_substitute = ...
         "native_extended_langmuir_freundlich_is_not_schell_sips";
-    params = addSchellSipsCoreParams(params, sourcePack.isotherm.parameters);
+    params = addSchellSipsCoreParams(params, sourcePack.isotherm.parameters, ...
+        topsailComponents);
     params.boundary_condition_mode = ...
         "topsail_native_no_schell_pressure_functions";
     params.omitted_default_diagnostics = [
@@ -108,15 +135,15 @@ function params = makeParamsScaffold(sourcePack, cycleCase, caseId, cyclesReques
     ];
 end
 
-function params = addSchellSipsCoreParams(params, isoParams)
-    params.schellSipsNInfA_molPerKg = [isoParams.CO2.a, isoParams.H2.a];
-    params.schellSipsNInfB_JPerMol = [isoParams.CO2.b, isoParams.H2.b];
-    params.schellSipsAffA_invPa = [isoParams.CO2.A, isoParams.H2.A];
-    params.schellSipsAffB_JPerMol = [isoParams.CO2.B, isoParams.H2.B];
-    params.schellSipsAlpha = [isoParams.CO2.alpha, isoParams.H2.alpha];
-    params.schellSipsBeta_invK = [isoParams.CO2.beta, isoParams.H2.beta];
-    params.schellSipsSref = [isoParams.CO2.sref, isoParams.H2.sref];
-    params.schellSipsTref_K = [isoParams.CO2.Tref, isoParams.H2.Tref];
+function params = addSchellSipsCoreParams(params, isoParams, components)
+    params.schellSipsNInfA_molPerKg = componentValues(isoParams, components, "a");
+    params.schellSipsNInfB_JPerMol = componentValues(isoParams, components, "b");
+    params.schellSipsAffA_invPa = componentValues(isoParams, components, "A");
+    params.schellSipsAffB_JPerMol = componentValues(isoParams, components, "B");
+    params.schellSipsAlpha = componentValues(isoParams, components, "alpha");
+    params.schellSipsBeta_invK = componentValues(isoParams, components, "beta");
+    params.schellSipsSref = componentValues(isoParams, components, "sref");
+    params.schellSipsTref_K = componentValues(isoParams, components, "Tref");
 end
 
 function cycleCase = findCycleCase(cycleCases, caseId)
@@ -140,6 +167,38 @@ function values = asStringArray(value)
         values = string(value(:));
     end
     values = values(:);
+end
+
+function assertSameComponentSet(sourceComponents, topsailComponents)
+    if ~isequal(sort(sourceComponents), sort(topsailComponents))
+        error("build_schell_params_from_source_pack:componentSetMismatch", ...
+            "Source components [%s] do not match toPSAil-native components [%s].", ...
+            strjoin(sourceComponents, ", "), strjoin(topsailComponents, ", "));
+    end
+end
+
+function indices = componentIndices(fromComponents, toComponents)
+    indices = zeros(numel(toComponents), 1);
+    for i = 1:numel(toComponents)
+        match = find(fromComponents == toComponents(i), 1);
+        if isempty(match)
+            error("build_schell_params_from_source_pack:componentLookupFailed", ...
+                "Could not map component %s.", toComponents(i));
+        end
+        indices(i) = match;
+    end
+end
+
+function values = componentValues(componentStruct, components, fieldName)
+    values = zeros(1, numel(components));
+    for i = 1:numel(components)
+        componentName = char(components(i));
+        if nargin < 3
+            values(i) = componentStruct.(componentName);
+        else
+            values(i) = componentStruct.(componentName).(char(fieldName));
+        end
+    end
 end
 
 function flowMolPerSec = convertCm3PerSecToMolPerSec(flowCm3PerSec, pressurePa, temperatureK, gasConstant)

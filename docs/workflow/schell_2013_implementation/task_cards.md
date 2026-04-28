@@ -755,7 +755,8 @@ Run one minimal health simulation for `schell_20bar_tads40_performance_central` 
 ### Required commands
 
 ```powershell
-& 'C:\Program Files\MATLAB\R2026a\bin\matlab.exe' -batch "addpath(genpath(pwd)); run('scripts/run_source_tests.m'); run('scripts/run_equation_tests.m'); run('scripts/run_sanity_tests.m');"
+& 'C:\Program Files\MATLAB\R2026a\bin\matlab.exe' -batch "addpath(genpath(pwd)); run('scripts/run_source_tests.m'); run('scripts/run_equation_tests.m'); run('scripts/run_sanity_tests.m'); run('scripts/run_schell_case_health.m');"
+python -m json.tool validation/reports/schell_2013/health/schell_20bar_tads40_performance_central_summary.json > $null
 ```
 
 ### Runtime limit
@@ -783,6 +784,8 @@ Run the central case to CSS or accepted cycle limit and extract a schema-complia
 
 - `scripts/run_schell_central_css.m`
 - `scripts/extract_schell_summary.m`
+- `scripts/build_schell_runnable_params.m`
+- limited update to `scripts/run_schell_case_health.m` only to reuse the shared runnable-param builder
 - `validation/reports/schell_2013/central/*`
 - `docs/workflow/schell_2013_implementation/output_mapping.md`
 
@@ -791,6 +794,7 @@ Run the central case to CSS or accepted cycle limit and extract a schema-complia
 - source pack values
 - validation targets
 - core files unless already authorised
+- tuning physical constants, solver tolerances, metrics, or validation thresholds to improve agreement
 
 ### Source basis
 
@@ -799,7 +803,15 @@ Run the central case to CSS or accepted cycle limit and extract a schema-complia
 
 ### Preconditions
 
-- `SCHELL-08` health run succeeds.
+- `SCHELL-08` health run succeeds and its summary JSON hard checks are all true.
+- Carry forward the current known warnings instead of treating them as fixed: `FLOW_BASIS`, unresolved `P_PEQ`, native equalization, purge approximation, and the health-run thermal-mode limitation.
+- Treat the optional Schell Sips route as a likely runtime/stiffness amplifier based on the reduced diagnostic; do not infer that native receiver-tank pressure messages are Sips-specific.
+
+### Implementation notes
+
+- Factor shared JSON-to-runnable-`params` construction out of `scripts/run_schell_case_health.m` before adding the CSS runner so SCHELL-09 does not duplicate the Schell cycle/tank/valve/component mapping setup.
+- Keep the run mode `topsail_native`; do not add Schell/Casas pressure-time boundary functions or validation tuning in this task.
+- The first CSS attempt must be bounded: default to a 5-cycle cap unless the caller explicitly overrides it, and report whether the run reached CSS or stopped at the cap.
 
 ### Required extractor fields
 
@@ -814,6 +826,7 @@ Run the central case to CSS or accepted cycle limit and extract a schema-complia
 - pressure history summary;
 - raw output paths;
 - warnings.
+- accepted cycle cap and stop reason.
 
 ### Required commands
 
@@ -824,16 +837,18 @@ python -m json.tool validation/reports/schell_2013/central/summary.json > $null
 
 ### Runtime limit
 
-Human-approved. Do not hide this in default smoke.
+Human-approved. The default first attempt is capped at 5 cycles; a higher cap requires an explicit caller override and must not be hidden in default smoke.
 
 ### Stop conditions
 
 - CSS does not converge and cause is unclear.
 - Extractor cannot map raw outputs unambiguously.
+- The run exceeds the approved cycle/runtime budget.
+- The next fix would require source-value, validation-target, pressure-boundary, solver, or metric changes.
 
 ### Deliverable
 
-Schema-compliant summary. No validation tuning.
+Schema-compliant summary with model mode, accepted cycle cap, stop reason, carried warnings, and raw output paths. No validation tuning.
 
 ---
 
