@@ -120,13 +120,12 @@ function [models,subModels] = getSubModels(params)
         models{modNo1} = @(params,states,nAds) ...
                          calcIsothermExtDuSiLangFreu(params,states,nAds);
     
-    %TBD
+    %Schell 2013 competitive Sips isotherm
     elseif modSp(modNo1) == 7
         
-        %models{modNo1} = 0;
-        
-        %Model under development
-        noteModelNotReady(modNo1);
+        %Define the isotherm
+        models{modNo1} = @(params,states,nAds) ...
+                         calcIsothermSchellSips(params,states,nAds);
     
     %TBD
     elseif modSp(modNo1) == 8

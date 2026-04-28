@@ -152,6 +152,12 @@ function params = getAdsEquilParams(params,varargin)
             %Save the result
             params.dimLessqSatSiteOneC = dimLessqSatSiteOneC;
             params.dimLessqSatSiteTwoC = dimLessqSatSiteTwoC;
+
+        %Schell 2013 competitive Sips isotherm
+        elseif whichIsotherm == 7
+
+            %Schell Sips parameters remain dimensional and are evaluated
+            %inside calcIsothermSchellSips.m.
             
         end
         %-----------------------------------------------------------------% 
@@ -308,6 +314,12 @@ function params = getAdsEquilParams(params,varargin)
         params.dimLessbSiteTwoC    = dimLessbSiteTwoC   ;
         params.dimLessnSiteOneC    = nSiteOneC          ;
         params.dimLessnSiteTwoC    = nSiteTwoC          ;            
+
+    %Schell 2013 competitive Sips isotherm
+    elseif whichIsotherm == 7
+
+        %Schell Sips parameters remain dimensional and are evaluated inside
+        %calcIsothermSchellSips.m.
         
     end
     %---------------------------------------------------------------------%

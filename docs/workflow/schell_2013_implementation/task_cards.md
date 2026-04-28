@@ -609,56 +609,107 @@ Smallest runnable or inspectable scaffold, not full validation.
 
 ---
 
-## SCHELL-07 - Optional core Sips integration planning placeholder
+## SCHELL-07 - Plan and integrate optional core Sips isotherm
 
 ### Goal
 
-Stop before editing core files and remind the project owner that optional Schell Sips integration needs a dedicated implementation plan.
+Plan, then implement, the optional non-default Schell Sips core isotherm route required before the first central health run.
 
 ### Allowed files
 
-- A future planning note only, if requested by the project owner.
+- `docs/workflow/schell_2013_implementation/schell_sips_integration_plan.md`, if a written plan note is useful.
+- `3_source/3_models/1_adsEquilibrium/calcIsothermSchellSips.m`
+- `3_source/1_parameters/getSubModels.m`
+- `3_source/1_parameters/getAdsEquilParams.m`, only if Schell Sips needs explicit dimensionless/normalisation handling there.
+- `scripts/build_schell_params_from_source_pack.m`
+- `tests/test_schell_sips_reference.m`
+- `tests/test_schell_case_scaffold.m`
+- `scripts/run_equation_tests.m`
+- `scripts/run_sanity_tests.m`
+- `tests/README.md`
 
 ### Forbidden files
 
-- All toPSAil core files.
+- toPSAil core files outside the explicit allowed list above.
+- Boundary-condition, pressure-flow, cycle, solver, and output/plotting core files.
 - Validation thresholds.
 - Source pack values.
+- Validation targets.
+- Validation reports.
 
 ### Source basis
 
 - `SCHELL-04` equation-local tests.
+- `SCHELL-05` route-B decision record.
+- `SCHELL-06` Schell case scaffold.
+- `params/schell2013_ap360_sips_binary/schell_2013_source_pack.json`
 - Project-owner decision that adding Schell Sips as an optional non-default core isotherm is intentional.
 
 ### Preconditions
 
 - `SCHELL-04` passing.
+- `SCHELL-06` complete.
+- Project owner has confirmed that `SCHELL-07` is the plan + integration stage, not merely a no-edit reminder.
 
 ### Required first step
 
-Before any future core edit, tell the project owner in chat:
+Before editing core files, state the implementation plan in chat or in
+`docs/workflow/schell_2013_implementation/schell_sips_integration_plan.md`.
+The plan must say:
 
 - Schell Sips integration is an intentional optional core-model addition.
 - It must not change default toPSAil behaviour.
-- It needs a dedicated implementation plan before code changes.
-- The agent should not build elaborate wrappers just to avoid this planned optional isotherm addition.
+- Existing extended Langmuir-Freundlich must not be treated as equivalent to Schell Sips.
+- The intended optional isotherm selector is `modSp(1) == 7`, using an existing TBD slot and leaving selectors `1` through `6` unchanged.
+- The initial implementation scope is isotherm dispatch/equilibrium support only; it must not change boundary conditions, cycle logic, pressure-flow handling, validation targets, or source values.
+
+### Required implementation
+
+- Add a Schell Sips isotherm function whose equation matches the `SCHELL-04` reference calculation and anchor cases:
+
+```text
+n_i_star = n_inf_i * (k_i * y_i * p)^s_i / (1 + sum_j (k_j * y_j * p)^s_j)
+n_inf_i = a_i * exp(-b_i / (R*T))
+k_i = A_i * exp(-B_i / (R*T))
+s_i = alpha_i * atan(beta_i * (T - Tref_i)) + sref_i
+```
+
+- Register that function as an optional non-default model in `getSubModels.m` using `modSp(1) == 7`.
+- Keep all existing isotherm selectors and default examples behaviour unchanged.
+- Update the route-B scaffold so `SIPS_CORE_INTEGRATION` no longer blocks run readiness only after the optional core route passes tests.
+- Extend the Tier 2/Tier 3 tests so the core route is checked against the independent Sips anchors and the scaffold confirms the required isotherm route works.
 
 ### Required tests
 
-None in this placeholder task.
+```powershell
+& 'C:\Program Files\MATLAB\R2026a\bin\matlab.exe' -batch "addpath(genpath(pwd)); run('scripts/run_source_tests.m'); run('scripts/run_equation_tests.m'); run('scripts/run_sanity_tests.m');"
+& 'C:\Program Files\MATLAB\R2026a\bin\matlab.exe' -batch "addpath(genpath(pwd)); run('scripts/run_smoke.m');"
+```
+
+Test expectations:
+
+- Tier 1 source-pack tests still pass.
+- Tier 2 Schell Sips equation tests compare the optional core isotherm route to all independent anchors.
+- Tier 3 scaffold test confirms the required isotherm route works for the central case scaffold.
+- Tier 0 smoke still passes, proving default toPSAil behaviour was not broken.
 
 ### Runtime limit
 
-60 minutes.
+90 minutes.
 
 ### Stop conditions
 
-- The task starts editing core files instead of producing a plan.
+- The implementation would require core edits outside the explicitly allowed files.
+- The implementation would change default toPSAil behaviour or existing isotherm selector meanings.
 - Existing extended Langmuir-Freundlich is being treated as equivalent to Schell Sips.
+- A source-pack value, validation target, or validation threshold would need to change.
+- Boundary-condition, pressure-flow, cycle, or solver changes appear necessary.
+- MATLAB cannot run the required tests.
+- The task drifts into the `SCHELL-08` health run or any validation-number generation.
 
 ### Deliverable
 
-A no-edit reminder/report only. Core implementation belongs in a later dedicated task.
+Passing optional Schell Sips core isotherm route, documented as non-default, with default toPSAil smoke still passing. No health run and no validation-number changes.
 
 ---
 
@@ -689,6 +740,7 @@ Run one minimal health simulation for `schell_20bar_tads40_performance_central` 
 
 - Input scaffold exists.
 - Required isotherm route works.
+- `SCHELL-07` complete.
 - Tier 1 and Tier 2 tests pass.
 
 ### Required checks
