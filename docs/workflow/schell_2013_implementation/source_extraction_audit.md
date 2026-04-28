@@ -41,11 +41,11 @@ The paper reports 20 cm3/s for adsorption and 50 cm3/s for purge, and explicitly
 n_dot = P * Q / (R * T)
 ```
 
-At 20 bar and 298.15 K, 20 cm3/s is approximately `0.01614 mol/s`; at 1 bar it is approximately `0.000807 mol/s`. A standard-volume interpretation would change the central feed molar flow by about a factor of 20. That is not a rounding error. That is a different experiment wearing the same hat.
+At 20 bar and 298.15 K, 20 cm3/s is approximately `0.01614 mol/s`; at 1 bar it is approximately `0.000807 mol/s`. A standard-volume interpretation is not a second Schell value; it is a common gas-flow-unit ambiguity that would change the central feed molar flow by about a factor of 20. Keep this as an explicit uncertainty. If the chosen basis is wrong, the error should be visible as a large inventory, thermal, pressure, or product-metric mismatch rather than a subtle fit issue.
 
 ### 4. Do not invent `p_peq`
 
-The intermediate pressure after pressure equalization is not given as a simple table parameter. Use native toPSAil equalization first, or create a separate diagnostic task to digitize/derive the Figure 7 values or inspect the prior Casas pressure-equalization method.
+The intermediate pressure after pressure equalization is not given as a simple table parameter. Use native toPSAil equalization first. Do not create a Schell/Casas pressure-mechanics reproduction task unless a future explicit instruction pack authorises a labelled mode.
 
 ### 5. Piping/stagnant tank is diagnostic, not default validation
 

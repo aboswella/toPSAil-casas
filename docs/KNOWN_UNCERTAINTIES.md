@@ -4,7 +4,6 @@ This register records unresolved source, modelling, and workflow uncertainties. 
 
 ## Source availability
 
-- Delgado 2014 paper and SI are expected but are not currently present under `sources/`.
 - `Missing information.txt` is mentioned in the handover but is not currently present under `sources/`.
 
 ## Casas-lite
@@ -15,13 +14,13 @@ This register records unresolved source, modelling, and workflow uncertainties. 
 
 ## Schell validation
 
-- The extent to which Schell boundary-condition details must be reproduced is unresolved. Default policy is to use toPSAil-native handling first.
+- Schell-specific boundary-condition mechanics are outside the current integration pack. Use toPSAil-native handling first unless a future explicit instruction pack authorises a labelled reproduction mode.
 - Thermal wall parameters and any source gaps must be made explicit before running Schell validation.
-- CO2 capture/purity metrics may require reconstruction from available source outputs; record assumptions before comparing.
-- Flow-rate basis is a first-order modelling choice: treating `20 cm3/s` as actual flow at 20 bar gives about `0.01614 mol/s`, while a standard-volume interpretation is about 20 times smaller.
-- The Schell case-input route is not yet chosen. The native toPSAil runner appears Excel/example-centred, so decide the route before building a runnable case.
-- Schell Sips core registration is not yet authorised. Equation-local tests must pass before any toPSAil core isotherm dispatch changes.
-- Temperature-profile comparisons remain qualitative until Schell curves are digitized or source-derived profile targets are added explicitly.
+- Schell reports CO2-rich product metrics by subtraction from feed inventory and measured H2-rich product. This is a validation reporting-basis note, not a simulator defect; extractors must state whether they compare direct toPSAil stream outputs or the same subtraction basis.
+- Flow-rate basis remains an explicit uncertainty: the paper reports `20 cm3/s`, and the canonical source pack uses actual volumetric flow at step pressure because Schell states molar feed flow changes with pressure. A standard-volume interpretation is not a second paper value; it is a labelled unit-ambiguity sensitivity only. The wrong choice should cause large, obvious shifts in inventory, thermal response, and product metrics, so report that evidence rather than tuning around it.
+- The Schell case-input route is not yet chosen. Prefer wrappers around the simulator entry points wherever practical, then use a small case-input strategy decision before building a runnable case.
+- Intentional design choice: add the Schell Sips equation as an optional core isotherm without changing default toPSAil behaviour. Before any agent edits core files, it must alert the project owner that this needs a dedicated implementation plan.
+- Temperature-profile comparisons remain qualitative/manual-review targets. Do not digitize Schell curves by default; instead present the relevant source/profile files or excerpts directly to the project owner for manual examination.
 
 ## Pressure equalisation
 
@@ -37,5 +36,6 @@ This register records unresolved source, modelling, and workflow uncertainties. 
 
 ## Tooling
 
-- `rg` currently resolves to the bundled WindowsApps/Codex path and fails with access denied on this machine. Use PowerShell fallback until a working ripgrep install is ahead in PATH.
+- `rg` is available and working on this machine. Use `rg` and `rg --files` as the first-choice search commands.
+- The Schell JSON source pack intentionally preserves source-symbol field names `a`/`A` and `b`/`B` for Sips parameters. MATLAB `jsondecode` and Python JSON tools parse it correctly, but PowerShell `ConvertFrom-Json` treats these as duplicate case-insensitive keys. Use MATLAB or Python for source-pack checks unless a future task explicitly renames those fields.
 - Confirm whether Codex reads `.codex/config.toml` using `/status` before relying on profile settings.

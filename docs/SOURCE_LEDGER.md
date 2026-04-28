@@ -82,4 +82,5 @@ Caution:
 - the binary H2/CO2 basis of design remains unless a specific contaminant-polishing task is opened.
 
 Local artifact status:
-- Delgado PDF and SI are expected but are not currently present under `sources/`.
+- `sources/Delgado.pdf` is present.
+- `sources/SI Delgado.pdf` is present.

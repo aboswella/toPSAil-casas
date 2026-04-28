@@ -487,7 +487,7 @@ Add isolated Schell Sips equation tests using independent numerical anchors with
 
 ### Deliverable
 
-Passing Tier 2 Sips tests. No core Sips registration.
+Passing Tier 2 Sips tests. No default behaviour change.
 
 ---
 
@@ -495,7 +495,7 @@ Passing Tier 2 Sips tests. No core Sips registration.
 
 ### Goal
 
-Decide how Schell JSON/source-pack inputs will become a runnable toPSAil case.
+Decide how Schell JSON/source-pack inputs will become a runnable toPSAil case, preferring wrappers around simulator entry points wherever practical.
 
 ### Allowed files
 
@@ -530,10 +530,10 @@ rg --files 4_example scripts tests params/schell2013_ap360_sips_binary
 
 Evaluate:
 
-- A: native Excel case under `4_example`;
-- B: JSON-to-Excel generator;
-- C: JSON-to-params MATLAB builder calling `runPsaCycle(params)`;
-- D: wrapper around an existing native example/params output.
+- A: wrapper around `runPsaProcessSimulation` or an existing native example/params output;
+- B: JSON-to-params MATLAB builder calling `runPsaCycle(params)`;
+- C: JSON-to-Excel generator;
+- D: native Excel case under `4_example`.
 
 Recommend exactly one route or `blocked`.
 
@@ -543,7 +543,7 @@ Recommend exactly one route or `blocked`.
 
 ### Stop conditions
 
-- The route would require core edits but no authorisation exists.
+- The route would require core edits other than the separately planned optional Sips isotherm integration.
 - Existing example structure cannot be inspected.
 
 ### Deliverable
@@ -609,56 +609,43 @@ Smallest runnable or inspectable scaffold, not full validation.
 
 ---
 
-## SCHELL-07 - Core Sips registration audit and implementation, gated
+## SCHELL-07 - Optional core Sips integration planning placeholder
 
 ### Goal
 
-Register the Schell Sips model in toPSAil only if explicitly authorised and only after a dispatch/nondimensionalisation audit.
+Stop before editing core files and remind the project owner that optional Schell Sips integration needs a dedicated implementation plan.
 
 ### Allowed files
 
-Only after human authorisation. Candidate files may include:
-
-- `3_source/1_parameters/getAdsEquilParams.m`
-- `3_source/3_models/1_adsEquilibrium/calcIsothermSchellSips.m`
-- any dispatch file identified by audit
-- `tests/test_schell_sips_core_registration.m`
+- A future planning note only, if requested by the project owner.
 
 ### Forbidden files
 
-- Any core file not identified in the audit.
+- All toPSAil core files.
 - Validation thresholds.
 - Source pack values.
 
 ### Source basis
 
 - `SCHELL-04` equation-local tests.
-- `SCHELL-05` route decision.
-- Native toPSAil isotherm dispatch inspection.
+- Project-owner decision that adding Schell Sips as an optional non-default core isotherm is intentional.
 
 ### Preconditions
 
 - `SCHELL-04` passing.
-- `SCHELL-06` scaffold present if required.
-- Explicit human authorisation for core edits.
 
 ### Required first step
 
-Before editing core, produce an audit of:
+Before any future core edit, tell the project owner in chat:
 
-- model code integer/string used for isotherm selection;
-- parameter names required;
-- dimensional vs nondimensional expected units;
-- temperature handling;
-- state layout;
-- where `calcIsotherm...` is called;
-- tests that will fail before implementation and pass after.
+- Schell Sips integration is an intentional optional core-model addition.
+- It must not change default toPSAil behaviour.
+- It needs a dedicated implementation plan before code changes.
+- The agent should not build elaborate wrappers just to avoid this planned optional isotherm addition.
 
 ### Required tests
 
-```powershell
-& 'C:\Program Files\MATLAB\R2026a\bin\matlab.exe' -batch "addpath(genpath(pwd)); run('scripts/run_equation_tests.m'); run('scripts/run_source_tests.m');"
-```
+None in this placeholder task.
 
 ### Runtime limit
 
@@ -666,13 +653,12 @@ Before editing core, produce an audit of:
 
 ### Stop conditions
 
-- No explicit human authorisation for core edits.
-- Nondimensionalisation is unclear.
+- The task starts editing core files instead of producing a plan.
 - Existing extended Langmuir-Freundlich is being treated as equivalent to Schell Sips.
 
 ### Deliverable
 
-Either a no-edit audit report or a minimal authorised core registration with tests.
+A no-edit reminder/report only. Core implementation belongs in a later dedicated task.
 
 ---
 
@@ -924,7 +910,7 @@ Run the 10 bar and 30 bar Schell profile cases and report pressure/temperature p
 
 - source values
 - model tuning
-- validation thresholds without digitized targets
+- validation thresholds without explicit human-supplied source targets
 
 ### Source basis
 
@@ -946,7 +932,7 @@ Treat these as pressure/temperature profile cases, not scalar performance cases.
 - time of peak;
 - pressure equalization endpoint estimate;
 - qualitative profile agreement note;
-- warnings about missing digitized curves.
+- warnings that source profile comparison remains manual/qualitative.
 
 ### Required commands
 
@@ -960,7 +946,7 @@ Human-approved. Not default smoke.
 
 ### Stop conditions
 
-- The task tries to create scalar targets from figures without digitization.
+- The task tries to create scalar targets from figures without explicit human instruction.
 
 ### Deliverable
 

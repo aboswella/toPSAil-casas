@@ -54,11 +54,11 @@ Required before any simulation:
 - Table 2 timings and performance targets match `validation/targets/schell_2013_validation_targets.csv`;
 - SI Table 3 Sips parameters match source pack;
 - `flow_rate_conversion_basis` exists and includes the factor-of-pressure warning;
-- `unresolved_assumptions` includes `FLOW_BASIS`, `P_PEQ`, `CASE_INPUT_ROUTE`, `SIPS_CORE_REGISTRATION`, and `TEMPERATURE_DIGITIZATION`.
+- `unresolved_assumptions` includes `FLOW_BASIS`, `P_PEQ`, `CASE_INPUT_ROUTE`, `SIPS_CORE_INTEGRATION`, and `TEMPERATURE_PROFILE_MANUAL_REVIEW`.
 
 ## Tier 2 equation checks
 
-Required before any Sips core registration:
+Required before any optional core Sips integration:
 
 - independent Sips anchor cases pass;
 - pure-component cases return zero loading for absent component;
@@ -101,7 +101,7 @@ CO2 recovery = 94.8 +/- 5.7 %
 
 Thermocouple positions are 0.10, 0.35, 0.60, 0.85, and 1.10 m from bottom. Temperature profile comparison is the preferred validation signal because the paper warns that concentration traces are distorted by piping and detector-volume effects.
 
-Initial profile validation is qualitative/report-only unless digitized curve targets are added by a separate task.
+Initial profile validation is qualitative/report-only. Agents must not digitize Schell curves by default; they should present the relevant source/profile files or excerpts to the project owner for manual examination unless a later task explicitly asks for digitization.
 
 ## Default smoke inclusion
 

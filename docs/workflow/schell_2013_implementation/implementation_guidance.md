@@ -12,10 +12,11 @@ The correct path is:
 4. Add a typed canonical JSON source pack and source-pack tests.
 5. Add equation-local Schell Sips tests with independent anchors.
 6. Decide the case-input route before generating a native simulation case.
-7. Add only the smallest simulation scaffold needed for the central 20 bar, 40 s adsorption case.
-8. Run health checks before CSS validation.
-9. Produce report-only soft validation before any tuning or model changes.
-10. Extend to remaining 20 bar cases, then 10/30 bar profile cases.
+7. Prefer wrappers around the simulator entry points for case orchestration.
+8. Add only the smallest simulation scaffold needed for the central 20 bar, 40 s adsorption case.
+9. Run health checks before CSS validation.
+10. Produce report-only soft validation before any tuning or model changes.
+11. Extend to remaining 20 bar cases, then 10/30 bar profile cases.
 
 The first implementation milestone is not "full Schell simulator runs". It is a clean, tested, source-traceable Schell benchmark definition.
 
@@ -27,7 +28,7 @@ The current project-specific `scripts/` and `tests/` folders are scaffold-only. 
 
 The native run path is Excel/example driven: `runPsaProcessSimulation(folderName)` resolves `4_example/<folderName>`, `getSimParams` reads many Excel workbooks, and `getExcelParams.m` errors on Linux. Therefore the Schell JSON source pack will not automatically run through native toPSAil. A case-input strategy decision is required before implementation.
 
-The Schell SI Sips equation is not equivalent to the existing native extended Langmuir-Freundlich function. Do not register a core isotherm until the equation-local tests pass and a model-registration audit identifies every dispatch and nondimensionalisation point that must change.
+The Schell SI Sips equation is not equivalent to the existing native extended Langmuir-Freundlich function. Intentional design choice: add Schell Sips as an optional core isotherm without changing default toPSAil behaviour, but only after a dedicated implementation plan is presented to the project owner. Do not add workaround wrappers solely to avoid this optional core integration.
 
 ## Best integration route
 
@@ -37,11 +38,11 @@ The recommended route is:
 2. Add MATLAB Tier 1 tests that load this JSON and check source values.
 3. Add MATLAB Tier 2 equation-local tests for the Schell Sips equation without touching core files.
 4. Decide whether the runnable case should be:
-   - a native Excel case,
-   - a JSON-to-Excel generator,
+   - a wrapper around `runPsaProcessSimulation` or an existing native example/params output,
    - a JSON-to-params MATLAB builder that calls `runPsaCycle(params)` directly,
-   - or a minimal wrapper around existing `getSimParams` output.
-5. Prefer a project-specific builder/generator over editing core machinery, unless the strategy review proves that core registration is the smaller and safer change.
+   - a JSON-to-Excel generator,
+   - or a native Excel case under `4_example` if explicitly authorised.
+5. Prefer wrappers around the simulator entry points wherever practical. Treat optional core Sips integration as a separate, intentional non-default model addition rather than as part of the case wrapper.
 
 Do not mix these routes. Choosing all of them is not robustness; it is indecision wearing a lab coat.
 
@@ -113,9 +114,9 @@ The better framing is: implement a traceable Schell benchmark and then progressi
 | Clean branch base | Codex may mix planning files with implementation | `SCHELL-PRE`, then branch from clean state. |
 | Baseline smoke status | Schell changes may be blamed for existing failures | `SCHELL-00B` before Schell implementation. |
 | Case-input route | JSON pack may not run through native Excel path | `SCHELL-05` decision record. |
-| Flow-rate basis | Factor-of-10 to factor-of-30 molar-flow error | Source-pack warning plus sensitivity report. |
-| Intermediate equalization pressure | Invalid pressure schedule if invented | Native equalization first; later digitize Figure 7 or inspect prior Casas method. |
-| Digitized temperature profiles | Cannot set hard profile thresholds | Begin qualitative/profile report; add digitization later. |
+| Flow-rate basis | Factor-of-10 to factor-of-30 molar-flow error | Keep labelled as an uncertainty; use canonical actual-flow assumption first and report any large inventory/thermal/product mismatch before changing basis. |
+| Intermediate equalization pressure | Invalid pressure schedule if invented | Native equalization first; no Schell/Casas pressure-mechanics reproduction unless a future explicit instruction pack authorises it. |
+| Temperature profile manual review | Cannot set hard profile thresholds from undigitized figures | Present relevant source/profile files or excerpts to the project owner; do not digitize unless explicitly instructed. |
 | MATLAB/CI availability | Tests may be impossible on Linux | PowerShell MATLAB R2026a commands and non-MATLAB JSON sanity checks. |
 
 ## Implementation rule

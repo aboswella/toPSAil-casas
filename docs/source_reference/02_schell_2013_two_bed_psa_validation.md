@@ -86,7 +86,7 @@ Flow-rate conversion warning:
 n_dot = P * Q / (R * T)
 ```
 
-The canonical source pack treats the reported volumetric flows as actual volumetric setpoints at step pressure and 298.15 K because the paper states that molar feed flow changes with pressure. Under this assumption, `20 cm3/s` corresponds to approximately `0.01614 mol/s` at 20 bar and `0.000807 mol/s` at 1 bar. A standard-volume interpretation changes the central feed molar flow by about a factor of 20, so it must be a labelled sensitivity or diagnostic choice rather than a silent substitution.
+The canonical source pack treats the reported volumetric flows as actual volumetric setpoints at step pressure and 298.15 K because the paper states that molar feed flow changes with pressure. Under this assumption, `20 cm3/s` corresponds to approximately `0.01614 mol/s` at 20 bar and `0.000807 mol/s` at 1 bar. A standard-volume interpretation is not a second value from Schell; it is the common gas-flow-unit ambiguity where a volumetric setpoint is interpreted at a standard or near-atmospheric reference pressure. Keep this labelled as an uncertainty and use the canonical assumption first. If the interpretation is wrong, the factor-of-pressure difference should be apparent in early inventory, temperature, pressure, and product-metric behaviour; report that evidence rather than silently switching bases or tuning parameters.
 
 ## Cycle steps
 
@@ -102,7 +102,7 @@ The one-column step sequence is:
 
 Idle steps exist in the two-column schedule and depend on the timings. Preserve them if toPSAil cycle scheduling requires explicit idle periods.
 
-The intermediate equalization pressure `p_peq` is not given as a simple table parameter. Use native toPSAil equalization first. Do not invent `p_peq`; derive or digitize it only in a separate authorised task.
+The intermediate equalization pressure `p_peq` is not given as a simple table parameter. Use native toPSAil equalization first. Do not invent `p_peq` and do not reproduce Schell/Casas pressure-changing mechanics unless a future explicit instruction pack authorises a labelled mode.
 
 ## Cycle timing and experimental performance
 
@@ -191,7 +191,7 @@ xi = 0.28
 
 Only implement these in a labelled Schell reproduction mode.
 
-`p_peq` is intentionally unresolved in the source pack. For the default validation path, let toPSAil-native equalization determine the intermediate pressure and report the endpoint. A source-reproduction task may later digitize Figure 7 or inspect the prior Casas equalization method.
+`p_peq` is intentionally unresolved in the source pack. For the default validation path, let toPSAil-native equalization determine the intermediate pressure and report the endpoint. A source-reproduction task must not be started unless a future explicit instruction pack authorises it.
 
 ## Piping and stagnant-tank diagnostics
 
@@ -222,7 +222,7 @@ For performance cases at 20 bar:
 3. Compute CO2-rich product amounts by subtraction from the component input amounts.
 4. Report mean values from the two columns over three process cycles, giving six values.
 
-Use the table metrics above as validation targets. For the `t_ads = 40 s` example, the SI calculation gives CO2 purity 78.7% and capture/recovery 94.8%, matching Table 2.
+Use the table metrics above as validation targets. For the `t_ads = 40 s` example, the SI calculation gives CO2 purity 78.7% and capture/recovery 94.8%, matching Table 2. This subtraction basis belongs to the Schell paper's reporting method; toPSAil may expose stream outputs directly, but validation reports must state which accounting basis was used for comparison.
 
 ## Model assumptions to preserve
 

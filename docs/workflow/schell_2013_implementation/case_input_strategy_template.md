@@ -6,11 +6,13 @@ Create this decision record during `SCHELL-05`. Do not implement the chosen rout
 
 Chosen route: `A | B | C | D | blocked`
 
-- A: native Excel case under `4_example`
-- B: JSON-to-Excel generator
-- C: JSON-to-params MATLAB builder that calls `runPsaCycle(params)`
-- D: wrapper around an existing native example/params output
+- A: wrapper around `runPsaProcessSimulation` or an existing native example/params output
+- B: JSON-to-params MATLAB builder that calls `runPsaCycle(params)`
+- C: JSON-to-Excel generator
+- D: native Excel case under `4_example`
 - blocked: missing prerequisite prevents decision
+
+Preference: choose a wrapper around simulator entry points wherever practical. Optional Schell Sips core integration is a separate intentional design choice and should not be used as a reason to overcomplicate the case wrapper.
 
 ## Repo facts inspected
 
@@ -46,7 +48,7 @@ Expected output summary path:
 | Risk | Mitigation |
 |---|---|
 | Flow-rate basis | |
-| Sips model registration | |
+| Optional core Sips integration | Remind the project owner this needs a dedicated plan before any core edit. |
 | Pressure equalization | |
 | MATLAB/Excel platform | |
 | Output extraction | |

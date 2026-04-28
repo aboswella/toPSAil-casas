@@ -83,7 +83,7 @@
       "pressurization_setpoint": "same as adsorption; actual flow only approximately 20 cm3/s during changing pressure",
       "primary_conversion_assumption": "actual volumetric flow at the step pressure and 298.15 K, converted by n_dot = P*Q/(R*T)",
       "why_primary_assumption": "Main paper states that the adsorption feed molar flow changes depending on pressure; that is inconsistent with treating 20 cm3/s as a fixed standard volumetric flow without qualification.",
-      "alternative_to_report": "standard or near-atmospheric volumetric basis; use only as an explicit sensitivity/diagnostic, not silently",
+      "alternative_to_report": "standard or near-atmospheric volumetric basis is not a second Schell source value; use only as an explicit sensitivity/diagnostic for gas-flow-unit ambiguity, not silently",
       "conversion_formula": "n_dot_mol_per_s = pressure_Pa * (flow_cm3_per_s * 1e-6) / (R_J_per_mol_K * temperature_K)",
       "examples_mol_per_s_at_298p15K": {
         "20_cm3_per_s_at_1_bar": 0.0008067909109020699,
@@ -92,7 +92,7 @@
         "20_cm3_per_s_at_30_bar": 0.024203727327062097,
         "50_cm3_per_s_at_1_bar": 0.0020169772772551746
       },
-      "hard_warning": "A feed-pressure versus standard-pressure interpretation changes molar flow by approximately p_high / 1 bar. At 20 bar this is about a factor of 20. Do not tune around this ambiguity."
+      "hard_warning": "FLOW_BASIS remains an explicit uncertainty. A feed-pressure versus standard-pressure interpretation changes molar flow by approximately p_high / 1 bar. At 20 bar this is about a factor of 20, so the wrong choice should be apparent in inventory, thermal, pressure, or product-metric behaviour. Do not tune around this ambiguity."
     },
     "provenance": "Schell 2013 main paper experimental procedure and Table 2."
   },
@@ -528,7 +528,7 @@
     "blowdown_xi_per_s": 0.28,
     "pressurization_pressure_function": "p(x=0,t)=p_peq+((p_high-p_peq)/t_press)*t",
     "p_peq": null,
-    "p_peq_note": "Intermediate equalization pressure is not given as a table parameter. Do not invent it; use native equalization, digitize/derive from Figure 7, or implement the prior Casas equalization method in a separate authorised task.",
+    "p_peq_note": "Intermediate equalization pressure is not given as a table parameter. Do not invent it; use native equalization. Do not reproduce Schell/Casas pressure-changing mechanics unless a future explicit instruction pack authorises a labelled mode.",
     "provenance": "Schell 2013 modeling section and pressure equalization discussion."
   },
   "piping_diagnostics": {
@@ -564,7 +564,7 @@
       "CSS metric reported"
     ],
     "soft_performance_band_policy": "report-only at first; classify in_band if within published +/- uncertainty, near_band if within 2x uncertainty, out_of_band otherwise; never tune in the same task",
-    "temperature_profile_policy": "primary qualitative/profile validation target; scalar thresholds require digitized curves and a separate manifest update",
+    "temperature_profile_policy": "primary qualitative/profile validation target; agents should present relevant source/profile files or excerpts to the project owner for manual review and must not digitize curves unless explicitly instructed",
     "composition_profile_policy": "treat MS profiles cautiously because source shows piping/detector distortion"
   },
   "unresolved_assumptions": [
@@ -572,31 +572,31 @@
       "id": "FLOW_BASIS",
       "status": "open",
       "risk": "factor-of-pressure molar-flow error",
-      "proposed_handling": "use primary conversion assumption and report alternative as sensitivity before tuning"
+      "proposed_handling": "use primary conversion assumption first; keep the standard-volume interpretation labelled as an uncertainty/sensitivity and report large diagnostic evidence before changing basis"
     },
     {
       "id": "P_PEQ",
       "status": "open",
       "risk": "pressure equalization cannot be exactly reproduced from Table 2 alone",
-      "proposed_handling": "native equalization first; digitize Figure 7 or inspect Casas prior method only in separate task"
+      "proposed_handling": "native equalization first; do not reproduce Schell/Casas pressure-changing mechanics unless a future explicit instruction pack authorises a labelled mode"
     },
     {
       "id": "CASE_INPUT_ROUTE",
       "status": "open",
       "risk": "toPSAil native runner is Excel/example driven and Linux getExcelParams errors",
-      "proposed_handling": "perform SCHELL-05 strategy review before native scaffold"
+      "proposed_handling": "perform SCHELL-05 strategy review before native scaffold; prefer wrappers around simulator entry points wherever practical"
     },
     {
-      "id": "SIPS_CORE_REGISTRATION",
+      "id": "SIPS_CORE_INTEGRATION",
       "status": "open",
       "risk": "native extended Langmuir-Freundlich is not Schell SI Sips",
-      "proposed_handling": "equation-local tests first; core edit only after explicit model-registration audit"
+      "proposed_handling": "intentional design choice is optional core Sips integration without changing default behaviour; before editing core, alert the project owner that a dedicated implementation plan is needed"
     },
     {
-      "id": "TEMPERATURE_DIGITIZATION",
+      "id": "TEMPERATURE_PROFILE_MANUAL_REVIEW",
       "status": "open",
-      "risk": "profile validation thresholds cannot be hard without digitized paper curves",
-      "proposed_handling": "initial soft report includes qualitative/profile diagnostics; add digitized targets later"
+      "risk": "profile validation thresholds cannot be hard from undigitized paper curves",
+      "proposed_handling": "initial soft report includes qualitative/profile diagnostics; present relevant source/profile files or excerpts to the project owner for manual examination rather than digitizing by default"
     }
   ]
 }
