@@ -1,54 +1,77 @@
-% SCHELL-08 health run for the central Schell 2013 PSA case.
-% Failure mode caught: the Schell central route cannot complete a minimal
-% native runPsaCycle health simulation or emits nonphysical state summaries.
+% SCHELL-09 bounded CSS attempt for the central Schell 2013 PSA case.
+% Failure mode caught: the central native run cannot complete a bounded CSS
+% attempt or cannot emit a schema-aligned summary/extractor record.
+%
+% Optional caller variables:
+%   caseId            string, default central Schell case
+%   cycleCap          positive integer, default 5
+%   schellCssOptions  struct overriding builder options
 
-summary = runSchellCaseHealth();
+if ~exist("caseId", "var") || isempty(caseId)
+    caseId = "schell_20bar_tads40_performance_central";
+else
+    caseId = string(caseId);
+end
 
-function summary = runSchellCaseHealth(caseId, cyclesRequested)
-    if nargin < 1 || isempty(caseId)
-        caseId = "schell_20bar_tads40_performance_central";
-    else
-        caseId = string(caseId);
-    end
+if ~exist("cycleCap", "var") || isempty(cycleCap)
+    cycleCap = 5;
+end
 
-    if nargin < 2 || isempty(cyclesRequested)
-        cyclesRequested = 1;
-    end
+if ~exist("schellCssOptions", "var") || isempty(schellCssOptions)
+    schellCssOptions = struct();
+end
+
+summary = runSchellCentralCss(caseId, cycleCap, schellCssOptions);
+
+function summary = runSchellCentralCss(caseId, cycleCap, options)
+    validateCycleCap(cycleCap);
 
     scriptDir = fileparts(mfilename("fullpath"));
     repoRoot = fileparts(scriptDir);
-    options.run_label = "health";
-    options.thermal_mode = "isothermal_health_check";
+    options.run_label = "central_css";
+    if ~isfield(options, "thermal_mode")
+        options.thermal_mode = "isothermal_bounded_css_attempt";
+    end
 
     [params, fullParams, runConfig, scaffold] = ...
-        build_schell_runnable_params(caseId, cyclesRequested, options);
+        build_schell_runnable_params(caseId, cycleCap, options);
 
-    fprintf("SCHELL-08 health: running %s for %d cycle(s).\n", ...
-        caseId, cyclesRequested);
+    fprintf("SCHELL-09 central: running %s with %d-cycle cap.\n", ...
+        caseId, cycleCap);
     runTimer = tic;
     sol = runPsaCycle(params);
     runtimeSeconds = toc(runTimer);
 
     reportDir = fullfile(repoRoot, "validation", "reports", ...
-        "schell_2013", "health");
+        "schell_2013", "central");
     if ~isfolder(reportDir)
         mkdir(reportDir);
     end
 
-    rawOutputPath = fullfile(reportDir, caseId + "_raw.mat");
+    rawOutputPath = fullfile(reportDir, "raw.mat");
     rawRun = makeRawRunRecord(scaffold, fullParams, runConfig);
     save(rawOutputPath, "sol", "rawRun", "-v7");
 
-    summaryPath = fullfile(reportDir, caseId + "_summary.json");
+    summaryPath = fullfile(reportDir, "summary.json");
     summary = extract_schell_summary(scaffold, fullParams, sol, ...
-        runConfig, runtimeSeconds, summaryPath, rawOutputPath, "health");
+        runConfig, runtimeSeconds, summaryPath, rawOutputPath, ...
+        "central_css");
     summary.hard_checks.summary_json_emitted = true;
     writeJson(summaryPath, summary);
 
-    assertSummaryHardChecks(summary, ...
-        "run_schell_case_health:hardCheckFailed", ...
-        "SCHELL-08 health run failed one or more hard checks.");
-    fprintf("SCHELL-08 health passed: wrote %s\n", summaryPath);
+    assertSummaryHardChecks(summary);
+    fprintf("SCHELL-09 central complete: wrote %s\n", summaryPath);
+    fprintf("SCHELL-09 stop reason: %s; CSS residual %.6g.\n", ...
+        summary.run.stop_reason, summary.run.css_residual);
+end
+
+function validateCycleCap(cycleCap)
+    if ~(isnumeric(cycleCap) && isscalar(cycleCap) ...
+            && isfinite(cycleCap) && cycleCap >= 1 ...
+            && cycleCap == floor(cycleCap))
+        error("run_schell_central_css:badCycleCap", ...
+            "cycleCap must be a positive integer.");
+    end
 end
 
 function rawRun = makeRawRunRecord(scaffold, fullParams, runConfig)
@@ -77,10 +100,15 @@ function rawRun = makeRawRunRecord(scaffold, fullParams, runConfig)
     rawRun.pressurization_valve_relative_to_adsorption = ...
         runConfig.pressurization_valve_relative_to_adsorption;
     rawRun.pressurization_valve_basis = runConfig.pressurization_valve_basis;
+    rawRun.purge_native_step = runConfig.purge_native_step;
+    rawRun.purge_source_basis = runConfig.purge_source_basis;
+    rawRun.purge_valve_relative_to_adsorption = ...
+        runConfig.purge_valve_relative_to_adsorption;
+    rawRun.purge_valve_basis = runConfig.purge_valve_basis;
     rawRun.accepted_cycle_cap = runConfig.accepted_cycle_cap;
 end
 
-function assertSummaryHardChecks(summary, errorId, errorMessage)
+function assertSummaryHardChecks(summary)
     checks = summary.hard_checks;
     passed = checks.matlab_completed ...
         && checks.requested_cycles_completed ...
@@ -91,7 +119,8 @@ function assertSummaryHardChecks(summary, errorId, errorMessage)
         && checks.css_metric_reported ...
         && checks.summary_json_emitted;
     if ~passed
-        error(errorId, errorMessage);
+        error("run_schell_central_css:hardCheckFailed", ...
+            "SCHELL-09 central run failed one or more hard checks.");
     end
 end
 
@@ -99,7 +128,7 @@ function writeJson(filePath, value)
     jsonText = jsonencode(value);
     fid = fopen(filePath, "w");
     if fid < 0
-        error("run_schell_case_health:jsonOpenFailed", ...
+        error("run_schell_central_css:jsonOpenFailed", ...
             "Could not open summary JSON for writing: %s", filePath);
     end
     cleanupObj = onCleanup(@() fclose(fid));

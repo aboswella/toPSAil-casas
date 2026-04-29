@@ -112,6 +112,20 @@ Read:
 - `docs/source_reference/04_casas_thesis_sensitivity_optimisation.md` for later sensitivity and optimisation framing.
 - `docs/source_reference/05_transcription_audit_and_guardrails.md` when transcribing, auditing, or correcting source-derived values.
 
+For toPSAil-native mechanics, Schell integration debugging, metrics/accounting, or future four-bed extension work, read the relevant files under `docs/source_reference/topsail source guide/`:
+
+- `docs/source_reference/topsail source guide/00_README_context_router.md` for bundle routing and file selection.
+- `docs/source_reference/topsail source guide/00_executive_source_map.md` for carry-forward facts and source map.
+- `docs/source_reference/topsail source guide/01_model_contract_assumptions.md` for the toPSAil model contract and assumptions.
+- `docs/source_reference/topsail source guide/02_pfd_tanks_pressure.md` for fixed PFD, tank, piping, and pressure vocabulary.
+- `docs/source_reference/topsail source guide/03_step_strings_connectivity.md` for step strings, native connectivity, and cycle scheduling.
+- `docs/source_reference/topsail source guide/04_boundary_conditions_simulation_modes.md` for boundary conditions, pressure-flow modes, and event termination.
+- `docs/source_reference/topsail source guide/05_metrics_accounting_ledgers.md` for metrics, accounting basis, and diagnostic ledgers.
+- `docs/source_reference/topsail source guide/06_schell_integration_remaining_tasks.md` for remaining Schell integration tasks and likely failure modes.
+- `docs/source_reference/topsail source guide/07_four_bed_extension.md` for future four-bed system extraction.
+- `docs/source_reference/topsail source guide/08_manifests_tests.md` for required manifests, tests, and implementation priorities.
+- `docs/source_reference/topsail source guide/manifest.json` for bundle membership.
+
 Open original PDFs only when a value is absent, internally inconsistent, or the task explicitly permits source lookup or source-reference correction.
 
 ## Thermal policy

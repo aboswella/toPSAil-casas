@@ -33,6 +33,7 @@ Tier 2 tests:
 
 Tier 3 tests:
 - `tests/test_schell_case_scaffold.m`: Tier 3; catches Schell route-B scaffold drift before a health run by requiring traceable source-pack mapping, H2/CO2 native runtime ordering with one light key, optional core Sips selector readiness, explicit run-readiness blocking, and an SCHELL-08 command guardrail that runs the health script and parses its summary JSON; runtime class is seconds; not included in default smoke.
+- `tests/test_schell_pressure_program.m`: Tier 3; catches Schell adapter pressure-program drift where `RP-FEE-XXX` reaches the artificial feed-tank pressure and starves `HP-FEE-RAF`; runtime class is about one minute; not included in default smoke or the default sanity runner.
 
 Fixtures:
 - `fixtures/schell_2013_sips_anchor_cases.json` contains independent numerical anchors for Tier 2 Schell Sips equation tests.
@@ -42,4 +43,5 @@ Status:
 - Tier 1 Schell source-pack tests added.
 - Tier 2 Schell Sips equation-local tests added.
 - Tier 3 Schell case-scaffold sanity tests added.
+- Tier 3 Schell pressure-program sanity test added.
 - No validation, sensitivity, or optimisation tests have been added.
