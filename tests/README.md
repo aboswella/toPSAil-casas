@@ -22,3 +22,13 @@ Status:
 - `testYangFourBedStateContainerShape.m` maps to `T-STATE-01`.
 - `testYangFourBedWritebackOnlyParticipants.m` maps to `T-STATE-02`.
 - `testYangFourBedCrossedPairRoundTrip.m` maps to `T-STATE-03`.
+- WP4 structural case-builder tests are under `tests/four_bed/`.
+- WP5 ledger/CSS/reporting tests are under `tests/four_bed/`.
+- `testYangFourBedLedgerSchema.m` maps to `T-DOC-01` and `LEDGER-01`.
+- `testYangPairLocalConservation.m` maps to `T-CONS-01`.
+- `testYangEqStageLedgerSeparation.m` maps to `T-PAIR-02`.
+- `testYangAdppBfLedgerSplit.m` maps to `T-PAIR-04`.
+- `testYangFullSlotLedgerBalance.m` maps to `T-CONS-02`.
+- `testYangCssResidualsAllBeds.m` maps to `T-CSS-01`.
+- `testYangMetricsExternalBasis.m` maps to `T-MET-01`.
+- `testYangRunMetadataAssumptions.m` maps to `T-DOC-01`.

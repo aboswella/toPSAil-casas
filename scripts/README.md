@@ -21,5 +21,9 @@ Status:
 - WP1 source/static helpers are under `scripts/four_bed/`.
 - WP2 direct-transfer pair-map helpers are under `scripts/four_bed/`.
 - WP3 persistent state-container helpers are under `scripts/four_bed/`.
+- WP4 temporary case-builder helpers are under `scripts/four_bed/`.
+- WP5 ledger, CSS, metric, and run-metadata helpers are under `scripts/four_bed/`.
 - `run_source_tests.m` runs the lightweight Yang manifest, layered-bed audit, and pair-map completeness checks.
-- `run_sanity_tests.m` runs the lightweight WP3 state-container and writeback checks.
+- `run_case_builder_tests.m` runs the lightweight WP4 structural case-builder checks.
+- `run_ledger_tests.m` runs synthetic WP5 ledger, conservation, metric, CSS, and metadata checks.
+- `run_sanity_tests.m` runs the lightweight WP3, WP4, and WP5 sanity checks.
