@@ -18,4 +18,5 @@ Default runners must stay small and discriminating:
 Pilot validation, long numerical sensitivity, optimization, event policy, tank/header variants, and generalized-PFD extensions must not be hidden inside the default smoke runner.
 
 Status:
-- scaffold only; no MATLAB scripts have been added in this documentation pass.
+- WP1 source/static helpers are under `scripts/four_bed/`.
+- `run_source_tests.m` runs the lightweight Yang manifest and layered-bed audit checks.

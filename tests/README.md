@@ -14,4 +14,6 @@ Test tiers:
 Every new test must map to `docs/workflow/four_bed_test_matrix.csv` and state the named failure mode it catches.
 
 Status:
-- scaffold only; no tests have been added in this documentation pass.
+- WP1 static/source tests are under `tests/four_bed/`.
+- `testYangManifestIntegrity.m` maps to `T-STATIC-01`.
+- `testYangLayeredBedCapability.m` maps to `T-PARAM-01`.
