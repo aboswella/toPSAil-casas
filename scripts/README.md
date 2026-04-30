@@ -19,4 +19,7 @@ Pilot validation, long numerical sensitivity, optimization, event policy, tank/h
 
 Status:
 - WP1 source/static helpers are under `scripts/four_bed/`.
-- `run_source_tests.m` runs the lightweight Yang manifest and layered-bed audit checks.
+- WP2 direct-transfer pair-map helpers are under `scripts/four_bed/`.
+- WP3 persistent state-container helpers are under `scripts/four_bed/`.
+- `run_source_tests.m` runs the lightweight Yang manifest, layered-bed audit, and pair-map completeness checks.
+- `run_sanity_tests.m` runs the lightweight WP3 state-container and writeback checks.

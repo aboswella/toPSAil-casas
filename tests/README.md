@@ -17,3 +17,8 @@ Status:
 - WP1 static/source tests are under `tests/four_bed/`.
 - `testYangManifestIntegrity.m` maps to `T-STATIC-01`.
 - `testYangLayeredBedCapability.m` maps to `T-PARAM-01`.
+- `testYangPairMapCompleteness.m` maps to `T-STATIC-02`.
+- WP3 unit tests are under `tests/four_bed/`.
+- `testYangFourBedStateContainerShape.m` maps to `T-STATE-01`.
+- `testYangFourBedWritebackOnlyParticipants.m` maps to `T-STATE-02`.
+- `testYangFourBedCrossedPairRoundTrip.m` maps to `T-STATE-03`.

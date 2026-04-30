@@ -7,5 +7,6 @@ fprintf('Running source/static tests...\n');
 
 testYangManifestIntegrity();
 testYangLayeredBedCapability();
+testYangPairMapCompleteness();
 
 fprintf('All source/static tests passed.\n');
