@@ -3,5 +3,7 @@
 *.eps
 .DS_Store
 *.csv
+!docs/workflow/*.csv
+!validation/targets/*.csv
 *.mat
 *.pdf

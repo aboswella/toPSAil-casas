@@ -34,7 +34,7 @@ State whether each test is Tier 0, 1, 2, 3, 4, or 5.
 
 ## Runtime limit
 
-Expected maximum runtime. Full validation and optimisation runs must not be hidden inside default smoke tests.
+Expected maximum runtime. Full validation and optimization runs must not be hidden inside default smoke tests.
 
 ## Stop conditions
 

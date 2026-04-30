@@ -1,0 +1,20 @@
+Architecture Map: thin four-bed Yang wrapper,,,,
+,,,,
+Guardrail,Decision,Implementation consequence,Status,Owner WP
+Dynamic internal tanks,Removed,No tank/header inventory participates in Yang internal transfers.,Required,WP1/WP5
+Global four-bed RHS/DAE,Disallowed,"No [state_A,state_B,state_C,state_D] numerical solve is assembled.",Required,WP4
+Core adsorber physics,Preserved,Existing toPSAil step/coupling machinery remains the numerical engine.,Required,WP4
+Four-bed wrapper,Bookkeeping only,"Knows bed labels, schedule, pair map, case builder, and ledgers.",Required,WP1-WP5
+,,,,
+Pairing rule,Donor role,Receiver role,Wrapper action,Accounting rule
+EQI direct equalization,EQI-BD,EQI-PR,Pass the two selected bed states into existing paired-bed behavior.,Internal transfer only
+EQII direct equalization,EQII-BD,EQII-PR,Pass the two selected bed states into existing paired-bed behavior.,Internal transfer only
+Provide purge,PP,PU,Direct donor product-end gas to receiving bed purge operation.,Internal transfer; receiver waste remains external waste
+Backfill,AD&PP,BF,Use product-side donor gas to pressurize companion bed while separating external product.,Internal BF transfer separated from product
+,,,,
+Wrapper execution sequence,Action,State handling,Ledger handling,Validation focus
+1,Read current Yang manifest group.,No bed states changed.,No ledger change.,Manifest integrity
+2,Select paired and single operations using explicit pair map.,Map global bed labels to local case indices.,Classify streams as external or internal.,Pair-map completeness
+3,Build temporary toPSAil-compatible paired/single case.,Inject selected persistent states only.,Initialize per-operation counters.,Case-builder isolation
+4,Invoke existing toPSAil machinery.,Receive terminal local states.,Capture flow/work quantities before reset.,Conservation
+5,Write terminal states back to participating global beds.,Replace only participating state_A/B/C/D entries.,Update cycle ledger and CSS residuals.,Writeback and CSS

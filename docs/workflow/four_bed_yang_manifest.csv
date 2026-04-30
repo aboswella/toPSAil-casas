@@ -1,0 +1,14 @@
+Yang Schedule Manifest Skeleton,,,,,,
+Source Table 2 row labels are preserved here. Runtime implementation should normalize merged duration spans into executable operation groups and use the explicit pair map; row order is not a pairing rule.,,,,,,
+,,,,,,
+Source column,Duration label from Yang Table 2,Bed A,Bed B,Bed C,Bed D,Wrapper interpretation note
+1,t_c/24,AD,EQI-PR,BD,EQI-BD,"Use explicit pair map; e.g., EQI-BD pairs with EQI-PR, while AD and BD are external/single operations."
+2,t_c/4,AD&PP,BF,PU,PP,AD&PP->BF and PP->PU are direct transfer rules; long/merged duration spans must be normalized before execution.
+3,t_c/24,EQI-BD,AD,EQII-PR,EQII-BD,Do not infer partners by row order; pair validation must use normalized operation groups.
+4,t_c/6,PP,AD&PP,EQI-PR,BD,Normalize source table spans; direct pair map decides whether the displayed labels are simultaneous in an executable group.
+5,t_c/24,EQII-BD,EQI-BD,BF,PU,Stage labels remain distinct even if native solver receives generic paired behavior.
+6,t_c/24,BD,PP,AD,EQII-PR,Single/external operations and internal transfers are ledgered under separate categories.
+7,t_c/6,PU,EQII-BD,AD&PP,EQI-PR,The manifest validator must resolve overlapping spans into direct-pair groups.
+8,t_c/24,EQII-PR,BD,EQI-BD,BF,"Terminal states write back to the named beds shown here, not local bed indices."
+9,t_c/24,EQI-PR,PU,PP,AD,PP->PU transfers are internal; AD product is external unless assigned to BF in the normalized group.
+10,5t_c/24,BF,EQII-PR,EQII-BD,AD&PP,AD&PP->BF internal flow is separated from external product in the ledger.

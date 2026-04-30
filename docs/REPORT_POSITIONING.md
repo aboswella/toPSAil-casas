@@ -1,47 +1,40 @@
 # Report Positioning
 
-## Core report claim
+## Core Report Claim
 
 Use this position unless later evidence changes the project direction:
 
-> The simulator uses toPSAil's native pressure-flow, boundary-condition, cycle, equalisation, and auxiliary-unit framework. Schell is used to validate dominant PSA behaviour rather than to force exact solver equivalence.
+> The simulator uses toPSAil's native bed-step machinery as the numerical engine. The Yang four-bed work is a thin wrapper that schedules persistent named bed states, applies explicit direct-transfer pair maps, and reconstructs external/internal ledgers without adding dynamic internal tanks, shared header inventory, or a global four-bed RHS.
 
-## Casas language
+## Yang Language
 
-Casas-lite is a sanity validation:
+The Yang work is a staged implementation and validation path:
 
-- breakthrough timing should be roughly credible;
-- thermal response should be physically plausible;
-- solver health should be good;
-- exact front shape, axial-dispersion matching, and detector/piping reproduction are not the target.
+- WP1 defines the source schedule manifest and metadata.
+- WP2 defines explicit bed-pair identities.
+- WP3 manages persistent named bed states.
+- WP4 builds temporary toPSAil-compatible single-bed and paired-bed calls.
+- WP5 reconstructs ledgers, all-bed CSS, and Yang-basis metrics.
 
-## Schell language
+## What Not To Claim
 
-Schell is the primary experimental full-cycle validation anchor:
+Do not claim physical validation merely because:
 
-- H2/CO2 two-bed PSA;
-- pressure equalisation;
-- temperature profiles;
-- purity and recovery metrics.
+- the source schedule was transcribed;
+- static manifest tests pass;
+- a wrapper executes one cycle;
+- native metrics are available;
+- a homogeneous surrogate runs when layered-bed support is unconfirmed.
 
-Differences from Schell boundary-condition implementation are expected and defensible when using the default toPSAil-native model. Do not describe such differences as errors unless a dedicated validation task shows they dominate the mismatch.
+## Required Caveats
 
-## Delgado language
+Reports must address:
 
-Delgado supports extension work:
-
-- BPL activated carbon and 13X zeolite data;
-- H2/CO/CH4/CO2 contaminant-polishing concept;
-- possible layered-bed report extension.
-
-Do not present Delgado PSA agreement as experimental validation.
-
-## Validation caveat
-
-Validation agreement alone is not proof of correctness. Reports must also address:
-
-- source traceability,
-- physical sanity,
-- numerical health,
-- validation agreement,
-- optimisation performance only after validation is stable.
+- source traceability;
+- architecture constraints;
+- direct-transfer pair-map status;
+- persistent state writeback status;
+- external/internal ledger basis;
+- layered-bed and thermal assumptions;
+- numerical health;
+- validation agreement only after earlier gates pass.

@@ -1,16 +1,16 @@
 Codex Task 01: Baseline toPSAil Smoke Test
+
 Objective
 
-Prove that the unmodified upstream toPSAil code works before any project-specific Casas, Schell, Delgado, sensitivity, optimisation, or solver modifications are attempted.
+Prove that the unmodified upstream toPSAil code works before any project-specific four-bed wrapper, validation, sensitivity, optimization, or solver modifications are attempted.
 
-This task is Phase 1 only.
+This task is baseline-only.
 
 Required reading before doing anything
 
-Read these files first:
+Read AGENTS.md first and complete the required pre-edit reading listed there.
+For this Tier 0 task, pay particular attention to:
 
-AGENTS.md
-docs/workflow/codex_baseline_and_casas_execution_plan.md
 docs/CODEX_PROJECT_MAP.md
 docs/GIT_WORKFLOW.md
 docs/TEST_POLICY.md
@@ -33,11 +33,13 @@ You may not:
 
 modify toPSAil solver internals;
 modify original examples;
-add Casas parameters;
-add Schell, Delgado, sensitivity, or optimisation logic;
-tune model parameters;
-weaken checks or thresholds;
-begin Phase 2.
+add four-bed schedule manifests;
+add pair maps;
+add persistent state containers;
+add case builders;
+add ledgers;
+begin sensitivity or optimization work.
+
 Required preflight checks
 
 Before running or editing anything, report the output of these commands:
@@ -67,6 +69,7 @@ which files it reads;
 which scripts or functions it calls;
 what outputs indicate successful completion;
 whether MATLAB path setup is required.
+
 Implementation rules
 
 Only after the original example has run manually, create:
@@ -89,11 +92,13 @@ Do not edit:
 4_example/
 5_reference/
 6_publication/
+
 Required MATLAB command
 
 The smoke runner must be executable using this MATLAB command:
 
 addpath(genpath(pwd)); run("scripts/run_smoke.m");
+
 Required checks
 
 After running the smoke test, verify the working tree with:
@@ -111,9 +116,8 @@ scripts/run_smoke.m;
 the MATLAB command used;
 the observed pass/fail result;
 any warnings or known limitations;
-confirmation that Phase 2 has not begun.
+confirmation that branch-specific implementation has not begun.
+
 Stop condition
 
 Stop after the Tier 0 baseline smoke test has passed or after a blocker has been documented.
-
-Do not continue into Casas breakthrough validation.

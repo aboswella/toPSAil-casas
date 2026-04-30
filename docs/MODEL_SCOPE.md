@@ -2,48 +2,44 @@
 
 ## Purpose
 
-This project uses toPSAil as the base MATLAB PSA simulator for H2/CO2 separation studies. The near-term objective is validation discipline, not solver reinvention.
+This project uses toPSAil as the base MATLAB PSA simulator for a Yang 2009 four-bed workflow. The near-term objective is controlled four-bed orchestration, not solver reinvention.
 
-## In scope
+## In Scope
 
 - Confirm unchanged toPSAil examples run.
-- Add project-specific wrappers, cases, parameter packs, validation manifests, reports, and tests.
-- Build a Casas-lite breakthrough sanity case.
-- Build a Schell two-bed H2/CO2 PSA validation case.
-- Add a Delgado-inspired layered-bed or contaminant-polishing extension only after the baseline and Schell path are stable.
-- Add sensitivity and optimisation wrappers only after validation cases are stable.
+- Add project-specific wrappers, manifests, cases, parameter packs, ledgers, reports, and tests.
+- Build a machine-readable Yang schedule manifest with raw and normalized duration representations.
+- Build explicit pair maps for direct transfers.
+- Maintain persistent named bed states for `A`, `B`, `C`, and `D`.
+- Build temporary toPSAil-compatible single-bed or paired-bed calls.
+- Reconstruct external/internal stream ledgers, Yang-basis metrics, and all-bed CSS diagnostics.
+- Audit layered-bed and thermal capability before claiming physical fidelity.
 
-## Out of scope unless explicitly authorised
+## Out Of Scope Unless Explicitly Authorised
 
 - Editing toPSAil solver internals.
 - Editing pressure-flow or boundary-condition machinery.
-- Reproducing Casas detector piping or exact axial-dispersion front shape.
-- Forcing Schell boundary conditions into the default toPSAil-native model.
-- Designing an upstream SMR pretreatment train.
-- Running full optimisation as part of smoke or default validation.
+- Creating dynamic internal tanks for Yang internal transfers.
+- Creating shared header inventory for Yang internal transfers.
+- Assembling a global four-bed RHS/DAE state.
+- Adding event-driven scheduling before fixed-duration execution works.
+- Running optimization or broad sensitivity studies before the wrapper is stable.
 
-## Default model mode
+## Default Model Mode
 
-The default model mode is toPSAil-native:
+The default model mode is toPSAil-native orchestration:
 
-- native pressure-flow handling,
-- native boundary-condition handling,
-- native cycle/equalisation/auxiliary-unit machinery,
-- project-specific case and parameter inputs around that machinery.
+- native single-bed and paired-bed machinery,
+- wrapper-level schedule and pair metadata,
+- persistent named bed states outside the core solver,
+- explicit external/internal stream ledgers,
+- documented thermal and layered-bed assumptions.
 
-A separate Schell-reproduction mode may be added later only if a documented validation failure justifies it. Such a mode must be labelled separately and must not replace the default mode.
+## Source Separation
 
-## Source separation
+Parameter packs must remain source-specific and traceable. Do not create a generic mixed parameter file by blending values from unrelated papers or exploratory assumptions.
 
-Parameter packs must remain source-specific:
-
-- `params/casas2012_ap360_sips_binary/`
-- `params/schell2013_ap360_sips_binary/`
-- `params/delgado2014_bpl13x_lf_four_component/`
-
-Do not blend AP3-60, BPL, 13X, Sips, Langmuir-Freundlich, Schell heat-transfer assumptions, or Delgado kinetics into one default parameter file.
-
-## Core boundary
+## Core Boundary
 
 The original toPSAil folders are treated as core:
 
@@ -54,4 +50,4 @@ The original toPSAil folders are treated as core:
 - `5_reference/`
 - `6_publication/`
 
-Prefer new project files under `cases/`, `params/`, `validation/`, `scripts/`, and `tests/`.
+Prefer new project files under `cases/`, `params/`, `validation/`, `scripts/`, `tests/`, and `docs/`.

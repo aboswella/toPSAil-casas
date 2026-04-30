@@ -2,18 +2,15 @@
 
 Parameter packs must be source-specific and traceable. Do not create a default mixed parameter file.
 
-Expected packs:
+For this branch, add Yang-related parameter packs only when a task explicitly authorises source transcription or case construction.
 
-- `casas2012_ap360_sips_binary/`
-- `schell2013_ap360_sips_binary/`
-- `delgado2014_bpl13x_lf_four_component/`
-
-Each pack should eventually include:
+Each pack should include:
 
 - source references;
 - units;
 - transcription notes;
 - unresolved source ambiguities;
-- a Tier 1 source-transcription test plan.
+- thermal and layered-bed assumptions;
+- a source-transcription test plan.
 
 Small canonical source packs may be stored as JSON when they are source-derived inputs rather than generated outputs. Avoid maintaining hand-edited duplicate formats for the same parameter pack.

@@ -1,0 +1,46 @@
+FOUR-BED toPSAil IMPLEMENTATION: PROJECT CONTEXT FILE MAP
+
+Purpose
+This note tells future ChatGPT/Codex-planning instances where the four-bed implementation planning information is stored. The separated CSV files are the canonical planning inputs. Though all work should be based on the information in this workbook, it should still be treated sceptically and critically assessed if an issue arises. All issues/contradictions should be flagged in your output.
+
+Canonical CSV files to check before assessing implementation or fixing issues
+
+0. four_bed_executive_summary.csv
+   Use this for the high-level corrected architecture summary and current overall verdict before drilling into the work-package files.
+
+1. four_bed_work_packages.csv
+   Start here. This is the main implementation plan. It defines WP1-WP5, their scope, expected deliverables, non-goals, dependencies, and handoff tests.
+
+2. four_bed_architecture_map.csv
+   Use this to confirm the architectural constraints. The key decisions are: no dynamic internal tanks for Yang transfers, no shared header inventory, no global four-bed RHS/DAE, and no core adsorber-physics rewrite. The four-bed implementation is a thin orchestration layer around existing toPSAil bed-step behaviour.
+
+3. four_bed_yang_manifest.csv
+   Use this for the Yang Table 2 schedule skeleton. It preserves the source A/B/C/D operation labels and duration labels. Do not infer bed pairings from row order. Pairing logic belongs to the explicit pair map work, mainly WP2.
+
+4. four_bed_issue_register.csv
+   Use this to identify known risks, likely causes, consequences, diagnostics, and clean pass criteria. Always check this before proposing implementation details or bug fixes, because many tempting approaches are already marked as architectural failure modes. Naturally, software still tries to reinvent the bad idea first.
+
+5. four_bed_test_matrix.csv
+   Use this for required validation. It maps tests to issues and work packages, including static checks, pair-transfer checks, state persistence checks, case-builder tests, numerical smoke tests, regression tests, and acceptance tests.
+
+6. four_bed_stage_gates.csv
+   Use this to understand the intended development sequence and go/no-go criteria. The stage gates are useful when deciding whether a work package is complete enough to hand to the next Codex agent.
+
+7. four_bed_evidence_notes.csv
+   Use this for source anchors and rationale. It links planning choices back to Yang 2009, the toPSAil paper, and project decisions.
+
+Recommended lookup order by task
+
+For any new implementation guide:
+1. Read four_bed_executive_summary.csv.
+2. Read four_bed_work_packages.csv.
+3. Read four_bed_architecture_map.csv.
+4. Read the work-package-specific rows in four_bed_test_matrix.csv and four_bed_issue_register.csv.
+5. Read four_bed_yang_manifest.csv if schedule, labels, durations, or bed roles are involved.
+6. Use four_bed_evidence_notes.csv only to support or challenge assumptions.
+
+Key project interpretation to preserve
+The Yang four-bed implementation should not be treated as a new four-bed process-network solver. It should be implemented as a thin wrapper with four persistent named bed states, A/B/C/D. For each Yang cycle slot, the wrapper selects the relevant single bed or coupled pair, calls existing toPSAil-style machinery on those states, and writes the returned terminal state back to the named beds. Internal Yang transfers are direct bed-to-bed couplings, not dynamic tank/header interactions.
+
+Legacy workbook
+The legacy workbook four_bed_viability_issue_register_updated.xlsx may exist in context, but the CSV files above are more reliable for reading and should be considered the canonical planning source unless the user says otherwise.

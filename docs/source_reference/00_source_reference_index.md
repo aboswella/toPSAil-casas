@@ -1,76 +1,43 @@
-# Source Reference Pack for Codex Tasks
+# Source Reference Router
 
 ## Purpose
 
-These files are the literature-derived parameter and configuration sheets for the staged toPSAil development workflow. They are intended to let Codex retrieve source facts from Markdown files rather than repeatedly searching the original PDFs.
+This branch uses `docs/workflow/` as the canonical source-reference and planning pack for Yang four-bed implementation work.
 
-Codex should treat these files as the first source of truth for project-specific parameters. The original source PDFs should only be opened when:
+Use this file as a lightweight router so future agents do not look for retired staged-validation sheets when the relevant context now lives in the workflow CSVs and WP guidance.
 
-1. a value in these files is internally inconsistent;
-2. a required value is absent and the task explicitly permits source lookup;
-3. a task is specifically about auditing or correcting this reference pack.
+## Current Branch Sources
 
-This is not a substitute for engineering judgement. It is a substitute for sending an agent into a PDF minefield and hoping it comes back with the right column radius. Humanity has chosen worse processes, but not many.
-
-## Files in this pack
-
-| File | Workflow stage | Main use |
-|---|---:|---|
-| `01_casas_2012_breakthrough_validation.md` | 2 | Casas-lite AP3-60 CO2/H2 fixed-bed breakthrough sanity case. |
-| `02_schell_2013_two_bed_psa_validation.md` | 3 | Schell AP3-60 two-bed H2/CO2 PSA experimental validation. |
-| `03_delgado_2014_layered_bed_extension.md` | 4 | Delgado BPL + 13X layered-bed H2 purification extension and simulation reproduction. |
-| `04_casas_thesis_sensitivity_optimisation.md` | 5-6 | Casas thesis parametric study, sensitivity, scheduling, CSS, and optimisation context. |
-| `05_transcription_audit_and_guardrails.md` | all | Cross-check record, unresolved issues, and non-negotiable guardrails. |
-
-## Workflow ordering
-
-Use the reference sheets in this order:
-
-1. Baseline toPSAil example run: no literature parameter pack required.
-2. Casas-lite breakthrough sanity: use `01_casas_2012_breakthrough_validation.md`.
-3. Schell two-bed PSA validation: use `02_schell_2013_two_bed_psa_validation.md`.
-4. Delgado layered-bed extension: use `03_delgado_2014_layered_bed_extension.md`.
-5. Sensitivity and optimisation: use `04_casas_thesis_sensitivity_optimisation.md` only after the validation cases are stable.
-
-## Source separation rules
-
-Keep these parameter packs separate:
-
-```text
-params/casas2012_ap360_sips_binary/
-params/schell2013_ap360_sips_binary/
-params/delgado2014_bpl13x_lf_four_component/
-```
-
-Do not blend AP3-60, BPL, 13X, Sips, Langmuir-Freundlich, Schell PSA heat assumptions, Delgado kinetics, or Casas thesis adiabatic optimisation settings into a single default parameter file.
-
-## Boundary-condition policy for Codex
-
-Default implementation mode remains toPSAil-native:
-
-- use native toPSAil pressure-flow handling;
-- use native toPSAil boundary-condition handling;
-- use project-specific wrappers, parameter files, and validation manifests around the native machinery.
-
-Only implement literature-specific boundary functions in a separately labelled reproduction mode. Do not silently replace the native boundary machinery because a paper used a convenient pressure-time formula. That is how models become fan fiction.
-
-## Hard versus soft targets
-
-Use the following categories:
-
-| Category | Meaning |
+| Source | Main Use |
 |---|---|
-| Hard transcription | Direct table values, equations, and explicit source statements. These may be used as implementation constants. |
-| Soft plot-read target | Approximate values read from figures. Use only for sanity checks unless the figure is digitised in a dedicated task. |
-| Diagnostic detail | Piping, detector, stagnant-tank, or source-specific measurement corrections. Include only in labelled diagnostic/reproduction modes. |
-| Missing or ambiguous | Do not invent. Stop and report the gap. |
+| `sources/Yang 2009 4-bed 10-step relevant.pdf` | Local literature artifact for the four-bed schedule, operation semantics, and physical-model caveats. |
+| `docs/workflow/four_bed_project_context_file_map.txt` | Entry point for branch planning context and lookup order. |
+| `docs/workflow/four_bed_executive_summary.csv` | High-level corrected architecture summary. |
+| `docs/workflow/four_bed_work_packages.csv` | WP1-WP5 scope, deliverables, non-goals, dependencies, and handoff tests. |
+| `docs/workflow/four_bed_architecture_map.csv` | Architecture constraints and wrapper execution sequence. |
+| `docs/workflow/four_bed_yang_manifest.csv` | Source schedule skeleton and operation labels. |
+| `docs/workflow/four_bed_issue_register.csv` | Known risks, diagnostics, and clean pass criteria. |
+| `docs/workflow/four_bed_test_matrix.csv` | Required tests, owners, runtimes, and default-smoke status. |
+| `docs/workflow/four_bed_stage_gates.csv` | Development sequence and go/no-go criteria. |
+| `docs/workflow/four_bed_evidence_notes.csv` | Source anchors and rationale. |
+| `docs/workflow/Work package guidance docs/WP1_yang_schedule_manifest_guidance.md` | Detailed WP1 implementation guide. |
 
-## Triple-check method used
+## Lookup Order
 
-The main numeric tables were checked three ways where possible:
+For implementation or review tasks:
 
-1. `pdftotext -layout` extraction from the uploaded source PDFs.
-2. Visual inspection of rendered PDF pages.
-3. Cross-check against a second source table, SI file, thesis section, or dimensional/consistency check.
+1. Read `docs/workflow/four_bed_project_context_file_map.txt`.
+2. Read `docs/workflow/four_bed_executive_summary.csv`.
+3. Read `docs/workflow/four_bed_work_packages.csv`.
+4. Read `docs/workflow/four_bed_architecture_map.csv`.
+5. Read work-package-specific rows in `docs/workflow/four_bed_test_matrix.csv` and `docs/workflow/four_bed_issue_register.csv`.
+6. Read `docs/workflow/four_bed_yang_manifest.csv` if schedule, labels, durations, or bed roles are involved.
+7. Read `docs/workflow/four_bed_evidence_notes.csv` to support or challenge assumptions.
+8. Open the Yang PDF only when a task explicitly asks for source confirmation or when the workflow files are inconsistent or incomplete.
 
-Some figure-derived values cannot be triple-checked to table precision because the source gives them graphically. Those are explicitly labelled as soft targets.
+## Source Handling Policy
+
+- Treat workflow files as planning inputs, not infallible truth.
+- Preserve source labels and duration labels exactly when building manifests.
+- Record contradictions in `docs/KNOWN_UNCERTAINTIES.md`.
+- Do not invent missing pair identities, intermediate pressures, thermal parameters, or layered-bed support.

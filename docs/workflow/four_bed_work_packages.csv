@@ -1,0 +1,11 @@
+WP,Implementation piece,Core question,Expected deliverables,Boundaries / non-goals,Dependencies,Handoff tests
+WP1,Yang schedule manifest,"What exactly are A/B/C/D doing over the Yang cycle, and how are source table durations normalized?",Machine-readable manifest; source-to-normalized schedule table; pressure-class metadata; label glossary.,No solver edits; no tank/header model; no event policy beyond fixed durations.,Source review,"T-STATIC-01, T-PARAM-01"
+WP2,Explicit bed-pair mapping,Which two named beds are passed into existing paired-bed machinery for every direct transfer?,Pair-map schema; donor/receiver/end metadata; EQI/EQII/PP/PU/AD&PP/BF validators.,No new physics; no row-order inference; no implicit shared manifolds.,WP1 manifest,"T-STATIC-02, T-PAIR-01, T-PAIR-02, T-PAIR-03, T-PAIR-04"
+WP3,Persistent four-bed state container,"How are state_A/state_B/state_C/state_D stored, selected, and updated across slots?",Named state container; state injection/extraction contract; terminal-state writeback rules; initialization policy.,Do not reset non-participating beds; do not store internal transfer tanks as physical state.,WP1/WP2,"T-STATE-01, T-STATE-02, T-STATE-03"
+WP4,Temporary two-bed/single-step case builder,How does the wrapper make toPSAil see a normal paired or single-bed problem?,Case-builder functions; local/global bed mapping; native step translation; boundary/end setup; regression protection.,"Do not modify core adsorber equations; do not assemble [A,B,C,D] into one RHS.",WP2/WP3,"T-CASE-01, T-CASE-02, T-NUM-01, T-NUM-02, T-REG-01"
+WP5,"Ledger, CSS, and reporting layer",How are external metrics and CSS reconstructed across the whole four-bed cycle?,External/internal component ledger; Yang-style purity/recovery definitions; all-bed CSS residuals; output metadata.,Do not count internal transfers as product; do not claim Yang validation before mismatch register is complete.,WP1-WP4,"T-CONS-01, T-CONS-02, T-CSS-01, T-MET-01, T-DOC-01"
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,

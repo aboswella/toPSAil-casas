@@ -2,47 +2,53 @@
 
 ## Default
 
-Do not assume adiabatic operation for small-column validation.
+Do not assume adiabatic operation by default for Yang four-bed comparisons.
 
-Finite wall heat transfer is the preferred default for Schell-style small-column validation when required source parameters are available or explicitly bracketed.
+Yang uses non-isothermal dynamics and layered beds. The wrapper can be architecturally correct while still being only a physical surrogate if thermal or layered-bed support is incomplete.
 
-## Required modes
+## Required Modes And Labels
 
-The model should support, where practical:
+Every case or pilot report must label its thermal mode, such as:
 
-1. finite wall heat transfer,
-2. adiabatic sensitivity case,
-3. fixed wall or isothermal approximation if explicitly justified.
-
-## Sensitivity variables
-
-At minimum, later sensitivity analysis should consider:
-
-- heat transfer coefficient multiplier,
-- wall heat capacity,
-- ambient/wall temperature,
-- heat of adsorption,
-- gas heat capacity model,
-- column radius,
-- superficial velocity.
-
-## Validation expectations
-
-For Casas-lite:
-- breakthrough timing and temperature rise are more important than exact front shape.
-
-For Schell:
-- thermocouple trends are a major validation observable.
-
-For Delgado:
-- thermal behaviour is secondary to reproducing reported PSA performance metrics unless contaminant polishing becomes a major project branch.
-
-## Documentation rule
-
-Every case spec must state its thermal mode:
-
-- finite wall heat transfer,
-- adiabatic sensitivity,
-- isothermal or fixed-wall approximation.
+- finite wall heat transfer;
+- adiabatic sensitivity case;
+- fixed-wall or isothermal approximation;
+- thermal mode not yet exercised in a static manifest task.
 
 If the mode depends on a missing parameter, stop and record the uncertainty instead of silently choosing a value.
+
+## Layered-Bed Requirement
+
+WP1 must audit layered-bed capability but must not implement layered-bed physics.
+
+Allowed WP1 audit outcomes:
+
+- layered support confirmed;
+- layered support not confirmed, homogeneous surrogate required;
+- audit blocked by a missing interface or source ambiguity.
+
+Do not describe a homogeneous surrogate as physically faithful to Yang layered beds.
+
+## Sensitivity Variables
+
+Later sensitivity analysis may consider:
+
+- heat transfer coefficient multiplier;
+- wall heat capacity;
+- ambient/wall temperature;
+- heat of adsorption;
+- gas heat capacity model;
+- column radius;
+- superficial velocity;
+- layer material assignment.
+
+Sensitivity analysis is not part of WP1.
+
+## Documentation Rule
+
+Every case spec, manifest, or validation report must state:
+
+- thermal mode;
+- layered-bed support status;
+- known physical-model mismatches;
+- whether the output is a schedule/wrapper test or a physical comparison.

@@ -1,0 +1,18 @@
+Four-bed Yang implementation: corrected architecture,,,,
+,,,,
+Item,Assessment,,,
+Overall verdict,Viable as a minimally invasive four-bed state-management wrapper around existing toPSAil bed and paired-bed machinery. It is not a new four-bed process-network solver.,,,
+Corrected architectural claim,"The Yang implementation repeatedly invokes existing toPSAil step/coupling machinery on the correct persistent bed state(s), then writes terminal states back to A/B/C/D.",,,
+Removed from scope,"Dynamic shared tanks, shared header inventory, a global four-bed RHS/DAE, a generalized four-bed PFD, and core adsorber physics changes.",,,
+Added to scope,Yang schedule manifest; explicit bed-pair mapping; persistent four-bed state container; temporary two-bed/single-step case builder; cycle ledger and CSS layer; regression tests.,,,
+Direct-coupling rule,"EQI-BD -> EQI-PR; EQII-BD -> EQII-PR; PP -> PU; AD&PP -> BF. These are zero-holdup direct pairings, not tank/header-mediated transfers.",,,
+State mechanism,The wrapper stores state_A/state_B/state_C/state_D. For each slot it injects selected states into a temporary toPSAil-compatible case and replaces only participating states with returned terminal states.,,,
+Metric rule,"Feed, product, waste, and internal direct-transfer quantities are recorded in a four-bed ledger. Internal transfers are excluded from external product/recovery calculations.",,,
+Primary architectural risk,Accidentally leaving old tank/global-scheduler assumptions in the implementation would reintroduce unnecessary state coupling and obscure conservation checks.,,,
+Near-term move,"Build static manifest and pair-map validators first, then state injection/extraction, direct-coupling toy tests, Yang fixed-duration skeleton, and only then ledger/CSS reporting.",,,
+,,,,
+Severity,Count,,Workbook updated,2026-04-29 22:54 UTC
+Critical,9,,Number of issues,32
+High,15,,Number of tests,22
+Medium,8,,Number of work packages,5
+Low,0,,Number of stage gates,9

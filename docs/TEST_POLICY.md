@@ -4,72 +4,84 @@
 
 Use a small number of discriminating tests.
 
-Do not add diagnostics unless they catch a named failure mode.
+Do not add diagnostics unless they catch a named failure mode from `docs/workflow/four_bed_issue_register.csv` or a task-specific risk.
 
-## Test tiers
+## Test Tiers
 
-### Tier 0: toPSAil baseline smoke
+### Tier 0: toPSAil Baseline Smoke
 
 Purpose:
-- confirm the fork runs before modification.
+
+- confirm the fork still runs before wrapper modifications.
 
 Pass criteria:
+
 - selected original examples complete;
 - no uncaught MATLAB error;
-- no NaN or Inf in final outputs.
+- no NaN or Inf in final outputs where outputs are accessible.
 
-### Tier 1: source transcription
+### Static/Source: Manifest And Metadata
 
 Purpose:
-- ensure source parameters are loaded correctly.
+
+- ensure Yang schedule metadata is transcribed and represented correctly.
 
 Examples:
-- bed dimensions;
-- feed composition;
-- pressure levels;
-- isotherm constants;
-- kinetic constants;
-- heat-of-adsorption values;
-- unit conversions.
 
-### Tier 2: equation-local
+- manifest row counts;
+- bed `A/B/C/D` sequences;
+- operation labels;
+- duration parsing and normalization;
+- pressure classes;
+- architecture flags;
+- layered-bed capability audit.
+
+### Unit: Pair, State, And Case-Builder Checks
 
 Purpose:
-- ensure isolated equations behave correctly.
+
+- ensure wrapper mechanics behave before full-cycle runs.
 
 Examples:
-- isotherm monotonicity;
-- LDF sign;
-- mole fraction normalisation;
-- adsorption heat sign.
 
-### Tier 3: one-step physical sanity
+- direct-transfer pair completeness;
+- donor/receiver direction;
+- persistent state writeback;
+- non-participant state preservation;
+- temporary case isolation;
+- endpoint and flow-direction checks.
+
+### Sanity/Integration: Conservation And Ledgers
 
 Purpose:
-- catch boundary, inventory, and solver failures before full cycles.
+
+- catch accounting, inventory, and boundary failures before full Yang pilots.
 
 Examples:
-- closed-bed sanity;
-- one adsorption step;
-- one blowdown step;
-- one purge step;
-- one equalisation step.
 
-### Tier 4: validation cases
+- pair-local conservation;
+- slot-level component balance;
+- external/internal ledger separation;
+- CSS residual shape;
+- finite pressure, temperature, flow, and composition outputs.
 
-Purpose:
-- compare to Casas, Schell, and Delgado.
-
-These are not default smoke tests.
-
-### Tier 5: sensitivity and optimisation
+### Pilot Validation: Yang Skeleton
 
 Purpose:
-- design exploration only after validation is stable.
+
+- compare fixed-duration wrapper behaviour to the source schedule only after earlier gates pass.
+
+These are not default smoke tests unless explicitly lightweight and listed as default in `docs/workflow/four_bed_test_matrix.csv`.
+
+### Later Extensions
+
+Purpose:
+
+- sensitivity, optimization, event policy, tank/header variants, or generalized-PFD work only after the fixed-duration wrapper is stable.
 
 Never run by default.
 
-## Default commands
+## Default Commands
 
 When the corresponding scripts exist, use:
 
@@ -81,9 +93,9 @@ run("scripts/run_equation_tests.m");
 run("scripts/run_sanity_tests.m");
 ```
 
-The default smoke command must not run Tier 4 validation or Tier 5 sensitivity/optimisation.
+The default smoke command must not hide long validation, sensitivity, optimization, or event-policy runs.
 
-## Hard failures
+## Hard Failures
 
 Hard failures include:
 
@@ -94,20 +106,24 @@ Hard failures include:
 - invalid mole fractions;
 - mole fractions not summing to acceptable tolerance;
 - source transcription mismatch;
+- state writeback to the wrong named bed;
+- non-participant bed state mutation;
+- missing direct-transfer partner;
+- internal transfer counted as external product;
 - non-conservation in closed systems beyond tolerance.
 
-## Soft validation failures
+## Soft Validation Failures
 
 Soft failures include:
 
-- breakthrough time mismatch;
-- purity/recovery mismatch;
+- source-performance mismatch;
 - temperature profile mismatch;
-- productivity mismatch.
+- productivity mismatch;
+- pressure endpoint mismatch when assumptions are documented.
 
 Soft failures should be reported, not automatically patched by changing physics.
 
-## New test rule
+## New Test Rule
 
 Every new test must state:
 

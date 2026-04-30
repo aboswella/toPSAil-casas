@@ -9,7 +9,13 @@ Expected future runners:
 - `run_equation_tests.m`
 - `run_sanity_tests.m`
 
-Tier 4 validation and Tier 5 sensitivity/optimisation must not be part of the default smoke runner.
+Default runners must stay small and discriminating:
+
+- Tier 0 smoke confirms unchanged toPSAil examples still run.
+- Static/source tests cover Yang manifest, duration, label, pressure-class, architecture-flag, and layered-bed audit checks.
+- Unit and sanity runners cover pair maps, persistent state, case builders, conservation, ledgers, and flow direction only after the relevant work package exists.
+
+Pilot validation, long numerical sensitivity, optimization, event policy, tank/header variants, and generalized-PFD extensions must not be hidden inside the default smoke runner.
 
 Status:
 - scaffold only; no MATLAB scripts have been added in this documentation pass.

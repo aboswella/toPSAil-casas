@@ -2,28 +2,34 @@
 
 ## Aim
 
-Develop a MATLAB PSA modelling workflow based on toPSAil for H2/CO2 separation, validated progressively against Casas-lite breakthrough behaviour and Schell two-bed PSA experiments, with Delgado-inspired layered-bed contaminant-polishing considered as an extension.
+Develop a MATLAB four-bed PSA workflow based on toPSAil for the Yang 2009 ten-step cycle.
 
-## Base design assumption
+The immediate objective is a thin orchestration layer that reuses existing toPSAil bed-step machinery while maintaining four persistent named bed states.
 
-The basis of design assumes a binary H2/CO2 feed due to upstream gas pretreatment. The pretreatment system itself is outside this project scope.
+## Base Design Assumption
 
-## Primary validation source
+The four-bed implementation is wrapper-level:
 
-Schell 2013 laboratory two-column PSA experiments are the primary validation target for full-cycle PSA behaviour.
+- persistent bed states are named `A`, `B`, `C`, and `D`;
+- internal transfers are direct bed-to-bed couplings;
+- existing toPSAil single-bed or paired-bed behaviour remains the numerical engine;
+- external/internal stream accounting is reconstructed outside the core solver.
 
-## Secondary validation source
+## Primary Literature Source
 
-Casas 2012 breakthrough experiments are used only to validate basic adsorption, thermal response, and breakthrough timing. Exact front shape is not a project objective.
+Yang 2009 Table 2 and process description define the four-bed schedule, operation labels, and duration labels for this branch.
 
-## Extension source
+## Canonical Planning Source
 
-Delgado 2014 is used to motivate and parameterise possible contaminant-polishing studies involving CO, CH4, CO2, H2, BPL activated carbon, and 13X zeolite.
+The canonical implementation planning files are under `docs/workflow/`.
 
-## Out of scope unless explicitly authorised
+Start with `docs/workflow/four_bed_project_context_file_map.txt`, then use the work-package, architecture, manifest, issue-register, test-matrix, stage-gate, and evidence CSVs as task-specific control files.
 
-- Full detector piping reproduction.
-- Exact Casas axial-dispersion/front-shape reproduction.
-- Rewriting toPSAil boundary-condition internals.
-- Full industrial pretreatment design.
-- Multi-objective optimisation before validation cases are stable.
+## Out Of Scope Unless Explicitly Authorised
+
+- Dynamic internal tanks for Yang internal transfers.
+- Shared header inventory for Yang internal transfers.
+- A global four-bed RHS/DAE solve.
+- Rewriting toPSAil adsorber physics, pressure-flow logic, or boundary-condition internals.
+- Event-based Yang scheduling before the fixed-duration direct-coupling path passes its gates.
+- Optimization or generalized PFD work before the wrapper path is stable.
