@@ -75,6 +75,8 @@ function audit = makeAuditStruct(report, opts)
     audit.integratedFlowsByComponent = getReportField(report, 'flows', struct());
     audit.effectiveSplit = getReportField(report, 'effectiveSplit', ...
         getNestedField(report, ["flowReport", "effectiveSplit"], struct()));
+    audit.terminalPhysicalStateChecksums = getReportField(report, ...
+        'terminalPhysicalStateChecksums', struct());
     audit.conservationResiduals = getReportField(report, 'conservation', struct());
     audit.sanityDiagnostics = getReportField(report, 'sanity', struct());
     audit.warnings = string(getReportField(report, 'warnings', strings(0, 1)));
@@ -84,6 +86,8 @@ function audit = makeAuditStruct(report, opts)
         "noFourBedRhsDae", logical(getReportField(report, 'noFourBedRhsDae', true)), ...
         "noCoreAdsorberPhysicsRewrite", logical(getReportField(report, 'noCoreAdsorberPhysicsRewrite', true)));
     audit.surrogateBasis = "Yang-inspired H2/CO2 homogeneous activated-carbon surrogate";
+    audit.surrogateFlags = getReportField(report, 'surrogateFlags', ...
+        defaultSurrogateFlags(report));
 
     if logical(opts.IncludeStateHistory) && isfield(report, 'debugStateHistory')
         audit.debugStateHistory = report.debugStateHistory;
@@ -116,6 +120,17 @@ function basis = inferFlowBasis(report)
         if isfield(report.flowReport, 'moles') && isstruct(report.flowReport.moles) && ...
                 isfield(report.flowReport.moles, 'unitBasis')
             basis.molesUnitBasis = string(report.flowReport.moles.unitBasis);
+            if contains(lower(basis.molesUnitBasis), "physical_moles")
+                basis.basis = "physical_moles";
+                basis.units = "mol";
+                basis.sourceField = "adapterReport.flowReport.moles";
+                return;
+            elseif contains(lower(basis.molesUnitBasis), "validation_only") || ...
+                    contains(lower(basis.molesUnitBasis), "not_evaluated")
+                basis.basis = "not_evaluated_validation_only";
+                basis.units = "not_evaluated";
+                basis.sourceField = "adapterReport.flowReport.moles";
+            end
         end
         if isfield(report.flowReport, 'native') && isstruct(report.flowReport.native) && ...
                 isfield(report.flowReport.native, 'unitBasis')
@@ -126,6 +141,26 @@ function basis = inferFlowBasis(report)
         end
     elseif isfield(report, 'flows') && isstruct(report.flows) && isfield(report.flows, 'unitBasis')
         basis.basis = string(report.flows.unitBasis);
+    end
+end
+
+function flags = defaultSurrogateFlags(report)
+    flags = struct();
+    flags.h2co2Only = hasOnlyH2Co2(report);
+    flags.homogeneousActivatedCarbon = true;
+    flags.layeredBedEnabled = false;
+    flags.zeolite5AIncluded = false;
+    flags.coIncluded = false;
+    flags.ch4Included = false;
+    flags.pseudoImpurityIncluded = false;
+    flags.validationClaim = "surrogate_runtime_or_adapter_audit_only_not_full_Yang_validation";
+end
+
+function tf = hasOnlyH2Co2(report)
+    tf = true;
+    if isstruct(report) && isfield(report, 'componentNames') && ~isempty(report.componentNames)
+        names = string(report.componentNames(:));
+        tf = numel(names) == 2 && all(names == ["H2"; "CO2"]);
     end
 end
 

@@ -36,9 +36,22 @@ function metrics = computeYangPerformanceMetrics(ledger, varargin)
     end
 
     metricRows = ledger.metricRows([],:);
+    basisReports = cell(numel(cycles), 1);
     for i = 1:numel(cycles)
         cycleIndex = cycles(i);
         cycleRows = rows(rows.cycle_index == cycleIndex, :);
+        basisReport = checkYangLedgerPhysicalMoleCompatibility(cycleRows, ...
+            ["external_feed"; "external_product"]);
+        basisReports{i} = basisReport;
+        if ~basisReport.pass
+            note = "metric invalid: " + basisReport.reason;
+            metricRows = appendMetricRow(metricRows, cycleIndex, "product_purity", targetComponent, ...
+                NaN, NaN, NaN, false, note);
+            metricRows = appendMetricRow(metricRows, cycleIndex, "product_recovery", targetComponent, ...
+                NaN, NaN, NaN, false, note);
+            continue;
+        end
+
         productRows = cycleRows(cycleRows.stream_scope == "external_product", :);
         feedRows = cycleRows(cycleRows.stream_scope == "external_feed", :);
 
@@ -63,6 +76,7 @@ function metrics = computeYangPerformanceMetrics(ledger, varargin)
     metrics.basis = "external_ledger_only_internal_transfers_excluded";
     metrics.rows = metricRows;
     metrics.internalTransfersExcluded = true;
+    metrics.physicalMoleBasisReports = basisReports;
 end
 
 function [value, pass, note] = safeRatio(numerator, denominator, note)
@@ -86,7 +100,7 @@ function metricRows = appendMetricRow(metricRows, cycleIndex, metricName, compon
         double(value), ...
         double(numerator), ...
         double(denominator), ...
-        "external_ledger_only_internal_transfers_excluded", ...
+        "external_ledger_only_internal_transfers_excluded_physical_mole_basis_checked", ...
         logical(pass), ...
         string(notes), ...
         'VariableNames', metricRows.Properties.VariableNames);

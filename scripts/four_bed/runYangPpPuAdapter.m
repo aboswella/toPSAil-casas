@@ -50,6 +50,8 @@ function [terminalLocalStates, adapterReport] = runYangPpPuAdapter(tempCase, tem
     adapterReport.flowReport = flowReport;
     adapterReport.conservation = conservation;
     adapterReport.sanity = sanity;
+    adapterReport.terminalPhysicalStateChecksums = ...
+        computeYangPhysicalStateChecksums(params, terminalLocalStates, tempCase.localMap);
     adapterReport.warnings = collectWarnings(adapterReport, sanity, conservation, flowReport);
 
     if adapterConfig.debugKeepStateHistory
@@ -126,6 +128,8 @@ function [terminalLocalStates, report] = runValidationOnly(tempCase, params, con
         "unitBasis", "not_evaluated_validation_only", ...
         "reason", "validationOnly mode checks the PP->PU contract without integrating dynamics");
     report.sanity = computeSanityFromPayloads(params, terminalLocalStates, pressure);
+    report.terminalPhysicalStateChecksums = ...
+        computeYangPhysicalStateChecksums(params, terminalLocalStates, tempCase.localMap);
     report.warnings = [
         "validationOnly mode did not integrate PP->PU dynamics"
         report.sanity.warnings(:)

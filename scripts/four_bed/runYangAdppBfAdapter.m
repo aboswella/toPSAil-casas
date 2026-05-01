@@ -51,6 +51,8 @@ function [terminalLocalStates, adapterReport] = runYangAdppBfAdapter(tempCase, t
     adapterReport.effectiveSplit = flowReport.effectiveSplit;
     adapterReport.conservation = conservation;
     adapterReport.sanity = sanity;
+    adapterReport.terminalPhysicalStateChecksums = ...
+        computeYangPhysicalStateChecksums(params, terminalLocalStates, tempCase.localMap);
     adapterReport.warnings = collectWarnings(adapterReport, sanity, conservation, flowReport);
 
     if adapterConfig.debugKeepStateHistory
@@ -135,6 +137,8 @@ function [terminalLocalStates, report] = runValidationOnly(tempCase, params, con
         "unitBasis", "not_evaluated_validation_only", ...
         "reason", "validationOnly mode checks the AD&PP->BF contract without integrating dynamics");
     report.sanity = computeSanityFromPayloads(params, terminalLocalStates, pressure);
+    report.terminalPhysicalStateChecksums = ...
+        computeYangPhysicalStateChecksums(params, terminalLocalStates, tempCase.localMap);
     report.warnings = [
         "validationOnly mode did not integrate AD&PP->BF dynamics"
         report.sanity.warnings(:)

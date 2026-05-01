@@ -18,6 +18,7 @@ function params = buildYangH2Co2AcTemplateParams(varargin)
     addParameter(parser, "CycleTimeSec", [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isfinite(x) && x > 0));
     addParameter(parser, "SolverTolerances", defaultYangSolverTolerances(), @(x) isstruct(x));
     addParameter(parser, "ReferenceTemperatureK", [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isfinite(x) && x > 0));
+    addParameter(parser, "FinalizeForRuntime", false, @(x) islogical(x) && isscalar(x));
     parse(parser, varargin{:});
     opts = parser.Results;
 
@@ -148,6 +149,10 @@ function params = buildYangH2Co2AcTemplateParams(varargin)
         "noSharedHeaderInventory", true, ...
         "noFourBedRhsDae", true, ...
         "noCoreAdsorberPhysicsRewrite", true);
+
+    if opts.FinalizeForRuntime
+        params = finalizeYangH2Co2AcTemplateParams(params);
+    end
 end
 
 function tol = defaultYangSolverTolerances()

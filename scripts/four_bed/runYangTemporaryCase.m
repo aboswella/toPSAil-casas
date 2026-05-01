@@ -5,6 +5,7 @@ function [terminalLocalStates, runReport] = runYangTemporaryCase(tempCase, varar
     addParameter(parser, 'Runner', "dry_run");
     addParameter(parser, 'RunnerFunction', []);
     addParameter(parser, 'TemplateParams', []);
+    addParameter(parser, 'Controls', []);
     addParameter(parser, 'DurationSeconds', []);
     addParameter(parser, 'DurationDimless', []);
     parse(parser, varargin{:});
@@ -61,26 +62,35 @@ function [terminalLocalStates, runReport] = runNative(tempCase, opts)
             'Runner "native" requires initialized TemplateParams.');
     end
 
-    durationValue = pickDuration(tempCase, opts.DurationSeconds, opts.DurationDimless);
-    if isempty(durationValue)
-        error('WP4:MissingDuration', ...
-            'Runner "native" requires DurationSeconds or DurationDimless; WP4 does not infer duration from source columns.');
-    end
-
-    params = injectYangLocalStatesIntoTemplateParams(opts.TemplateParams, tempCase, ...
+    [params, prepReport] = prepareYangNativeLocalRunParams(tempCase, opts.TemplateParams, ...
+        'Controls', opts.Controls, ...
         'DurationSeconds', opts.DurationSeconds, ...
         'DurationDimless', opts.DurationDimless);
-    tDom = [0, durationValue];
+    [tDom, timeReport] = resolveYangNativeTimeDomain(params, ...
+        'DurationSeconds', opts.DurationSeconds, ...
+        'DurationDimless', opts.DurationDimless, ...
+        'TempCase', tempCase);
     [stTime, stStates, flags] = runPsaCycleStep(params, params.initStates, tDom, 1, 1);
     [terminalLocalStates, counterTailReport] = extractYangTerminalLocalStates(params, stStates, tempCase);
+    counterTailDeltas = computeYangCounterTailDeltasFromStates( ...
+        params, stStates, tempCase.nLocalBeds);
 
     runReport = baseReport(tempCase, "native");
     runReport.didInvokeNative = true;
     runReport.callCount = 1;
+    runReport.localRunPreparation = prepReport;
+    runReport.durationSeconds = timeReport.durationSeconds;
+    runReport.durationDimless = timeReport.durationDimless;
+    runReport.timeBasis = timeReport.timeBasis;
+    runReport.durationSource = timeReport.durationSource;
     runReport.timeDomain = tDom;
     runReport.stTime = stTime;
+    runReport.stStates = stStates;
     runReport.flags = flags;
     runReport.counterTailReport = counterTailReport;
+    runReport.counterTailDeltas = counterTailDeltas;
+    runReport.counterTailBasis = "native_counter_tail_delta_from_stStates";
+    runReport.counterTailLayout = "first_nComs_feed_end_second_nComs_product_end";
     runReport.message = "native runner invoked existing toPSAil step machinery";
 end
 
@@ -112,18 +122,5 @@ function value = getOptionalReportField(report, fieldName, defaultValue)
     value = defaultValue;
     if isstruct(report) && isfield(report, char(fieldName))
         value = report.(char(fieldName));
-    end
-end
-
-function durationValue = pickDuration(tempCase, durationSeconds, durationDimless)
-    durationValue = [];
-    if ~isempty(durationDimless)
-        durationValue = durationDimless;
-    elseif ~isempty(durationSeconds)
-        durationValue = durationSeconds;
-    elseif isfield(tempCase.execution, 'durationDimless') && ~isempty(tempCase.execution.durationDimless)
-        durationValue = tempCase.execution.durationDimless;
-    elseif isfield(tempCase.execution, 'durationSeconds') && ~isempty(tempCase.execution.durationSeconds)
-        durationValue = tempCase.execution.durationSeconds;
     end
 end

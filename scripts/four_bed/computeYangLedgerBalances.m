@@ -29,11 +29,13 @@ function [balanceRows, summary] = computeYangLedgerBalances(ledger, varargin)
     summary.version = "WP5-Yang2009-ledger-balance-summary-v1";
     summary.pass = all(balanceRows.pass);
     summary.nBalanceRows = height(balanceRows);
-    if height(balanceRows) == 0
+    finiteResiduals = balanceRows.residual_moles(isfinite(balanceRows.residual_moles));
+    if height(balanceRows) == 0 || isempty(finiteResiduals)
         summary.maxAbsResidual = 0;
     else
-        summary.maxAbsResidual = max(abs(balanceRows.residual_moles));
+        summary.maxAbsResidual = max(abs(finiteResiduals));
     end
+    summary.nInvalidBasisRows = sum(~isfinite(balanceRows.residual_moles));
     summary.basis = "external_feed_minus_product_minus_waste_minus_bed_delta_and_internal_transfer_cancellation";
 end
 
@@ -55,6 +57,15 @@ function balanceRows = appendSlotExternalBalances(balanceRows, rows, componentNa
             rows.operation_group_id == keys.operation_group_id(k) & ...
             rows.stage_label == keys.stage_label(k) & ...
             rows.direct_transfer_family == keys.direct_transfer_family(k);
+        basisReport = checkYangLedgerPhysicalMoleCompatibility(rows(keyMask, :), ...
+            ["external_feed"; "external_product"; "external_waste"; "bed_inventory_delta"]);
+        if ~basisReport.pass
+            balanceRows = appendInvalidExternalBalanceRows(balanceRows, componentNames, ...
+                keys.cycle_index(k), keys.slot_index(k), "slot_external", ...
+                keys.operation_group_id(k), keys.stage_label(k), keys.direct_transfer_family(k), ...
+                "slot_external_physical_mole_basis_unavailable", basisReport.reason);
+            continue;
+        end
         for c = 1:numel(componentNames)
             component = componentNames(c);
             compMask = keyMask & rows.component == component;
@@ -79,6 +90,15 @@ function balanceRows = appendCycleExternalBalances(balanceRows, rows, componentN
     for k = 1:numel(cycles)
         cycleIndex = cycles(k);
         keyMask = rows.cycle_index == cycleIndex;
+        basisReport = checkYangLedgerPhysicalMoleCompatibility(rows(keyMask, :), ...
+            ["external_feed"; "external_product"; "external_waste"; "bed_inventory_delta"]);
+        if ~basisReport.pass
+            balanceRows = appendInvalidExternalBalanceRows(balanceRows, componentNames, ...
+                cycleIndex, NaN, "cycle_external", ...
+                "cycle_total", "all", "all", ...
+                "cycle_external_physical_mole_basis_unavailable", basisReport.reason);
+            continue;
+        end
         for c = 1:numel(componentNames)
             component = componentNames(c);
             compMask = keyMask & rows.component == component;
@@ -112,6 +132,15 @@ function balanceRows = appendInternalTransferBalances(balanceRows, rows, compone
             internalRows.operation_group_id == keys.operation_group_id(k) & ...
             internalRows.stage_label == keys.stage_label(k) & ...
             internalRows.direct_transfer_family == keys.direct_transfer_family(k);
+        basisReport = checkYangLedgerPhysicalMoleCompatibility(internalRows(keyMask, :), ...
+            "internal_transfer");
+        if ~basisReport.pass
+            balanceRows = appendInvalidInternalBalanceRows(balanceRows, componentNames, ...
+                keys.cycle_index(k), keys.slot_index(k), "slot_internal_transfer", ...
+                keys.operation_group_id(k), keys.stage_label(k), keys.direct_transfer_family(k), ...
+                "slot_internal_transfer_physical_mole_basis_unavailable", basisReport.reason);
+            continue;
+        end
         for c = 1:numel(componentNames)
             component = componentNames(c);
             compMask = keyMask & internalRows.component == component;
@@ -143,6 +172,28 @@ function tol = residualTolerance(values, absTol, relTol)
         scale = 0;
     end
     tol = absTol + relTol * scale;
+end
+
+function balanceRows = appendInvalidExternalBalanceRows(balanceRows, componentNames, ...
+        cycleIndex, slotIndex, balanceScope, operationGroupId, stageLabel, ...
+        directTransferFamily, basis, reason)
+    for c = 1:numel(componentNames)
+        balanceRows = appendBalanceRow(balanceRows, ...
+            cycleIndex, slotIndex, balanceScope, operationGroupId, stageLabel, ...
+            directTransferFamily, componentNames(c), NaN, NaN, NaN, NaN, 0, 0, ...
+            NaN, 0, basis, "invalid balance: " + string(reason));
+    end
+end
+
+function balanceRows = appendInvalidInternalBalanceRows(balanceRows, componentNames, ...
+        cycleIndex, slotIndex, balanceScope, operationGroupId, stageLabel, ...
+        directTransferFamily, basis, reason)
+    for c = 1:numel(componentNames)
+        balanceRows = appendBalanceRow(balanceRows, ...
+            cycleIndex, slotIndex, balanceScope, operationGroupId, stageLabel, ...
+            directTransferFamily, componentNames(c), 0, 0, 0, 0, NaN, NaN, ...
+            NaN, 0, basis, "invalid balance: " + string(reason));
+    end
 end
 
 function balanceRows = appendBalanceRow(balanceRows, cycleIndex, slotIndex, balanceScope, ...

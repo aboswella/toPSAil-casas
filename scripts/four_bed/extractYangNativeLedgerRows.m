@@ -13,7 +13,7 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
     addParameter(parser, 'CycleIndex', NaN);
     addParameter(parser, 'OperationGroupId', getGroupField(group, 'operationGroupId', "not_supplied"));
     addParameter(parser, 'ComponentNames', getFieldOrDefault(controls, 'componentNames', ["H2"; "CO2"]));
-    addParameter(parser, 'CounterSignPolicy', "nonnegative_cumulative_amounts");
+    addParameter(parser, 'CounterSignPolicy', "signed_native_boundary_convention");
     parse(parser, varargin{:});
     opts = parser.Results;
 
@@ -34,13 +34,13 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
         'DirectTransferFamily', string(group.directTransferFamily), ...
         'Basis', "native_counter_tail_delta", ...
         'Units', "native_integrated_units", ...
-        'Notes', "FI-7 native ledger extraction from column counter tails"};
+        'Notes', "FI-7 native ledger extraction from signed column counter tails"};
 
     switch family
         case "AD"
             [feedTail, productTail] = splitCounterTail(templateParams, counterDeltas{1});
-            assertNonnegative(feedTail, "AD feed-end counter", opts.CounterSignPolicy);
-            assertNonnegative(productTail, "AD product-end counter", opts.CounterSignPolicy);
+            feedTail = counterAmount(feedTail, -1, "AD feed-end counter", opts.CounterSignPolicy);
+            productTail = counterAmount(productTail, -1, "AD product-end counter", opts.CounterSignPolicy);
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, feedTail, ...
                 common, localMap, 1, "external_feed", "in", "feed_end");
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, productTail, ...
@@ -48,7 +48,7 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
 
         case "BD"
             [feedTail, ~] = splitCounterTail(templateParams, counterDeltas{1});
-            assertNonnegative(feedTail, "BD feed-end waste counter", opts.CounterSignPolicy);
+            feedTail = counterAmount(feedTail, 1, "BD feed-end waste counter", opts.CounterSignPolicy);
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, feedTail, ...
                 common, localMap, 1, "external_waste", "out", "feed_end");
 
@@ -59,8 +59,10 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
             end
             [~, donorProduct] = splitCounterTail(templateParams, counterDeltas{1});
             [~, receiverProduct] = splitCounterTail(templateParams, counterDeltas{2});
-            assertNonnegative(donorProduct, family + " donor product-end counter", opts.CounterSignPolicy);
-            assertNonnegative(receiverProduct, family + " receiver product-end counter", opts.CounterSignPolicy);
+            donorProduct = counterAmount(donorProduct, -1, ...
+                family + " donor product-end counter", opts.CounterSignPolicy);
+            receiverProduct = counterAmount(receiverProduct, 1, ...
+                family + " receiver product-end counter", opts.CounterSignPolicy);
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, donorProduct, ...
                 common, localMap, 1, "internal_transfer", "out_of_donor", "product_end");
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, receiverProduct, ...
@@ -78,6 +80,8 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
     nativeLedgerReport.counterTailLayout = ...
         "first_nComs_feed_end_second_nComs_product_end_from_getRhsFuncVals";
     nativeLedgerReport.counterSignPolicy = string(opts.CounterSignPolicy);
+    nativeLedgerReport.counterSignConvention = ...
+        "feed counter positive out of feed end; product counter positive into product end; ledger amounts use absolute signed deltas by default";
     nativeLedgerReport.nRows = height(rows);
     nativeLedgerReport.basis = "native_counter_tail_delta";
 end
@@ -162,14 +166,21 @@ function [feedTail, productTail] = splitCounterTail(params, tail)
     productTail = tail(params.nComs+1:end);
 end
 
-function assertNonnegative(values, label, policy)
+function amount = counterAmount(values, expectedSign, label, policy)
+    values = values(:);
     if string(policy) == "allow_signed"
+        amount = abs(values);
         return;
     end
-    if any(values(:) < -1e-12)
+    if string(policy) == "signed_native_boundary_convention"
+        amount = abs(values);
+        return;
+    end
+    if any(values < -1e-12)
         error('FI7:NativeCounterSignMismatch', ...
             '%s contains negative counter deltas under nonnegative policy.', char(label));
     end
+    amount = values;
 end
 
 function tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, amounts, common, localMap, localIndex, scope, direction, endpoint)

@@ -94,6 +94,10 @@ function simReport = runYangFourBedSimulation(initialContainer, templateParams, 
         'AbsTol', controls.balanceAbsTol, ...
         'RelTol', controls.balanceRelTol);
     metrics = computeYangPerformanceMetrics(ledger);
+    runCompleted = true;
+    cssPass = ~isempty(cssHistory) && logical(cssHistory.pass(end));
+    metricsPass = isempty(metrics.rows) || all(metrics.rows.pass);
+    acceptancePass = runCompleted && cssPass && balanceSummary.pass && metricsPass;
 
     simReport = struct();
     simReport.version = "FI6-FI7-Yang2009-four-bed-simulation-report-v1";
@@ -105,7 +109,13 @@ function simReport = runYangFourBedSimulation(initialContainer, templateParams, 
     simReport.metrics = metrics;
     simReport.balanceSummary = balanceSummary;
     simReport.stopReason = stopReason;
-    simReport.pass = isempty(cssHistory) || cssHistory.pass(end);
+    simReport.runCompleted = runCompleted;
+    simReport.cssPass = cssPass;
+    simReport.metricsPass = metricsPass;
+    simReport.acceptancePass = acceptancePass;
+    simReport.pass = acceptancePass;
+    simReport.acceptanceBasis = ...
+        "runCompleted && cssPass && physical-mole ledger balances pass && metrics pass";
     simReport.warnings = warnings(strlength(warnings) > 0);
     simReport.architecture = struct( ...
         "noDynamicInternalTanks", true, ...

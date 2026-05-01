@@ -18,6 +18,7 @@ function controls = normalizeYangFourBedControls(controlsIn, templateParams)
 
     controls.Cv_EQI = getNumericField(controlsIn, 'Cv_EQI', NaN, true);
     controls.Cv_EQII = getNumericField(controlsIn, 'Cv_EQII', NaN, true);
+    controls.Cv_AD_feed = getNumericField(controlsIn, 'Cv_AD_feed', NaN, true);
     controls.Cv_PP_PU_internal = getNumericField(controlsIn, 'Cv_PP_PU_internal', NaN, true);
     controls.Cv_PU_waste = getNumericField(controlsIn, 'Cv_PU_waste', NaN, true);
     controls.Cv_ADPP_feed = getNumericField(controlsIn, 'Cv_ADPP_feed', NaN, true);
