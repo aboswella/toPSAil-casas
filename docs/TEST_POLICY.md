@@ -4,15 +4,16 @@
 
 Use a small number of discriminating tests.
 
-Do not add diagnostics unless they catch a named failure mode from `docs/workflow/four_bed_issue_register.csv` or a task-specific risk.
+Do not add diagnostics unless they catch a named final-implementation risk, a
+legacy issue-register failure mode that still applies, or a task-specific risk.
 
-## Test Tiers
+## Active Test Tiers
 
 ### Tier 0: toPSAil Baseline Smoke
 
 Purpose:
 
-- confirm the fork still runs before wrapper modifications.
+- confirm the fork still runs before wrapper or adapter modifications.
 
 Pass criteria:
 
@@ -24,19 +25,35 @@ Pass criteria:
 
 Purpose:
 
-- ensure Yang schedule metadata is transcribed and represented correctly.
+- ensure Yang schedule metadata and final executable timing policy are represented
+  correctly.
 
 Examples:
 
 - manifest row counts;
 - bed `A/B/C/D` sequences;
 - operation labels;
-- duration parsing and normalization;
+- raw duration labels preserved;
+- normalized slot duration helper;
 - pressure classes;
 - architecture flags;
-- layered-bed capability audit.
+- no dynamic tank/header inventory guard.
 
-### Unit: Pair, State, And Case-Builder Checks
+### Parameter: H2/CO2 AC Surrogate
+
+Purpose:
+
+- ensure the final surrogate parameter pack matches the active model basis.
+
+Examples:
+
+- component order `[H2; CO2]`;
+- binary-renormalized feed;
+- activated-carbon-only homogeneous basis;
+- native DSL mapping smoke tests;
+- explicit exclusion of zeolite, CO, CH4, pseudo-components, and layered beds.
+
+### Unit: Pair, State, Case-Builder, And Adapter Checks
 
 Purpose:
 
@@ -46,38 +63,43 @@ Examples:
 
 - direct-transfer pair completeness;
 - donor/receiver direction;
-- persistent state writeback;
+- physical-state-only writeback;
+- counter-tail extraction;
 - non-participant state preservation;
 - temporary case isolation;
-- endpoint and flow-direction checks.
+- endpoint and flow-direction checks;
+- PP->PU and AD&PP->BF adapter conservation.
 
 ### Sanity/Integration: Conservation And Ledgers
 
 Purpose:
 
-- catch accounting, inventory, and boundary failures before full Yang pilots.
+- catch accounting, inventory, pressure, and boundary failures before full
+  surrogate pilots.
 
 Examples:
 
 - pair-local conservation;
 - slot-level component balance;
 - external/internal ledger separation;
-- CSS residual shape;
+- pressure endpoint diagnostics;
+- all-bed physical-state CSS residual shape;
 - finite pressure, temperature, flow, and composition outputs.
 
-### Pilot Validation: Yang Skeleton
+### Pilot Validation: Normalized Yang Surrogate
 
 Purpose:
 
-- compare fixed-duration wrapper behaviour to the source schedule only after earlier gates pass.
+- exercise the fixed-duration H2/CO2 AC surrogate after earlier gates pass.
 
-These are not default smoke tests unless explicitly lightweight and listed as default in `docs/workflow/four_bed_test_matrix.csv`.
+These are not default smoke tests unless explicitly lightweight.
 
 ### Later Extensions
 
 Purpose:
 
-- sensitivity, optimization, event policy, tank/header variants, or generalized-PFD work only after the fixed-duration wrapper is stable.
+- sensitivity, optimization, event policy, tank/header variants, or generalized
+  PFD work only after the fixed-duration wrapper is stable.
 
 Never run by default.
 
@@ -93,7 +115,8 @@ run("scripts/run_equation_tests.m");
 run("scripts/run_sanity_tests.m");
 ```
 
-The default smoke command must not hide long validation, sensitivity, optimization, or event-policy runs.
+The default smoke command must not hide long validation, sensitivity,
+optimization, or event-policy runs.
 
 ## Hard Failures
 
@@ -106,9 +129,12 @@ Hard failures include:
 - invalid mole fractions;
 - mole fractions not summing to acceptable tolerance;
 - source transcription mismatch;
+- executable duration fractions not summing to one;
 - state writeback to the wrong named bed;
 - non-participant bed state mutation;
+- cumulative counter tails persisted as bed physical state;
 - missing direct-transfer partner;
+- PP->PU or AD&PP->BF adapter conservation failure;
 - internal transfer counted as external product;
 - non-conservation in closed systems beyond tolerance.
 
@@ -128,7 +154,12 @@ Soft failures should be reported, not automatically patched by changing physics.
 Every new test must state:
 
 - test tier;
+- final implementation item or batch protected;
 - named failure mode caught;
 - source or policy basis;
 - required runtime class;
 - whether it is included in default smoke.
+
+Legacy test IDs from `docs/workflow/four_bed_test_matrix.csv` may be retained for
+traceability when they still match the active failure mode. They do not define
+new active scope by themselves.

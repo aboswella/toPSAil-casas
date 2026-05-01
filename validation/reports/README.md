@@ -18,6 +18,14 @@ Every report must include:
 - interpretation;
 - unresolved uncertainties.
 
-Yang four-bed reports must also state the fixed-duration/direct-coupling assumption, no dynamic internal tank/header assumption, event policy, layered-bed support status, external/internal ledger basis, and all-bed CSS basis.
+Yang four-bed reports must also state the fixed-duration/direct-coupling
+assumption, no dynamic internal tank/header assumption, event policy,
+homogeneous-surrogate or layered-bed status, external/internal ledger basis, and
+all-bed CSS basis.
+
+For the active final surrogate, reports must additionally state the H2/CO2 feed
+renormalization, activated-carbon-only homogeneous basis, normalized schedule
+duration policy, and whether any legacy WP labels are being used only for
+traceability.
 
 Large generated artifacts should remain untracked unless the task explicitly asks to commit them.

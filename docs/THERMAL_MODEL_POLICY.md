@@ -2,9 +2,12 @@
 
 ## Default
 
-Do not assume adiabatic operation by default for Yang four-bed comparisons.
+Do not claim a physically faithful Yang reproduction for the active final
+implementation.
 
-Yang uses non-isothermal dynamics and layered beds. The wrapper can be architecturally correct while still being only a physical surrogate if thermal or layered-bed support is incomplete.
+Yang uses non-isothermal layered beds. The active target is a homogeneous
+activated-carbon H2/CO2 surrogate. Thermal behaviour must be documented for each
+case or report, and any mismatch with Yang must be treated as a model limitation.
 
 ## Required Modes And Labels
 
@@ -13,21 +16,35 @@ Every case or pilot report must label its thermal mode, such as:
 - finite wall heat transfer;
 - adiabatic sensitivity case;
 - fixed-wall or isothermal approximation;
-- thermal mode not yet exercised in a static manifest task.
+- thermal mode not yet exercised in a static or parameter-pack task.
 
-If the mode depends on a missing parameter, stop and record the uncertainty instead of silently choosing a value.
+If the mode depends on a missing parameter, stop and record the uncertainty
+instead of silently choosing a value.
 
-## Layered-Bed Requirement
+## Homogeneous Surrogate Requirement
 
-WP1 must audit layered-bed capability but must not implement layered-bed physics.
+The first final implementation deliberately excludes:
 
-Allowed WP1 audit outcomes:
+- zeolite 5A;
+- layered activated carbon plus zeolite beds;
+- CO and CH4;
+- pseudo-impurity or inert placeholder components.
 
-- layered support confirmed;
-- layered support not confirmed, homogeneous surrogate required;
-- audit blocked by a missing interface or source ambiguity.
+Run metadata must state that the active model is a homogeneous
+activated-carbon-only surrogate.
 
-Do not describe a homogeneous surrogate as physically faithful to Yang layered beds.
+## Layered-Bed Position
+
+Layered-bed support may remain historically relevant for later model-expansion
+work, but it is not part of the active final surrogate. Do not add layered-bed
+physics under a final implementation batch unless the user explicitly changes
+the target.
+
+Allowed current positions:
+
+- homogeneous activated-carbon surrogate;
+- layered-bed support not used in this final implementation;
+- layered-bed capability noted only as a limitation or later extension.
 
 ## Sensitivity Variables
 
@@ -40,15 +57,18 @@ Later sensitivity analysis may consider:
 - gas heat capacity model;
 - column radius;
 - superficial velocity;
-- layer material assignment.
+- valve coefficients;
+- cycle time;
+- feed velocity.
 
-Sensitivity analysis is not part of WP1.
+Sensitivity analysis is not part of default smoke or baseline commissioning
+unless the task explicitly asks for optimization-readiness checks.
 
 ## Documentation Rule
 
-Every case spec, manifest, or validation report must state:
+Every case spec, manifest, adapter audit, or validation report must state:
 
 - thermal mode;
-- layered-bed support status;
+- homogeneous activated-carbon surrogate status;
 - known physical-model mismatches;
-- whether the output is a schedule/wrapper test or a physical comparison.
+- whether the output is a schedule/wrapper/adapter test or a physical comparison.

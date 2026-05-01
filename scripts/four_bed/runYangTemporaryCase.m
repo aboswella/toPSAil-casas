@@ -72,7 +72,7 @@ function [terminalLocalStates, runReport] = runNative(tempCase, opts)
         'DurationDimless', opts.DurationDimless);
     tDom = [0, durationValue];
     [stTime, stStates, flags] = runPsaCycleStep(params, params.initStates, tDom, 1, 1);
-    terminalLocalStates = extractYangTerminalLocalStates(params, stStates, tempCase);
+    [terminalLocalStates, counterTailReport] = extractYangTerminalLocalStates(params, stStates, tempCase);
 
     runReport = baseReport(tempCase, "native");
     runReport.didInvokeNative = true;
@@ -80,6 +80,7 @@ function [terminalLocalStates, runReport] = runNative(tempCase, opts)
     runReport.timeDomain = tDom;
     runReport.stTime = stTime;
     runReport.flags = flags;
+    runReport.counterTailReport = counterTailReport;
     runReport.message = "native runner invoked existing toPSAil step machinery";
 end
 

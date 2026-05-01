@@ -4,7 +4,7 @@ Manifests define validation intent before validation runs are interpreted.
 
 Each manifest should state:
 
-- case or work-package name;
+- case name and final implementation item or batch;
 - source basis;
 - model mode;
 - manifest and pair-map version, when applicable;
@@ -17,12 +17,16 @@ Each manifest should state:
 
 For Yang four-bed work, manifests must also state:
 
+- H2/CO2 renormalization basis;
+- homogeneous activated-carbon surrogate status;
 - direct-coupling assumption;
 - no dynamic internal tank/header assumption;
 - event policy;
-- layered-bed support status;
 - external/internal ledger basis;
 - all-bed CSS basis.
+
+Legacy WP labels may be included only for traceability. They do not define active
+validation scope.
 
 Do not change validation targets or thresholds in the same task as physics, numerics, metrics, or parameter changes.
 

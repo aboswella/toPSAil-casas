@@ -1,8 +1,9 @@
 Task ID:
-readonly-yang-branch-audit
+readonly-yang-final-audit
 
 Goal:
-Audit the toPSAil fork and identify the smallest safe next Yang four-bed task.
+Audit the toPSAil fork and identify the smallest safe next final Yang
+four-bed task.
 
 Allowed files:
 - none; run in read-only mode.
@@ -24,6 +25,11 @@ Required reading:
 - docs/KNOWN_UNCERTAINTIES.md
 - docs/REPORT_POSITIONING.md
 - docs/GIT_WORKFLOW.md
+- docs/four_bed/README.md
+- docs/four_bed/FINAL_IMPLEMENTATION_CONTEXT.md
+- relevant active batch guide under docs/four_bed/, if one exists
+
+Legacy reading, only if needed for historical rationale or contradiction checks:
 - docs/workflow/four_bed_project_context_file_map.txt
 - docs/workflow/four_bed_executive_summary.csv
 - docs/workflow/four_bed_work_packages.csv
@@ -36,8 +42,10 @@ Required reading:
 - docs/workflow/Work package guidance docs/WP1_yang_schedule_manifest_guidance.md
 
 Find:
-- whether agent-facing files still route future work toward retired Casas/Schell/Delgado validation tasks;
-- whether the available infrastructure preserves the no-tank, no-header, no-global-four-bed-RHS wrapper architecture;
+- whether agent-facing files still route future work toward retired WP1-WP5 tasks;
+- which final batch or FI item is the smallest safe next step;
+- whether the available infrastructure preserves the no-tank, no-header,
+  no-global-four-bed-RHS wrapper architecture;
 - how to run original toPSAil examples;
 - where isotherms are implemented;
 - where kinetics are implemented;
@@ -45,15 +53,15 @@ Find:
 - where boundary conditions are implemented;
 - where CSS convergence is checked;
 - where performance metrics are computed;
-- whether layered beds or spatially varying adsorbent properties are natively supported;
-- whether existing paired-bed machinery can be invoked through wrapper-level calls.
+- whether existing paired-bed machinery can be invoked through wrapper-level calls;
+- which current files already implement Batch 1 or Batch 2 scope.
 
 Return:
 1. files inspected;
 2. answers to each audit question with file references;
 3. whether core edits appear necessary for the next stage;
 4. risks and uncertainties;
-5. recommended smallest next task.
+5. recommended smallest next final-batch task.
 
 Do not propose broad rewrites.
 Do not edit files.

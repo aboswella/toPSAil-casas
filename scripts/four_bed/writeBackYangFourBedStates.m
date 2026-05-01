@@ -6,6 +6,7 @@ function [updatedContainer, report] = writeBackYangFourBedStates(container, sele
 
     parser = inputParser;
     addParameter(parser, 'UpdateNote', "not_supplied");
+    addParameter(parser, 'Params', []);
     parse(parser, varargin{:});
     opts = parser.Results;
 
@@ -45,9 +46,13 @@ function [updatedContainer, report] = writeBackYangFourBedStates(container, sele
     end
 
     updatedContainer = container;
+    counterTailStripped = false(nLocal, 1);
+    persistentPayloads = cell(nLocal, 1);
     for i = 1:nLocal
         fieldName = targetFields(i);
-        updatedContainer.(char(fieldName)) = terminalLocalStates{i};
+        [persistentPayloads{i}, counterTailStripped(i)] = normalizePersistentPayload( ...
+            terminalLocalStates{i}, opts.Params);
+        updatedContainer.(char(fieldName)) = persistentPayloads{i};
     end
 
     nextWritebackIndex = getNextWritebackIndex(updatedContainer.writebackLog);
@@ -60,10 +65,118 @@ function [updatedContainer, report] = writeBackYangFourBedStates(container, sele
     report.updatedStateFields = targetFields;
     report.updatedBedLabels = string(localMap.global_bed);
     report.unchangedStateFields = setdiff(string(container.stateFields(:)), targetFields, 'stable');
+    report.persistedPayloads = persistentPayloads;
+    report.counterTailStripped = counterTailStripped;
+    report.persistencePolicy = "physical_adsorber_state_only_no_boundary_counter_tails";
     report.writebackIndex = nextWritebackIndex;
     report.selectionType = string(selection.selectionType);
     report.pairId = string(selection.pairId);
     report.directTransferFamily = string(selection.directTransferFamily);
+end
+
+function [persistentPayload, counterTailStripped] = normalizePersistentPayload(payload, params)
+    counterTailStripped = false;
+    if isempty(params)
+        [persistentPayload, counterTailStripped] = normalizeWithoutParams(payload);
+    else
+        validateParams(params);
+        [persistentPayload, counterTailStripped] = normalizeWithParams(payload, params);
+    end
+end
+
+function [persistentPayload, counterTailStripped] = normalizeWithoutParams(payload)
+    counterTailStripped = false;
+    persistentPayload = payload;
+
+    if isnumeric(payload)
+        error('WP3:MissingParamsForStateVector', ...
+            'Numeric terminal states require Params so writeback can verify physical length.');
+    end
+
+    if ~isstruct(payload)
+        return;
+    end
+
+    if isfield(payload, 'physicalStateVector')
+        physicalVector = validateVector(payload.physicalStateVector);
+        persistentPayload.stateVector = physicalVector;
+        persistentPayload.physicalStateVector = physicalVector;
+        return;
+    end
+
+    if isfield(payload, 'stateVector')
+        payloadType = "";
+        if isfield(payload, 'payloadType')
+            payloadType = string(payload.payloadType);
+        end
+        if payloadType == "yang_physical_adsorber_state_v1"
+            persistentPayload.stateVector = validateVector(payload.stateVector);
+            persistentPayload.physicalStateVector = persistentPayload.stateVector;
+        else
+            error('WP3:MissingParamsForStateVector', ...
+                'Terminal payloads with stateVector require physicalStateVector, a physical payloadType, or Params.');
+        end
+    end
+end
+
+function [persistentPayload, counterTailStripped] = normalizeWithParams(payload, params)
+    counterTailStripped = false;
+
+    if isnumeric(payload)
+        counterTailStripped = numel(payload) == params.nColStT && params.nColStT > params.nColSt;
+        persistentPayload = extractYangPhysicalBedState(params, payload);
+        return;
+    end
+
+    if ~isstruct(payload)
+        persistentPayload = payload;
+        return;
+    end
+
+    if isfield(payload, 'physicalStateVector')
+        physicalVector = validateVector(payload.physicalStateVector);
+        if numel(physicalVector) ~= params.nColSt
+            error('WP3:PhysicalStateLengthMismatch', ...
+                'physicalStateVector has %d entries; expected nColSt = %d.', ...
+                numel(physicalVector), params.nColSt);
+        end
+        persistentPayload = payload;
+        persistentPayload.stateVector = physicalVector;
+        persistentPayload.physicalStateVector = physicalVector;
+        return;
+    end
+
+    if isfield(payload, 'stateVector')
+        stateVector = validateVector(payload.stateVector);
+        counterTailStripped = numel(stateVector) == params.nColStT && params.nColStT > params.nColSt;
+        persistentPayload = extractYangPhysicalBedState(params, payload);
+    else
+        persistentPayload = payload;
+    end
+end
+
+function validateParams(params)
+    if ~isstruct(params) || ~isfield(params, 'nColSt') || ~isfield(params, 'nColStT')
+        error('WP3:InvalidParams', ...
+            'Params must include nColSt and nColStT for physical writeback validation.');
+    end
+
+    validateattributes(params.nColSt, {'numeric'}, ...
+        {'scalar', 'integer', 'positive'}, mfilename, 'params.nColSt');
+    validateattributes(params.nColStT, {'numeric'}, ...
+        {'scalar', 'integer', 'positive'}, mfilename, 'params.nColStT');
+    if params.nColStT < params.nColSt
+        error('WP3:InvalidParams', ...
+            'params.nColStT must be greater than or equal to params.nColSt.');
+    end
+end
+
+function stateVector = validateVector(stateVector)
+    if ~isnumeric(stateVector) || ~isvector(stateVector)
+        error('WP3:UnsupportedStatePayload', ...
+            'State payload vectors must be numeric vectors.');
+    end
+    stateVector = stateVector(:);
 end
 
 function validateSelection(selection)

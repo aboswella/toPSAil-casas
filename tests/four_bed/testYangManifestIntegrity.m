@@ -32,7 +32,12 @@ function testYangManifestIntegrity()
 
     assert(manifest.duration.rawUnitsPerDisplayedCycle == 25);
     assert(abs(manifest.duration.rawSumFractionOfTc - 25/24) < 1e-12);
+    assert(isequal(manifest.duration.executableUnits(:), [1; 6; 1; 4; 1; 1; 4; 1; 1; 5]));
+    assert(abs(sum(manifest.duration.executableFractions) - 1) < 1e-12);
+    assert(manifest.duration.normalizationPolicy == "execute_normalized_displayed_cycle_units_over_25");
+    assert(contains(manifest.duration.cycleTimeMappingPolicy, "executableFractions"));
     assert(abs(sum(manifest.sourceColumns.normalized_fraction_of_displayed_cycle) - 1) < 1e-12);
+    assert(abs(sum(manifest.sourceColumns.executable_duration_fraction) - 1) < 1e-12);
 
     forbiddenPartnerVars = [
         "partner_bed"

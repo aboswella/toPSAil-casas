@@ -9,6 +9,7 @@ fprintf('Running sanity/unit tests...\n');
 testYangFourBedStateContainerShape();
 testYangFourBedWritebackOnlyParticipants();
 testYangFourBedCrossedPairRoundTrip();
+testYangPhysicalStatePersistenceCleanup();
 
 scriptDir = fileparts(mfilename('fullpath'));
 run(fullfile(scriptDir, "run_case_builder_tests.m"));

@@ -8,6 +8,8 @@ Forbidden files:
 
 Source basis:
 
+Active final implementation item or batch:
+
 Preconditions:
 
 Required implementation:

@@ -1,4 +1,10 @@
-# WP1 Codex Guidance: Yang Four-Bed Schedule Manifest for toPSAil
+# Legacy WP1 Codex Guidance: Yang Four-Bed Schedule Manifest for toPSAil
+
+Legacy notice: this document is retained for historical context only. The active
+final implementation plan is FI-1 through FI-8, routed through
+`docs/four_bed/FINAL_IMPLEMENTATION_CONTEXT.md` and the current batch guides.
+Do not use this file as active implementation scope unless the user explicitly
+asks for legacy WP1 review.
 
 ## 0. Purpose of this document
 

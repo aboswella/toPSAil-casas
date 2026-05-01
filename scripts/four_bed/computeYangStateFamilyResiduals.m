@@ -12,9 +12,17 @@ function rows = computeYangStateFamilyResiduals(initialState, finalState, vararg
     opts = parser.Results;
 
     rows = makeEmptyRows();
+    params = normalizeParams(opts.Params);
+    boundaryCountersExcluded = payloadHasNativeCounterTail(initialState, params) || ...
+        payloadHasNativeCounterTail(finalState, params);
     try
-        initialVector = extractYangStateVector(initialState);
-        finalVector = extractYangStateVector(finalState);
+        if isempty(params) || ~isstruct(params) || ~isfield(params, 'nColSt')
+            initialVector = extractYangStateVector(initialState);
+            finalVector = extractYangStateVector(finalState);
+        else
+            initialVector = extractYangStateVector(initialState, 'Params', params);
+            finalVector = extractYangStateVector(finalState, 'Params', params);
+        end
     catch err
         rows = appendResidualRow(rows, opts, "unsupported_payload", 0, NaN, NaN, NaN, false, ...
             "Unsupported CSS payload: " + string(err.message));
@@ -27,7 +35,6 @@ function rows = computeYangStateFamilyResiduals(initialState, finalState, vararg
         return;
     end
 
-    params = opts.Params;
     if isempty(params)
         rows = appendFamilyResidual(rows, opts, "state_vector", initialVector, finalVector, 1:numel(initialVector), ...
             "State-vector residual without toPSAil family split.");
@@ -91,10 +98,49 @@ function rows = computeYangStateFamilyResiduals(initialState, finalState, vararg
     rows = appendFamilyResidual(rows, opts, "wall_temperature", initialVector, finalVector, wallTempIdx, ...
         "Wall temperature CSS residual.");
 
-    if numel(initialVector) >= persistentLength + boundaryLength
+    if boundaryCountersExcluded
         rows = appendResidualRow(rows, opts, "boundary_cumulative_flow_excluded", boundaryLength, ...
             0, 0, 0, true, ...
             "Trailing cumulative boundary-flow counters are excluded from CSS residuals.");
+    end
+end
+
+function params = normalizeParams(params)
+    if isempty(params) || ~isstruct(params)
+        return;
+    end
+
+    if isfield(params, 'nColSt')
+        return;
+    end
+
+    if isfield(params, 'nStates') && isfield(params, 'nVols')
+        params.nColSt = params.nStates * params.nVols;
+    elseif isfield(params, 'nColStT') && isfield(params, 'nComs')
+        params.nColSt = params.nColStT - 2 * params.nComs;
+    end
+end
+
+function tf = payloadHasNativeCounterTail(payload, params)
+    tf = false;
+    if isempty(params) || ~isstruct(params) || ...
+            ~isfield(params, 'nColSt') || ~isfield(params, 'nColStT') || ...
+            params.nColStT <= params.nColSt
+        return;
+    end
+
+    nValues = payloadVectorLength(payload);
+    tf = nValues == params.nColStT;
+end
+
+function nValues = payloadVectorLength(payload)
+    nValues = NaN;
+    if isnumeric(payload)
+        nValues = numel(payload);
+    elseif isstruct(payload) && isfield(payload, 'physicalStateVector')
+        nValues = numel(payload.physicalStateVector);
+    elseif isstruct(payload) && isfield(payload, 'stateVector')
+        nValues = numel(payload.stateVector);
     end
 end
 

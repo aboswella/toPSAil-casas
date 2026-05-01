@@ -2,20 +2,23 @@
 
 ## Project Purpose
 
-This repository is a fork of toPSAil used to implement and validate a MATLAB four-bed PSA workflow based on the Yang 2009 ten-step cycle.
+This repository is a fork of toPSAil used to implement and validate a MATLAB four-bed PSA workflow inspired by the Yang 2009 ten-step cycle.
 
-The current branch objective is a minimally invasive four-bed orchestration layer around existing toPSAil bed-step behaviour. It is not a rewrite of the adsorber physics or a new four-bed process-network solver.
+The current branch objective is the final implementation of a Yang-inspired H2/CO2 homogeneous activated-carbon surrogate. It remains a minimally invasive four-bed orchestration layer around existing toPSAil bed-step behaviour. It is not a full Yang layered four-component reproduction, a rewrite of the adsorber physics, or a new four-bed process-network solver.
 
-The project sequence is:
+The old WP1-WP5 sequence is complete or superseded. Treat the old work-package documents, prompts, and workflow CSVs as legacy context unless the user explicitly asks for legacy review.
+
+The active final implementation sequence is:
 
 1. Confirm unmodified toPSAil examples still run.
 2. Lock the four-bed architecture: no dynamic internal tanks, no shared header inventory, no global four-bed RHS/DAE, and no core adsorber-physics rewrite.
-3. Build WP1: the Yang schedule manifest, duration normalization, label glossary, pressure-class metadata, and layered-bed capability audit.
-4. Build WP2: explicit direct-transfer pair mapping.
-5. Build WP3: persistent named bed state storage for beds A, B, C, and D.
-6. Build WP4: temporary two-bed or single-bed case builders that invoke existing toPSAil machinery.
-7. Build WP5: external/internal ledgers, all-bed CSS reporting, and Yang-basis metrics.
-8. Consider event control, optimization, generalized PFD work, or tank/header extensions only after the fixed-duration direct-coupling path is stable.
+3. Batch 1 / FI-1 and FI-3: finalise normalized schedule execution and physical-state-only persistence.
+4. Batch 2 / FI-2: build the H2/CO2 activated-carbon surrogate parameter and case package.
+5. Batch 3 / FI-4: implement the PP->PU direct-coupling adapter.
+6. Batch 4 / FI-5: implement the AD&PP->BF direct-coupling adapter.
+7. Batch 5 / FI-6 and FI-7: implement the full four-bed cycle driver and wrapper ledger/audit extraction.
+8. Batch 6 / FI-8: commission with staged static, state, native smoke, adapter, ledger, cycle, CSS, and sensitivity-readiness tests.
+9. Consider event control, optimization, generalized PFD work, or tank/header extensions only after the fixed-duration direct-coupling path is stable.
 
 Correctness means:
 
@@ -47,7 +50,17 @@ Before editing code or project-control files, read:
 - `docs/REPORT_POSITIONING.md`
 - `docs/GIT_WORKFLOW.md`
 
-For Yang four-bed work, also read:
+For Yang four-bed work, also read the active final-context router first:
+
+- `docs/four_bed/README.md`
+- `docs/four_bed/FINAL_IMPLEMENTATION_CONTEXT.md`
+
+Then read the relevant active batch guide when it exists:
+
+- `docs/four_bed/batch_1_schedule_state_persistence_implementation_guide.md`
+- `docs/four_bed/batch_2_h2co2_ac_parameter_pack_implementation_guide.md`
+
+The older workflow files are legacy context. Read them only for historical rationale, risk cross-checking, old test IDs, or contradiction investigation:
 
 - `docs/workflow/four_bed_project_context_file_map.txt`
 - `docs/workflow/four_bed_executive_summary.csv`
@@ -58,16 +71,13 @@ For Yang four-bed work, also read:
 - `docs/workflow/four_bed_yang_manifest.csv`
 - `docs/workflow/four_bed_stage_gates.csv`
 - `docs/workflow/four_bed_evidence_notes.csv`
-
-For WP1 implementation, additionally read:
-
 - `docs/workflow/Work package guidance docs/WP1_yang_schedule_manifest_guidance.md`
 
 Before editing any case, also read that case's `case_spec.md`.
 
 Before editing any reusable Codex prompt, also read `docs/TASK_PROTOCOL.md`.
 
-Before transcribing source parameters or source-derived validation targets, read the relevant workflow file under `docs/workflow/` and the source ledger.
+Before transcribing source parameters or source-derived validation targets, read `docs/four_bed/FINAL_IMPLEMENTATION_CONTEXT.md`, the relevant case or parameter spec, the source ledger, and any legacy workflow file needed to understand the source provenance.
 
 ## Non-Negotiable Rules
 
@@ -128,46 +138,56 @@ For each cycle slot, the wrapper should select the relevant single bed or explic
 
 Internal Yang transfers are direct bed-to-bed couplings. They are not dynamic tanks, shared headers, external product streams, or global flowsheet inventory.
 
-Keep work-package boundaries clear:
+Keep final implementation batch boundaries clear:
 
-- WP1 owns schedule manifest metadata, label semantics, duration handling, pressure classes, and capability audit.
-- WP2 owns pair identities.
-- WP3 owns persistent state storage and writeback.
-- WP4 owns temporary case construction around existing toPSAil machinery.
-- WP5 owns ledgers, CSS, metrics, and reporting.
+- Batch 1 owns normalized schedule execution and physical-state-only persistence.
+- Batch 2 owns the H2/CO2 activated-carbon surrogate case and parameter package.
+- Batch 3 owns the PP->PU direct-coupling adapter and any common adapter API it establishes.
+- Batch 4 owns the AD&PP->BF direct-coupling adapter and split accounting.
+- Batch 5 owns the full four-bed cycle driver, wrapper ledger, audit extraction, and final external-basis metrics.
+- Batch 6 owns commissioning and acceptance tests.
+
+Legacy WP1-WP5 names may still appear in filenames, test IDs, version strings, and error IDs. Do not let those labels define new task scope.
 
 ## Source and Workflow Policy
 
-Use `docs/workflow/` as the first source of truth for branch planning, architecture, work packages, tests, stage gates, and issue registers.
+Use `docs/four_bed/FINAL_IMPLEMENTATION_CONTEXT.md` as the first source of truth for the active final implementation plan.
 
 Use `sources/Yang 2009 4-bed 10-step relevant.pdf` as the local literature artifact for source checks when a task explicitly requires source confirmation.
 
-Start with:
+Use `docs/workflow/` as legacy planning context only. It can help with historical architecture rationale, issue history, and old test mapping, but it no longer defines the active task sequence.
+
+Active four-bed work starts with:
+
+- `docs/four_bed/README.md`
+- `docs/four_bed/FINAL_IMPLEMENTATION_CONTEXT.md`
+- the relevant active batch guide, if one exists.
+
+Legacy lookup files:
 
 - `docs/workflow/four_bed_project_context_file_map.txt` for routing.
 - `docs/workflow/four_bed_executive_summary.csv` for the high-level architecture summary.
-- `docs/workflow/four_bed_work_packages.csv` for work-package scope.
+- `docs/workflow/four_bed_work_packages.csv` for legacy work-package scope.
 - `docs/workflow/four_bed_architecture_map.csv` for architecture constraints.
 - `docs/workflow/four_bed_issue_register.csv` before proposing fixes.
-- `docs/workflow/four_bed_test_matrix.csv` for required tests.
+- `docs/workflow/four_bed_test_matrix.csv` for legacy test IDs and risk mapping.
 - `docs/workflow/four_bed_yang_manifest.csv` for the source schedule skeleton.
-- `docs/workflow/four_bed_stage_gates.csv` for development order.
+- `docs/workflow/four_bed_stage_gates.csv` for legacy development order.
 - `docs/workflow/four_bed_evidence_notes.csv` for source anchors and rationale.
 
 Open original PDFs only when a value is absent, internally inconsistent, or the task explicitly permits source lookup or source-reference correction.
 
 ## Thermal and Layered-Bed Policy
 
-Yang uses non-isothermal layered beds. Do not claim a physically faithful Yang reproduction until layered-bed capability and thermal assumptions have been audited and documented.
+Yang uses non-isothermal layered beds, but the active final target is a homogeneous activated-carbon H2/CO2 surrogate. Do not claim a physically faithful Yang reproduction for this final implementation.
 
 Allowed near-term positions:
 
-- layered-bed support confirmed,
-- homogeneous surrogate explicitly labelled,
+- homogeneous activated-carbon surrogate explicitly labelled,
 - thermal mode explicitly documented,
 - missing thermal or material parameters recorded as uncertainties.
 
-WP1 may audit layered-bed support but must not implement layered-bed physics.
+Do not implement layered-bed physics, zeolite 5A, CO, CH4, or pseudo-components in the first final implementation unless the user explicitly changes the project target.
 
 ## Testing Policy
 
@@ -176,10 +196,10 @@ Use the smallest meaningful test.
 Test tiers:
 
 - Tier 0: unchanged toPSAil baseline examples.
-- Static/source: Yang manifest, duration, label, pressure-class, architecture-flag, and layered-bed audit checks.
-- Unit: pair mapping, direct-transfer role, persistent state, and temporary case-builder checks.
-- Sanity/integration: conservation, external/internal ledgers, flow direction, and one-slot checks.
-- Pilot validation: fixed-duration Yang skeleton, all-bed CSS, and Yang-basis metrics after earlier gates pass.
+- Static/source: Yang manifest, duration, label, pressure-class, architecture-flag, and homogeneous-surrogate caveat checks.
+- Unit: pair mapping, direct-transfer role, physical-state persistence, temporary case-builder, and adapter checks.
+- Sanity/integration: conservation, external/internal ledgers, flow direction, pressure diagnostics, and one-slot checks.
+- Pilot validation: normalized fixed-duration Yang surrogate cycle, all-bed CSS, and external-basis H2/CO2 metrics after earlier gates pass.
 - Later extensions: sensitivity, optimization, event control, tank/header variants, or generalized PFD work.
 
 Default test commands must not hide long validation, sensitivity, optimization, or event-policy runs.
@@ -194,7 +214,7 @@ run("scripts/run_equation_tests.m");
 run("scripts/run_sanity_tests.m");
 ```
 
-Map new tests to `docs/workflow/four_bed_test_matrix.csv` and state which failure mode each test catches.
+Map new tests to the final implementation item or batch they protect. If a legacy test ID from `docs/workflow/four_bed_test_matrix.csv` still applies, keep it as historical traceability, but do not use the legacy matrix to expand active scope.
 
 ## Required Report After Every Task
 
@@ -222,7 +242,7 @@ Stop and report instead of editing if:
 - a test threshold would need to change,
 - MATLAB cannot run the required test,
 - the task requires full optimization,
-- the change would mix work-package responsibilities in a way that obscures review.
+- the change would mix final implementation batch responsibilities in a way that obscures review.
 
 ## MATLAB Commands
 

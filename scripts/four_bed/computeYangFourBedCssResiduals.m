@@ -82,5 +82,5 @@ function css = computeYangFourBedCssResiduals(initialContainer, finalContainer, 
         "absTol", opts.AbsTol, ...
         "relTol", opts.RelTol, ...
         "normType", string(opts.NormType));
-    css.notes = "All persistent named beds A/B/C/D are checked; temporary local cases alone are not CSS evidence.";
+    css.notes = "All persistent named beds A/B/C/D are checked over physical adsorber state only; temporary local cases and boundary counters are not CSS evidence.";
 end

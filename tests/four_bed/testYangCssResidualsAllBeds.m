@@ -10,7 +10,8 @@ function testYangCssResidualsAllBeds()
     params.nComs = 2;
     params.nVols = 2;
     params.nStates = 2*params.nComs + 2;
-    params.nColStT = params.nStates*params.nVols + 2*params.nComs;
+    params.nColSt = params.nStates*params.nVols;
+    params.nColStT = params.nColSt + 2*params.nComs;
 
     initial = makeContainer(manifest, pairMap, 0);
     finalFail = makeContainer(manifest, pairMap, 0);

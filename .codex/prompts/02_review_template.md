@@ -10,7 +10,7 @@ Check:
 5. Are the tests meaningful or tautological?
 6. Are any validation changes explained?
 7. For Yang four-bed work, did the changes preserve explicit direct transfers, no dynamic internal tanks, no shared header inventory, no global four-bed RHS/DAE, and no core adsorber-physics rewrite?
-8. For Yang four-bed work, did the changes keep WP1-WP5 ownership boundaries clear?
+8. For Yang four-bed work, did the changes keep final FI/batch ownership boundaries clear and treat WP1-WP5 materials as legacy?
 9. What should be reverted or split into a later task?
 10. What is the next smallest useful task?
 
