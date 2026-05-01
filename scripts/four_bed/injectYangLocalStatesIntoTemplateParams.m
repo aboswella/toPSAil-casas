@@ -22,7 +22,7 @@ function params = injectYangLocalStatesIntoTemplateParams(templateParams, tempCa
             'Cannot inject states into an invalid temporary case.');
     end
 
-    requiredFields = ["nCols", "nColStT", "initStates"];
+    requiredFields = ["nCols", "nColSt", "nColStT", "nComs", "initStates"];
     paramsFields = string(fieldnames(templateParams));
     missingFields = setdiff(requiredFields, paramsFields);
     if ~isempty(missingFields)
@@ -36,17 +36,32 @@ function params = injectYangLocalStatesIntoTemplateParams(templateParams, tempCa
     end
 
     params = templateParams;
+    counterTailLength = params.nColStT - params.nColSt;
+    expectedCounterTailLength = 2 * params.nComs;
+    if counterTailLength ~= expectedCounterTailLength
+        error('FI6:UnexpectedCounterTailLength', ...
+            'Native counter tail length is %d; expected 2*nComs = %d.', ...
+            counterTailLength, expectedCounterTailLength);
+    end
+
     initStates = params.initStates;
     if size(initStates, 1) ~= 1
         initStates = initStates(:).';
     end
 
+    injectionModes = strings(tempCase.nLocalBeds, 1);
     for i = 1:tempCase.nLocalBeds
         localStateVector = extractStateVector(tempCase.localStates{i});
-        if numel(localStateVector) ~= params.nColStT
+        if numel(localStateVector) == params.nColSt
+            localStateVector = [localStateVector(:); zeros(counterTailLength, 1)];
+            injectionModes(i) = "physical_state_with_zero_counter_tail_for_temporary_native_execution";
+        elseif numel(localStateVector) == params.nColStT
+            localStateVector = localStateVector(:);
+            injectionModes(i) = "native_length_state_supplied";
+        else
             error('WP4:LocalStateLengthMismatch', ...
-                'Local state %d has %d entries; expected nColStT = %d.', ...
-                i, numel(localStateVector), params.nColStT);
+                'Local state %d has %d entries; expected nColSt = %d or nColStT = %d.', ...
+                i, numel(localStateVector), params.nColSt, params.nColStT);
         end
 
         idx = ((i-1)*params.nColStT + 1):(i*params.nColStT);
@@ -63,6 +78,13 @@ function params = injectYangLocalStatesIntoTemplateParams(templateParams, tempCa
     if ~isempty(durationValue)
         params.durStep = durationValue;
     end
+
+    params.yangStateInjectionReport = struct( ...
+        "version", "FI6-Yang2009-temporary-native-state-injection-v1", ...
+        "persistentStateBasis", "physical_adsorber_state_only", ...
+        "nativeExecutionTailPolicy", "zero_counter_tails_appended_only_for_temporary_native_calls", ...
+        "localInjectionModes", injectionModes, ...
+        "counterTailLength", counterTailLength);
 end
 
 function stateVector = extractStateVector(localState)
