@@ -120,6 +120,7 @@ function config = makeAdppBfConfig(validationOnly)
     config.Cv_ADPP_feed = 0.05;
     config.Cv_ADPP_product = 0.02;
     config.Cv_ADPP_BF_internal = 0.03;
+    config.adapterCvBasis = "scaled_dimensionless";
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
     config.allowReverseFeedFlow = false;
@@ -142,6 +143,7 @@ function config = makePpPuConfig(validationOnly)
     config.durationSeconds = [];
     config.Cv_PP_PU_internal = 0.05;
     config.Cv_PU_waste = 0.02;
+    config.adapterCvBasis = "scaled_dimensionless";
     config.receiverWastePressureRatio = 0.20;
     config.receiverWastePressureClass = "P4";
     config.allowReverseInternalFlow = false;
@@ -182,6 +184,7 @@ function assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, config)
 
     productConfig = config;
     productConfig.Cv_ADPP_product = config.Cv_ADPP_product * 2;
+    [productConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, productConfig);
     productChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, productConfig);
     assert(productChanged.native.totalExternalProduct > base.native.totalExternalProduct);
     assert(norm(productChanged.native.internalTransferOutByComponent - ...
@@ -189,6 +192,7 @@ function assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, config)
 
     internalConfig = config;
     internalConfig.Cv_ADPP_BF_internal = config.Cv_ADPP_BF_internal * 2;
+    [internalConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, internalConfig);
     internalChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, internalConfig);
     assert(internalChanged.native.totalInternalTransferOut > base.native.totalInternalTransferOut);
     assert(norm(internalChanged.native.externalProductByComponent - ...

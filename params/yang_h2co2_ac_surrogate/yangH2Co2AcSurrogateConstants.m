@@ -64,19 +64,33 @@ function basis = yangH2Co2AcSurrogateConstants()
     basis.pressure.intermediateClassesSymbolic = ["P1"; "P2"; "P3"; "P5"; "P6"];
     basis.pressure.note = "Intermediate pressure classes remain symbolic in FI-2.";
 
+    qSatConversionFactorMolPerKg = 1000.0;
+    qSatSourceUnitNote = [
+        "Source table q_m values are retained as written but interpreted "
+        "for this surrogate as kmol/kg-equivalent values converted to mol/kg; "
+        "the active runtime loading capacities are therefore 1000x the earlier "
+        "direct mol/kg transcription."
+    ];
+
     basis.dsl = struct();
     basis.dsl.componentOrder = componentOrder;
+    basis.dsl.qSatSourceToMolPerKgFactor = qSatConversionFactorMolPerKg;
+    basis.dsl.qSatSourceUnitNote = strjoin(qSatSourceUnitNote, "");
     basis.dsl.siteOne = struct();
-    basis.dsl.siteOne.qSatMolPerKg = [2.40e-5; 8.00e-3];
+    basis.dsl.siteOne.qSatSourceTableValues = [2.40e-5; 8.00e-3];
+    basis.dsl.siteOne.qSatMolPerKg = ...
+        basis.dsl.siteOne.qSatSourceTableValues .* qSatConversionFactorMolPerKg;
     basis.dsl.siteOne.affinityPreExponentialPerAtm = [9.0e-4; 8.0e-6];
     basis.dsl.siteOne.affinityExponentK = [1700; 3100];
     basis.dsl.siteTwo = struct();
-    basis.dsl.siteTwo.qSatMolPerKg = [4.80e-4; 1.40e-3];
+    basis.dsl.siteTwo.qSatSourceTableValues = [4.80e-4; 1.40e-3];
+    basis.dsl.siteTwo.qSatMolPerKg = ...
+        basis.dsl.siteTwo.qSatSourceTableValues .* qSatConversionFactorMolPerKg;
     basis.dsl.siteTwo.affinityPreExponentialPerAtm = [6.0e-5; 9.6e-7];
     basis.dsl.siteTwo.affinityExponentK = [1915; 4750];
     basis.dsl.heatOfAdsorptionCalPerMol = [1800; 5900];
     basis.dsl.heatOfAdsorptionJPerMol = basis.dsl.heatOfAdsorptionCalPerMol * calToJ;
-    basis.dsl.unitNote = "Yang reports q in mmol/g and affinity in 1/atm; mmol/g is numerically equal to mol/kg.";
+    basis.dsl.unitNote = "Yang q_m source-table values are converted with a 1000x loading-capacity factor for the active surrogate; affinity remains in 1/atm before builder conversion.";
 
     basis.referenceTemperatureK = 303.15;
     basis.constants = struct();

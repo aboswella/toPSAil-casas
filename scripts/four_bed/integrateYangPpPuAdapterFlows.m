@@ -109,14 +109,17 @@ function rates = evaluateRates(donor, receiver, config)
     pReceiverPr = receiverPrTotal .* receiver.temps(end, 1);
     pReceiverFe = receiverFeTotal .* receiver.temps(1, 1);
 
-    rawInternal = config.Cv_PP_PU_internal .* (pDonorPr - pReceiverPr);
+    cvInternal = getEffectiveCv(config, "Cv_PP_PU_internal");
+    cvWaste = getEffectiveCv(config, "Cv_PU_waste");
+
+    rawInternal = cvInternal .* (pDonorPr - pReceiverPr);
     if config.allowReverseInternalFlow
         nDotInternal = rawInternal;
     else
         nDotInternal = max(0, rawInternal);
     end
 
-    rawWaste = config.Cv_PU_waste .* ...
+    rawWaste = cvWaste .* ...
         (pReceiverFe - config.receiverWastePressureRatio);
     if config.allowReverseWasteFlow
         nDotWaste = rawWaste;
@@ -133,6 +136,15 @@ function rates = evaluateRates(donor, receiver, config)
     rates.donorProductVol = nDotInternal ./ safeDenominator(donorPrTotal);
     rates.receiverProductVol = -nDotInternal ./ safeDenominator(receiverPrTotal);
     rates.receiverFeedWasteVol = -nDotWaste ./ safeDenominator(receiverFeTotal);
+end
+
+function cv = getEffectiveCv(config, fieldName)
+    fieldName = char(fieldName);
+    if isfield(config, 'effectiveCv') && isfield(config.effectiveCv, fieldName)
+        cv = config.effectiveCv.(fieldName);
+    else
+        cv = config.(fieldName);
+    end
 end
 
 function signs = summarizeFlowSigns(donorProductVol, receiverProductVol, receiverFeedVol, config)

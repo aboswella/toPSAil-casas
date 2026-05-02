@@ -166,12 +166,14 @@ Activated-carbon DSL parameters in source order `[H2; CO2]`:
 
 | Component | Site 1 q_m | Site 1 B(T) | Site 2 q_m | Site 2 B(T) | Heat |
 |---|---:|---:|---:|---:|---:|
-| H2 | `2.40E-5 mmol/g = 2.40E-5 mol/kg` | `9.0E-4 exp(1700/T) 1/atm` | `4.80E-4 mmol/g = 4.80E-4 mol/kg` | `6.0E-5 exp(1915/T) 1/atm` | `1800 cal/mol` |
-| CO2 | `8.00E-3 mmol/g = 8.00E-3 mol/kg` | `8.0E-6 exp(3100/T) 1/atm` | `1.40E-3 mmol/g = 1.40E-3 mol/kg` | `9.6E-7 exp(4750/T) 1/atm` | `5900 cal/mol` |
+| H2 | source table `2.40E-5`; active runtime `2.40E-2 mol/kg` after 1000x loading-capacity conversion | `9.0E-4 exp(1700/T) 1/atm` | source table `4.80E-4`; active runtime `4.80E-1 mol/kg` after 1000x loading-capacity conversion | `6.0E-5 exp(1915/T) 1/atm` | `1800 cal/mol` |
+| CO2 | source table `8.00E-3`; active runtime `8.00 mol/kg` after 1000x loading-capacity conversion | `8.0E-6 exp(3100/T) 1/atm` | source table `1.40E-3`; active runtime `1.40 mol/kg` after 1000x loading-capacity conversion | `9.6E-7 exp(4750/T) 1/atm` | `5900 cal/mol` |
 
 Important conversion note:
 
-- The equality `mmol/g = mol/kg` is numerically true.
+- The earlier direct mol/kg transcription made the active capacities 1000x too
+  small. The parameter pack now retains the source table values as metadata
+  and applies the 1000x loading-capacity conversion for runtime `mol/kg`.
 - The affinity constants are given in `1/atm` with exponential factors in Kelvin.
 - toPSAil may internally expect pressure in bar or dimensionless concentration scaling. Follow the existing toPSAil parameter conversion path rather than forcing dimensional DSL values directly into the isotherm evaluator.
 

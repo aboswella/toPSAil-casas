@@ -129,14 +129,18 @@ function rates = evaluateRates(params, donor, receiver, config)
     pDonorPr = donorPrTotal .* donor.temps(end, 1);
     pReceiverPr = receiverPrTotal .* receiver.temps(end, 1);
 
-    rawFeed = config.Cv_ADPP_feed .* (config.feedPressureRatio - pDonorFe);
+    cvFeed = getEffectiveCv(config, "Cv_ADPP_feed");
+    cvProduct = getEffectiveCv(config, "Cv_ADPP_product");
+    cvInternal = getEffectiveCv(config, "Cv_ADPP_BF_internal");
+
+    rawFeed = cvFeed .* (config.feedPressureRatio - pDonorFe);
     if config.allowReverseFeedFlow
         nDotFeed = rawFeed;
     else
         nDotFeed = max(0, rawFeed);
     end
 
-    rawExternalProduct = config.Cv_ADPP_product .* ...
+    rawExternalProduct = cvProduct .* ...
         (pDonorPr - config.externalProductPressureRatio);
     if config.allowReverseProductFlow
         nDotExternalProduct = rawExternalProduct;
@@ -144,7 +148,7 @@ function rates = evaluateRates(params, donor, receiver, config)
         nDotExternalProduct = max(0, rawExternalProduct);
     end
 
-    rawInternal = config.Cv_ADPP_BF_internal .* (pDonorPr - pReceiverPr);
+    rawInternal = cvInternal .* (pDonorPr - pReceiverPr);
     if config.allowReverseInternalFlow
         nDotInternal = rawInternal;
     else
@@ -163,6 +167,15 @@ function rates = evaluateRates(params, donor, receiver, config)
         safeDenominator(donorPrTotal);
     rates.receiverProductVol = -nDotInternal ./ safeDenominator(receiverPrTotal);
     rates.receiverFeedVol = 0;
+end
+
+function cv = getEffectiveCv(config, fieldName)
+    fieldName = char(fieldName);
+    if isfield(config, 'effectiveCv') && isfield(config.effectiveCv, fieldName)
+        cv = config.effectiveCv.(fieldName);
+    else
+        cv = config.(fieldName);
+    end
 end
 
 function y = resolveFeedMoleFractions(params)

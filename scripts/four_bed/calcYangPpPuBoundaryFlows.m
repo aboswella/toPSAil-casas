@@ -9,7 +9,10 @@ function [volumetricFlow, flowState] = calcYangPpPuBoundaryFlows(params, col, nS
     endpoint = string(endpoint);
 
     state = getEndpointState(params, col);
-    rawInternal = config.Cv_PP_PU_internal .* ...
+    cvInternal = getEffectiveCv(config, "Cv_PP_PU_internal");
+    cvWaste = getEffectiveCv(config, "Cv_PU_waste");
+
+    rawInternal = cvInternal .* ...
         (state.donor.product.pressureRatio - state.receiver.product.pressureRatio);
     if config.allowReverseInternalFlow
         nDotInternal = rawInternal;
@@ -17,7 +20,7 @@ function [volumetricFlow, flowState] = calcYangPpPuBoundaryFlows(params, col, nS
         nDotInternal = max(0, rawInternal);
     end
 
-    rawWaste = config.Cv_PU_waste .* ...
+    rawWaste = cvWaste .* ...
         (state.receiver.feed.pressureRatio - config.receiverWastePressureRatio);
     if config.allowReverseWasteFlow
         nDotWaste = rawWaste;
@@ -47,6 +50,15 @@ function [volumetricFlow, flowState] = calcYangPpPuBoundaryFlows(params, col, nS
     flowState.endpoint = endpoint;
     flowState.donor = state.donor;
     flowState.receiver = state.receiver;
+end
+
+function cv = getEffectiveCv(config, fieldName)
+    fieldName = char(fieldName);
+    if isfield(config, 'effectiveCv') && isfield(config.effectiveCv, fieldName)
+        cv = config.effectiveCv.(fieldName);
+    else
+        cv = config.(fieldName);
+    end
 end
 
 function state = getEndpointState(params, col)

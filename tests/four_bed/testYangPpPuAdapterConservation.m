@@ -95,6 +95,7 @@ function config = makeAdapterConfig(validationOnly)
     config.durationSeconds = [];
     config.Cv_PP_PU_internal = 0.05;
     config.Cv_PU_waste = 0.02;
+    config.adapterCvBasis = "scaled_dimensionless";
     config.receiverWastePressureRatio = 0.20;
     config.receiverWastePressureClass = "P4";
     config.allowReverseInternalFlow = false;

@@ -82,6 +82,7 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         adapterConfig, "Cv_PP_PU_internal");
     adapterConfig.Cv_PU_waste = getRequiredNumericScalar( ...
         adapterConfig, "Cv_PU_waste");
+    adapterConfig = resolvePpPuValveBasis(templateParams, adapterConfig);
 
     if isfield(adapterConfig, 'receiverWastePressureRatio') && ...
             ~isempty(adapterConfig.receiverWastePressureRatio)
@@ -128,6 +129,45 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         "slotIndex", NaN, true);
     adapterConfig.operationGroupId = getStringField(adapterConfig, ...
         "operationGroupId", string(tempCase.pairId));
+end
+
+function adapterConfig = resolvePpPuValveBasis(templateParams, adapterConfig)
+    adapterConfig.adapterCvBasis = getValveBasis(adapterConfig);
+    adapterConfig.valveCoefficientBasis = adapterConfig.adapterCvBasis;
+
+    adapterConfig.rawCv = struct( ...
+        "Cv_PP_PU_internal", adapterConfig.Cv_PP_PU_internal, ...
+        "Cv_PU_waste", adapterConfig.Cv_PU_waste);
+    adapterConfig.effectiveCv = struct( ...
+        "Cv_PP_PU_internal", resolveYangValveCoefficient( ...
+            adapterConfig.Cv_PP_PU_internal, templateParams, adapterConfig, "Cv_PP_PU_internal"), ...
+        "Cv_PU_waste", resolveYangValveCoefficient( ...
+            adapterConfig.Cv_PU_waste, templateParams, adapterConfig, "Cv_PU_waste"));
+    adapterConfig.adapterCvScalingApplied = ...
+        adapterConfig.adapterCvBasis == "dimensional_kmol_per_bar_s";
+    adapterConfig.valScaleFac = getValveScaleFactor(templateParams);
+end
+
+function basis = getValveBasis(config)
+    basis = "dimensional_kmol_per_bar_s";
+    if isfield(config, 'adapterCvBasis') && ~isempty(config.adapterCvBasis)
+        basis = string(config.adapterCvBasis);
+    elseif isfield(config, 'valveCoefficientBasis') && ~isempty(config.valveCoefficientBasis)
+        basis = string(config.valveCoefficientBasis);
+    end
+    if ~isscalar(basis) || strlength(basis) == 0
+        error('FI4:InvalidAdapterConfig', ...
+            'adapterConfig.adapterCvBasis must be a nonempty scalar string.');
+    end
+end
+
+function scale = getValveScaleFactor(params)
+    scale = NaN;
+    if isstruct(params) && isfield(params, 'valScaleFac') && ...
+            ~isempty(params.valScaleFac) && isnumeric(params.valScaleFac) && ...
+            isscalar(params.valScaleFac) && isfinite(params.valScaleFac)
+        scale = double(params.valScaleFac);
+    end
 end
 
 function validateDuration(durationSeconds, durationDimless)

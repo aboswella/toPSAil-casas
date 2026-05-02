@@ -26,6 +26,8 @@ The parameter pack uses toPSAil's native extended dual-site Langmuir-Freundlich 
 
 Yang affinity constants are evaluated at the reference temperature for the native isothermal mapping and converted from `1/atm` to `1/bar`. The point-test script compares direct Yang DSL loading against the configured native toPSAil DSL mapping.
 
+The activated-carbon `q_m` source-table values are retained as metadata and converted with a `1000x` loading-capacity factor for the active surrogate runtime basis. This corrects the earlier direct mol/kg transcription that made adsorbed capacities too small.
+
 The native toPSAil temperature-dependence path has one heat parameter per component, while Yang's source formulas have site-specific exponential factors. Non-isothermal agreement is therefore a known caveat, not a validation claim.
 
 ## Scope Boundaries

@@ -14,6 +14,9 @@ function testYangH2Co2AcParameterPack()
     assert(params.modSp(1) == 6);
     assert(isequal(params.nSiteOneC(:), [1; 1]));
     assert(isequal(params.nSiteTwoC(:), [1; 1]));
+    assert(all(abs(params.qSatSiteOneC(:) - [2.40e-2; 8.00]) < 1e-12));
+    assert(all(abs(params.qSatSiteTwoC(:) - [4.80e-1; 1.40]) < 1e-12));
+    assert(params.yangBasis.dsl.qSatSourceToMolPerKgFactor == 1000.0);
     assert(abs(sum(params.feedMoleFractions) - 1) < 1e-12);
     assert(abs(params.feedMoleFractions(1) - 0.7697228145) < 1e-10);
     assert(abs(params.feedMoleFractions(2) - 0.2302771855) < 1e-10);

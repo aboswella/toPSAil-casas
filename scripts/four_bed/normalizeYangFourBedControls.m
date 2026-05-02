@@ -12,19 +12,25 @@ function controls = normalizeYangFourBedControls(controlsIn, templateParams)
             'Yang four-bed controls must be a scalar struct.');
     end
 
-    controls = struct();
-    controls.cycleTimeSec = getNumericField(controlsIn, 'cycleTimeSec', 240.0, false);
-    controls.feedVelocityCmSec = getNumericField(controlsIn, 'feedVelocityCmSec', NaN, true);
+    defaults = defaultYangFourBedControls();
 
-    controls.Cv_EQI = getNumericField(controlsIn, 'Cv_EQI', NaN, true);
-    controls.Cv_EQII = getNumericField(controlsIn, 'Cv_EQII', NaN, true);
-    controls.Cv_AD_feed = getNumericField(controlsIn, 'Cv_AD_feed', NaN, true);
-    controls.Cv_PP_PU_internal = getNumericField(controlsIn, 'Cv_PP_PU_internal', NaN, true);
-    controls.Cv_PU_waste = getNumericField(controlsIn, 'Cv_PU_waste', NaN, true);
-    controls.Cv_ADPP_feed = getNumericField(controlsIn, 'Cv_ADPP_feed', NaN, true);
-    controls.Cv_ADPP_product = getNumericField(controlsIn, 'Cv_ADPP_product', NaN, true);
-    controls.Cv_ADPP_BF_internal = getNumericField(controlsIn, 'Cv_ADPP_BF_internal', NaN, true);
-    controls.Cv_BD_waste = getNumericField(controlsIn, 'Cv_BD_waste', NaN, true);
+    controls = struct();
+    controls.cycleTimeSec = getNumericField(controlsIn, 'cycleTimeSec', defaults.cycleTimeSec, false);
+    controls.feedVelocityCmSec = getNumericField(controlsIn, 'feedVelocityCmSec', defaults.feedVelocityCmSec, false);
+
+    controls.Cv_EQI = getNumericField(controlsIn, 'Cv_EQI', defaults.Cv_EQI, false);
+    controls.Cv_EQII = getNumericField(controlsIn, 'Cv_EQII', defaults.Cv_EQII, false);
+    controls.Cv_AD_feed = getNumericField(controlsIn, 'Cv_AD_feed', defaults.Cv_AD_feed, false);
+    controls.Cv_PP_PU_internal = getNumericField(controlsIn, 'Cv_PP_PU_internal', defaults.Cv_PP_PU_internal, false);
+    controls.Cv_PU_waste = getNumericField(controlsIn, 'Cv_PU_waste', defaults.Cv_PU_waste, false);
+    controls.Cv_ADPP_feed = getNumericField(controlsIn, 'Cv_ADPP_feed', defaults.Cv_ADPP_feed, false);
+    controls.Cv_ADPP_product = getNumericField(controlsIn, 'Cv_ADPP_product', defaults.Cv_ADPP_product, false);
+    controls.Cv_ADPP_BF_internal = getNumericField(controlsIn, 'Cv_ADPP_BF_internal', defaults.Cv_ADPP_BF_internal, false);
+    controls.Cv_BD_waste = getNumericField(controlsIn, 'Cv_BD_waste', defaults.Cv_BD_waste, false);
+    controls.adapterCvBasis = getValveBasis(controlsIn, defaults.adapterCvBasis);
+    controls.valveCoefficientBasis = controls.adapterCvBasis;
+    controls.valveDefaultBasisNote = ...
+        "first-pass valve coefficients assume corrected adsorption capacity; final values require sensitivity or optimization, and feed-like product may persist if the q_m correction is pending";
 
     controls.nVols = getNumericField(controlsIn, 'nVols', getTemplateField(templateParams, 'nVols', NaN), true);
     controls.solverTolerances = getFieldOrDefault(controlsIn, 'solverTolerances', struct());
@@ -54,6 +60,22 @@ function controls = normalizeYangFourBedControls(controlsIn, templateParams)
     controls.surrogateBasis = "Yang-inspired H2/CO2 homogeneous activated-carbon surrogate";
     controls.validationPosition = ...
         "wrapper_cycle_controls_only_no_full_Yang_layered_four_component_validation_claim";
+end
+
+function defaults = defaultYangFourBedControls()
+    defaults = struct();
+    defaults.cycleTimeSec = 240.0;
+    defaults.feedVelocityCmSec = 5.2;
+    defaults.Cv_AD_feed = 5.0e-7;
+    defaults.Cv_ADPP_feed = 1.0e-6;
+    defaults.Cv_ADPP_product = 1.0e-6;
+    defaults.Cv_ADPP_BF_internal = 5.0e-7;
+    defaults.Cv_EQI = 1.0e-6;
+    defaults.Cv_EQII = 1.0e-6;
+    defaults.Cv_PP_PU_internal = 1.0e-6;
+    defaults.Cv_PU_waste = 2.0e-6;
+    defaults.Cv_BD_waste = 2.0e-6;
+    defaults.adapterCvBasis = "dimensional_kmol_per_bar_s";
 end
 
 function value = getFieldOrDefault(s, name, defaultValue)
@@ -94,6 +116,19 @@ function value = getLogicalField(s, name, defaultValue)
     if ~islogical(value) || ~isscalar(value)
         error('FI6:InvalidControls', ...
             'controls.%s must be a scalar logical.', name);
+    end
+end
+
+function basis = getValveBasis(s, defaultValue)
+    basis = defaultValue;
+    if isstruct(s) && isfield(s, 'adapterCvBasis') && ~isempty(s.adapterCvBasis)
+        basis = string(s.adapterCvBasis);
+    elseif isstruct(s) && isfield(s, 'valveCoefficientBasis') && ~isempty(s.valveCoefficientBasis)
+        basis = string(s.valveCoefficientBasis);
+    end
+    if ~isscalar(basis) || ~ismember(basis, ["dimensional_kmol_per_bar_s", "scaled_dimensionless"])
+        error('FI6:InvalidControls', ...
+            'controls.adapterCvBasis must be dimensional_kmol_per_bar_s or scaled_dimensionless.');
     end
 end
 

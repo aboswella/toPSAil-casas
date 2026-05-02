@@ -117,3 +117,22 @@ Not used for:
 - assuming four persistent beds are already supported by the GUI or existing
   examples;
 - bypassing wrapper ledgers for final external/internal metric reconstruction.
+
+## Yang H2/CO2 AC q_m Loading Basis
+
+Role:
+
+- activated-carbon DSL saturation capacities for the active H2/CO2
+  homogeneous surrogate.
+
+Policy:
+
+- retain the Yang source-table `q_m` numbers as metadata;
+- convert those source-table values to active runtime `mol/kg` capacities with
+  a `1000x` loading-capacity factor;
+- keep this as a parameter-pack correction, not a tuned validation constant.
+
+Current active runtime values in component order `[H2; CO2]`:
+
+- site 1: `[2.40e-2; 8.00] mol/kg`;
+- site 2: `[4.80e-1; 1.40] mol/kg`.

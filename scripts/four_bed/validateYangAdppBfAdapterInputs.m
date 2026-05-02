@@ -89,6 +89,7 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         adapterConfig, "Cv_ADPP_product");
     adapterConfig.Cv_ADPP_BF_internal = getRequiredNumericScalar( ...
         adapterConfig, "Cv_ADPP_BF_internal");
+    adapterConfig = resolveAdppBfValveBasis(templateParams, adapterConfig);
 
     [adapterConfig.feedPressureRatio, adapterConfig.feedPressureBasis] = ...
         resolveFeedPressureRatio(templateParams, adapterConfig);
@@ -116,6 +117,48 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         "slotIndex", NaN, true);
     adapterConfig.operationGroupId = getStringField(adapterConfig, ...
         "operationGroupId", string(tempCase.pairId));
+end
+
+function adapterConfig = resolveAdppBfValveBasis(templateParams, adapterConfig)
+    adapterConfig.adapterCvBasis = getValveBasis(adapterConfig);
+    adapterConfig.valveCoefficientBasis = adapterConfig.adapterCvBasis;
+
+    adapterConfig.rawCv = struct( ...
+        "Cv_ADPP_feed", adapterConfig.Cv_ADPP_feed, ...
+        "Cv_ADPP_product", adapterConfig.Cv_ADPP_product, ...
+        "Cv_ADPP_BF_internal", adapterConfig.Cv_ADPP_BF_internal);
+    adapterConfig.effectiveCv = struct( ...
+        "Cv_ADPP_feed", resolveYangValveCoefficient( ...
+            adapterConfig.Cv_ADPP_feed, templateParams, adapterConfig, "Cv_ADPP_feed"), ...
+        "Cv_ADPP_product", resolveYangValveCoefficient( ...
+            adapterConfig.Cv_ADPP_product, templateParams, adapterConfig, "Cv_ADPP_product"), ...
+        "Cv_ADPP_BF_internal", resolveYangValveCoefficient( ...
+            adapterConfig.Cv_ADPP_BF_internal, templateParams, adapterConfig, "Cv_ADPP_BF_internal"));
+    adapterConfig.adapterCvScalingApplied = ...
+        adapterConfig.adapterCvBasis == "dimensional_kmol_per_bar_s";
+    adapterConfig.valScaleFac = getValveScaleFactor(templateParams);
+end
+
+function basis = getValveBasis(config)
+    basis = "dimensional_kmol_per_bar_s";
+    if isfield(config, 'adapterCvBasis') && ~isempty(config.adapterCvBasis)
+        basis = string(config.adapterCvBasis);
+    elseif isfield(config, 'valveCoefficientBasis') && ~isempty(config.valveCoefficientBasis)
+        basis = string(config.valveCoefficientBasis);
+    end
+    if ~isscalar(basis) || strlength(basis) == 0
+        error('FI5:InvalidAdapterConfig', ...
+            'adapterConfig.adapterCvBasis must be a nonempty scalar string.');
+    end
+end
+
+function scale = getValveScaleFactor(params)
+    scale = NaN;
+    if isstruct(params) && isfield(params, 'valScaleFac') && ...
+            ~isempty(params.valScaleFac) && isnumeric(params.valScaleFac) && ...
+            isscalar(params.valScaleFac) && isfinite(params.valScaleFac)
+        scale = double(params.valScaleFac);
+    end
 end
 
 function validateDuration(durationSeconds, durationDimless)

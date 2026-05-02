@@ -96,6 +96,13 @@ end
 
 function coeffs = collectValveCoefficients(report)
     coeffs = struct();
+    coeffs.valveCoefficientBasis = string(getReportField(report, ...
+        'valveCoefficientBasis', "not_supplied"));
+    coeffs.adapterCvScalingApplied = logical(getReportField(report, ...
+        'adapterCvScalingApplied', false));
+    coeffs.valScaleFac = getReportField(report, 'valScaleFac', NaN);
+    coeffs.rawCv = getReportField(report, 'rawCv', struct());
+    coeffs.effectiveCv = getReportField(report, 'effectiveCv', struct());
     names = [
         "Cv_PP_PU_internal"
         "Cv_PU_waste"

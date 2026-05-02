@@ -110,6 +110,7 @@ function config = makeAdppBfConfig(validationOnly)
     config.Cv_ADPP_feed = 0.05;
     config.Cv_ADPP_product = 0.02;
     config.Cv_ADPP_BF_internal = 0.03;
+    config.adapterCvBasis = "scaled_dimensionless";
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
     config.allowReverseFeedFlow = false;

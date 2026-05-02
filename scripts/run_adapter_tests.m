@@ -1,4 +1,5 @@
 fprintf('Running Yang adapter tests...\n');
+testYangValveCoefficientScaling();
 testYangPpPuAdapterContract();
 testYangPpPuAdapterConservation();
 testYangAdppBfAdapterContract();

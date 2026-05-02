@@ -7,6 +7,7 @@
 fprintf('Running FI-8 four-bed commissioning tests...\n');
 
 testYangRuntimeTemplateReadiness();
+testYangValveCoefficientScaling();
 testYangNativeLedgerRowsSynthetic();
 testYangNativeRuntimeSmoke();
 testYangAdapterRuntimeSmoke();
