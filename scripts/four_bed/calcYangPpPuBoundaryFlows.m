@@ -9,8 +9,8 @@ function [volumetricFlow, flowState] = calcYangPpPuBoundaryFlows(params, col, nS
     endpoint = string(endpoint);
 
     state = getEndpointState(params, col);
-    cvInternal = getEffectiveCv(config, "Cv_PP_PU_internal");
-    cvWaste = getEffectiveCv(config, "Cv_PU_waste");
+    cvInternal = config.Cv_directTransfer;
+    cvWaste = getDerivedPurgeWasteCv(config);
 
     rawInternal = cvInternal .* ...
         (state.donor.product.pressureRatio - state.receiver.product.pressureRatio);
@@ -52,12 +52,12 @@ function [volumetricFlow, flowState] = calcYangPpPuBoundaryFlows(params, col, nS
     flowState.receiver = state.receiver;
 end
 
-function cv = getEffectiveCv(config, fieldName)
-    fieldName = char(fieldName);
-    if isfield(config, 'effectiveCv') && isfield(config.effectiveCv, fieldName)
-        cv = config.effectiveCv.(fieldName);
+function cv = getDerivedPurgeWasteCv(config)
+    if isfield(config, 'derivedConductance') && ...
+            isfield(config.derivedConductance, 'PU_waste')
+        cv = config.derivedConductance.PU_waste;
     else
-        cv = config.(fieldName);
+        cv = 2.0 .* config.Cv_directTransfer;
     end
 end
 

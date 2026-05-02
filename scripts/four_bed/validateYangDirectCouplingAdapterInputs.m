@@ -78,11 +78,9 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
     adapterConfig.durationDimless = getOptionalField(adapterConfig, "durationDimless", []);
     validateDuration(adapterConfig.durationSeconds, adapterConfig.durationDimless);
 
-    adapterConfig.Cv_PP_PU_internal = getRequiredNumericScalar( ...
-        adapterConfig, "Cv_PP_PU_internal");
-    adapterConfig.Cv_PU_waste = getRequiredNumericScalar( ...
-        adapterConfig, "Cv_PU_waste");
-    adapterConfig = resolvePpPuValveBasis(templateParams, adapterConfig);
+    adapterConfig.Cv_directTransfer = getRequiredNumericScalar( ...
+        adapterConfig, "Cv_directTransfer");
+    adapterConfig = resolvePpPuConductanceBasis(adapterConfig);
 
     if isfield(adapterConfig, 'receiverWastePressureRatio') && ...
             ~isempty(adapterConfig.receiverWastePressureRatio)
@@ -131,43 +129,18 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         "operationGroupId", string(tempCase.pairId));
 end
 
-function adapterConfig = resolvePpPuValveBasis(templateParams, adapterConfig)
-    adapterConfig.adapterCvBasis = getValveBasis(adapterConfig);
-    adapterConfig.valveCoefficientBasis = adapterConfig.adapterCvBasis;
-
-    adapterConfig.rawCv = struct( ...
-        "Cv_PP_PU_internal", adapterConfig.Cv_PP_PU_internal, ...
-        "Cv_PU_waste", adapterConfig.Cv_PU_waste);
-    adapterConfig.effectiveCv = struct( ...
-        "Cv_PP_PU_internal", resolveYangValveCoefficient( ...
-            adapterConfig.Cv_PP_PU_internal, templateParams, adapterConfig, "Cv_PP_PU_internal"), ...
-        "Cv_PU_waste", resolveYangValveCoefficient( ...
-            adapterConfig.Cv_PU_waste, templateParams, adapterConfig, "Cv_PU_waste"));
-    adapterConfig.adapterCvScalingApplied = ...
-        adapterConfig.adapterCvBasis == "dimensional_kmol_per_bar_s";
-    adapterConfig.valScaleFac = getValveScaleFactor(templateParams);
-end
-
-function basis = getValveBasis(config)
-    basis = "dimensional_kmol_per_bar_s";
-    if isfield(config, 'adapterCvBasis') && ~isempty(config.adapterCvBasis)
-        basis = string(config.adapterCvBasis);
-    elseif isfield(config, 'valveCoefficientBasis') && ~isempty(config.valveCoefficientBasis)
-        basis = string(config.valveCoefficientBasis);
-    end
-    if ~isscalar(basis) || strlength(basis) == 0
-        error('FI4:InvalidAdapterConfig', ...
-            'adapterConfig.adapterCvBasis must be a nonempty scalar string.');
-    end
-end
-
-function scale = getValveScaleFactor(params)
-    scale = NaN;
-    if isstruct(params) && isfield(params, 'valScaleFac') && ...
-            ~isempty(params.valScaleFac) && isnumeric(params.valScaleFac) && ...
-            isscalar(params.valScaleFac) && isfinite(params.valScaleFac)
-        scale = double(params.valScaleFac);
-    end
+function adapterConfig = resolvePpPuConductanceBasis(adapterConfig)
+    cv = adapterConfig.Cv_directTransfer;
+    adapterConfig.adapterCoefficientBasis = "scaled_dimensionless_raw_direct";
+    adapterConfig.valveCoefficientBasis = adapterConfig.adapterCoefficientBasis;
+    adapterConfig.rawCv = struct("Cv_directTransfer", cv);
+    adapterConfig.effectiveCv = struct("Cv_directTransfer", cv);
+    adapterConfig.adapterCvScalingApplied = false;
+    adapterConfig.valScaleFac = NaN;
+    adapterConfig.derivedConductance = struct( ...
+        "PP_PU_internal", cv, ...
+        "PU_waste", 2.0 .* cv, ...
+        "PU_wasteDerivation", "2.0 * Cv_directTransfer");
 end
 
 function validateDuration(durationSeconds, durationDimless)

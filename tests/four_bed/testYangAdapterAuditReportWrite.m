@@ -19,9 +19,14 @@ function testYangAdapterAuditReportWrite()
     report.receiverBed = string(group.receiverBed);
     report.localMap = group.localMap;
     report.durationSeconds = group.durationSec;
-    report.Cv_ADPP_feed = 0.1;
-    report.Cv_ADPP_product = 0.2;
-    report.Cv_ADPP_BF_internal = 0.3;
+    report.Cv_directTransfer = 0.1;
+    report.valveCoefficientBasis = "scaled_dimensionless_raw_direct";
+    report.rawCv = struct("Cv_directTransfer", 0.1);
+    report.effectiveCv = struct("Cv_directTransfer", 0.1);
+    report.derivedConductance = struct( ...
+        "ADPP_feed", 0.1, ...
+        "ADPP_productCandidate", 0.1, ...
+        "ADPP_BF_internalCandidate", 0.1);
     report.pressureDiagnostics = struct("initial", struct("ok", true), ...
         "terminal", struct("ok", true));
     report.flows = struct("externalFeedByComponent", [1; 0.1], ...

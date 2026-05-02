@@ -128,19 +128,17 @@ function rates = evaluateRates(params, donor, receiver, config)
     pDonorFe = donorFeTotal .* donor.temps(1, 1);
     pDonorPr = donorPrTotal .* donor.temps(end, 1);
     pReceiverPr = receiverPrTotal .* receiver.temps(end, 1);
-    cvFeed = getEffectiveCv(config, "Cv_ADPP_feed");
-    cvProduct = getEffectiveCv(config, "Cv_ADPP_product");
-    cvInternal = getEffectiveCv(config, "Cv_ADPP_BF_internal");
+    cvDirect = config.Cv_directTransfer;
     internalSplit = getInternalSplitFraction(config);
 
-    rawFeed = cvFeed .* (config.feedPressureRatio - pDonorFe);
+    rawFeed = cvDirect .* (config.feedPressureRatio - pDonorFe);
     if config.allowReverseFeedFlow
         nDotFeed = rawFeed;
     else
         nDotFeed = max(0, rawFeed);
     end
 
-    rawExternalProductCandidate = cvProduct .* ...
+    rawExternalProductCandidate = cvDirect .* ...
         (pDonorPr - config.externalProductPressureRatio);
     if config.allowReverseProductFlow
         nDotExternalProductCandidate = rawExternalProductCandidate;
@@ -148,7 +146,7 @@ function rates = evaluateRates(params, donor, receiver, config)
         nDotExternalProductCandidate = max(0, rawExternalProductCandidate);
     end
 
-    rawInternalCandidate = cvInternal .* (pDonorPr - pReceiverPr);
+    rawInternalCandidate = cvDirect .* (pDonorPr - pReceiverPr);
     if config.allowReverseInternalFlow
         nDotInternalCandidate = rawInternalCandidate;
     else
@@ -170,15 +168,6 @@ function rates = evaluateRates(params, donor, receiver, config)
     rates.donorProductVol = nDotProductTotal ./ safeDenominator(donorPrTotal);
     rates.receiverProductVol = -nDotInternal ./ safeDenominator(receiverPrTotal);
     rates.receiverFeedVol = 0;
-end
-
-function cv = getEffectiveCv(config, fieldName)
-    fieldName = char(fieldName);
-    if isfield(config, 'effectiveCv') && isfield(config.effectiveCv, fieldName)
-        cv = config.effectiveCv.(fieldName);
-    else
-        cv = config.(fieldName);
-    end
 end
 
 function split = getInternalSplitFraction(config)
@@ -263,7 +252,8 @@ function split = computeEffectiveSplit(nativeFlows, config)
     split.requestedInternalSplitFraction = getInternalSplitFraction(config);
     split.componentNames = componentNames;
     split.byComponent = byComponent;
-    split.primaryControl = "fixed_internal_split_fraction";
+    split.primaryControl = "ADPP_BF_internalSplitFraction";
+    split.conductanceControl = "Cv_directTransfer";
 end
 
 function den = safeDenominator(value)

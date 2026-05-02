@@ -9,12 +9,10 @@ function [volumetricFlow, flowState] = calcYangAdppBfBoundaryFlows(params, col, 
     endpoint = string(endpoint);
 
     state = getEndpointState(params, col);
-    cvFeed = getEffectiveCv(config, "Cv_ADPP_feed");
-    cvProduct = getEffectiveCv(config, "Cv_ADPP_product");
-    cvInternal = getEffectiveCv(config, "Cv_ADPP_BF_internal");
+    cvDirect = config.Cv_directTransfer;
     internalSplit = getInternalSplitFraction(config);
 
-    rawFeed = cvFeed .* ...
+    rawFeed = cvDirect .* ...
         (config.feedPressureRatio - state.donor.feed.pressureRatio);
     if config.allowReverseFeedFlow
         nDotFeed = rawFeed;
@@ -22,7 +20,7 @@ function [volumetricFlow, flowState] = calcYangAdppBfBoundaryFlows(params, col, 
         nDotFeed = max(0, rawFeed);
     end
 
-    rawExternalProductCandidate = cvProduct .* ...
+    rawExternalProductCandidate = cvDirect .* ...
         (state.donor.product.pressureRatio - config.externalProductPressureRatio);
     if config.allowReverseProductFlow
         nDotExternalProductCandidate = rawExternalProductCandidate;
@@ -30,7 +28,7 @@ function [volumetricFlow, flowState] = calcYangAdppBfBoundaryFlows(params, col, 
         nDotExternalProductCandidate = max(0, rawExternalProductCandidate);
     end
 
-    rawInternalCandidate = cvInternal .* ...
+    rawInternalCandidate = cvDirect .* ...
         (state.donor.product.pressureRatio - state.receiver.product.pressureRatio);
     if config.allowReverseInternalFlow
         nDotInternalCandidate = rawInternalCandidate;
@@ -76,15 +74,6 @@ function [volumetricFlow, flowState] = calcYangAdppBfBoundaryFlows(params, col, 
     flowState.endpoint = endpoint;
     flowState.donor = state.donor;
     flowState.receiver = state.receiver;
-end
-
-function cv = getEffectiveCv(config, fieldName)
-    fieldName = char(fieldName);
-    if isfield(config, 'effectiveCv') && isfield(config.effectiveCv, fieldName)
-        cv = config.effectiveCv.(fieldName);
-    else
-        cv = config.(fieldName);
-    end
 end
 
 function split = getInternalSplitFraction(config)

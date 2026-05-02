@@ -39,7 +39,7 @@ function testYangPpPuAdapterContract()
     assertPpPuFlowLawSigns(params, ppCase, normalizedConfig);
     assertPpPuFlowIntegratorShape(params, ppCase, normalizedConfig);
 
-    missingControl = rmfield(config, 'Cv_PU_waste');
+    missingControl = rmfield(config, 'Cv_directTransfer');
     assertErrorIdentifier(@() validateYangDirectCouplingAdapterInputs( ...
         ppCase, params, missingControl), 'FI4:MissingAdapterConfigField');
 
@@ -107,9 +107,7 @@ function config = makeAdapterConfig(validationOnly)
     config.directTransferFamily = "PP_PU";
     config.durationDimless = 0.01;
     config.durationSeconds = [];
-    config.Cv_PP_PU_internal = 0.05;
-    config.Cv_PU_waste = 0.02;
-    config.adapterCvBasis = "scaled_dimensionless";
+    config.Cv_directTransfer = 0.05;
     config.receiverWastePressureRatio = 0.20;
     config.receiverWastePressureClass = "P4";
     config.allowReverseInternalFlow = false;

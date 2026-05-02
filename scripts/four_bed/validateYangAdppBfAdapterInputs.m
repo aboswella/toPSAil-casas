@@ -83,18 +83,14 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
     adapterConfig.durationDimless = getOptionalField(adapterConfig, "durationDimless", []);
     validateDuration(adapterConfig.durationSeconds, adapterConfig.durationDimless);
 
-    adapterConfig.Cv_ADPP_feed = getRequiredNumericScalar( ...
-        adapterConfig, "Cv_ADPP_feed");
-    adapterConfig.Cv_ADPP_product = getRequiredNumericScalar( ...
-        adapterConfig, "Cv_ADPP_product");
-    adapterConfig.Cv_ADPP_BF_internal = getRequiredNumericScalar( ...
-        adapterConfig, "Cv_ADPP_BF_internal");
+    adapterConfig.Cv_directTransfer = getRequiredNumericScalar( ...
+        adapterConfig, "Cv_directTransfer");
     adapterConfig.ADPP_BF_internalSplitFraction = getFractionWithDefault( ...
         adapterConfig, "ADPP_BF_internalSplitFraction", 1.0 / 3.0);
     adapterConfig.ADPP_BF_splitMode = "fixed_internal_split_fraction";
     adapterConfig.ADPP_BF_internalCvPolicy = ...
-        "Cv_ADPP_BF_internal contributes to total product-end outflow candidate; split fraction controls final branch allocation";
-    adapterConfig = resolveAdppBfValveBasis(templateParams, adapterConfig);
+        "single Cv_directTransfer forms feed, product, and internal candidates; split fraction controls final branch allocation";
+    adapterConfig = resolveAdppBfConductanceBasis(adapterConfig);
 
     [adapterConfig.feedPressureRatio, adapterConfig.feedPressureBasis] = ...
         resolveFeedPressureRatio(templateParams, adapterConfig);
@@ -124,47 +120,19 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         "operationGroupId", string(tempCase.pairId));
 end
 
-function adapterConfig = resolveAdppBfValveBasis(templateParams, adapterConfig)
-    adapterConfig.adapterCvBasis = getValveBasis(adapterConfig);
-    adapterConfig.valveCoefficientBasis = adapterConfig.adapterCvBasis;
-
-    adapterConfig.rawCv = struct( ...
-        "Cv_ADPP_feed", adapterConfig.Cv_ADPP_feed, ...
-        "Cv_ADPP_product", adapterConfig.Cv_ADPP_product, ...
-        "Cv_ADPP_BF_internal", adapterConfig.Cv_ADPP_BF_internal);
-    adapterConfig.effectiveCv = struct( ...
-        "Cv_ADPP_feed", resolveYangValveCoefficient( ...
-            adapterConfig.Cv_ADPP_feed, templateParams, adapterConfig, "Cv_ADPP_feed"), ...
-        "Cv_ADPP_product", resolveYangValveCoefficient( ...
-            adapterConfig.Cv_ADPP_product, templateParams, adapterConfig, "Cv_ADPP_product"), ...
-        "Cv_ADPP_BF_internal", resolveYangValveCoefficient( ...
-            adapterConfig.Cv_ADPP_BF_internal, templateParams, adapterConfig, ...
-            "Cv_ADPP_BF_internal"));
-    adapterConfig.adapterCvScalingApplied = ...
-        adapterConfig.adapterCvBasis == "dimensional_kmol_per_bar_s";
-    adapterConfig.valScaleFac = getValveScaleFactor(templateParams);
-end
-
-function basis = getValveBasis(config)
-    basis = "dimensional_kmol_per_bar_s";
-    if isfield(config, 'adapterCvBasis') && ~isempty(config.adapterCvBasis)
-        basis = string(config.adapterCvBasis);
-    elseif isfield(config, 'valveCoefficientBasis') && ~isempty(config.valveCoefficientBasis)
-        basis = string(config.valveCoefficientBasis);
-    end
-    if ~isscalar(basis) || strlength(basis) == 0
-        error('FI5:InvalidAdapterConfig', ...
-            'adapterConfig.adapterCvBasis must be a nonempty scalar string.');
-    end
-end
-
-function scale = getValveScaleFactor(params)
-    scale = NaN;
-    if isstruct(params) && isfield(params, 'valScaleFac') && ...
-            ~isempty(params.valScaleFac) && isnumeric(params.valScaleFac) && ...
-            isscalar(params.valScaleFac) && isfinite(params.valScaleFac)
-        scale = double(params.valScaleFac);
-    end
+function adapterConfig = resolveAdppBfConductanceBasis(adapterConfig)
+    cv = adapterConfig.Cv_directTransfer;
+    adapterConfig.adapterCoefficientBasis = "scaled_dimensionless_raw_direct";
+    adapterConfig.valveCoefficientBasis = adapterConfig.adapterCoefficientBasis;
+    adapterConfig.rawCv = struct("Cv_directTransfer", cv);
+    adapterConfig.effectiveCv = struct("Cv_directTransfer", cv);
+    adapterConfig.adapterCvScalingApplied = false;
+    adapterConfig.valScaleFac = NaN;
+    adapterConfig.derivedConductance = struct( ...
+        "ADPP_feed", cv, ...
+        "ADPP_productCandidate", cv, ...
+        "ADPP_BF_internalCandidate", cv, ...
+        "derivation", "all ADPP conductance candidates use Cv_directTransfer");
 end
 
 function validateDuration(durationSeconds, durationDimless)

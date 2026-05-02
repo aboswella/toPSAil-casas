@@ -45,7 +45,7 @@ function testYangAdppBfAdapterContract()
     assert(all(adapterReport.flows.externalWasteByComponent == 0));
     assert(isfield(adapterReport, 'effectiveSplit'));
     assert(adapterReport.effectiveSplit.primaryControl == ...
-        "fixed_internal_split_fraction");
+        "ADPP_BF_internalSplitFraction");
     assert(abs(adapterReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
 
     assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, normalizedConfig);
@@ -119,11 +119,8 @@ function config = makeAdppBfConfig(validationOnly)
     config.directTransferFamily = "ADPP_BF";
     config.durationDimless = 0.01;
     config.durationSeconds = [];
-    config.Cv_ADPP_feed = 0.05;
-    config.Cv_ADPP_product = 0.02;
-    config.Cv_ADPP_BF_internal = 0.03;
+    config.Cv_directTransfer = 0.03;
     config.ADPP_BF_internalSplitFraction = 1/3;
-    config.adapterCvBasis = "scaled_dimensionless";
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
     config.allowReverseFeedFlow = false;
@@ -144,9 +141,7 @@ function config = makePpPuConfig(validationOnly)
     config.directTransferFamily = "PP_PU";
     config.durationDimless = 0.01;
     config.durationSeconds = [];
-    config.Cv_PP_PU_internal = 0.05;
-    config.Cv_PU_waste = 0.02;
-    config.adapterCvBasis = "scaled_dimensionless";
+    config.Cv_directTransfer = 0.05;
     config.receiverWastePressureRatio = 0.20;
     config.receiverWastePressureClass = "P4";
     config.allowReverseInternalFlow = false;
@@ -188,7 +183,7 @@ function assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, config)
     totalProductEnd = base.native.totalExternalProduct + base.native.totalInternalTransferOut;
     assert(totalProductEnd > 0);
     assert(abs(base.native.totalInternalTransferOut / totalProductEnd - 1/3) < 1e-12);
-    assert(base.effectiveSplit.primaryControl == "fixed_internal_split_fraction");
+    assert(base.effectiveSplit.primaryControl == "ADPP_BF_internalSplitFraction");
 
     splitConfig = config;
     splitConfig.ADPP_BF_internalSplitFraction = 0.5;

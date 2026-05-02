@@ -218,8 +218,9 @@ function adapterConfig = makeAdapterConfig(group, controls, opts)
     adapterConfig = struct();
     adapterConfig.durationSeconds = group.durationSec;
     adapterConfig.componentNames = controls.componentNames;
-    adapterConfig.adapterCvBasis = controls.adapterCvBasis;
-    adapterConfig.valveCoefficientBasis = controls.valveCoefficientBasis;
+    adapterConfig.Cv_directTransfer = controls.Cv_directTransfer;
+    adapterConfig.adapterCoefficientBasis = controls.adapterCoefficientBasis;
+    adapterConfig.Cv_directTransferAliasReport = controls.Cv_directTransferAliasReport;
     adapterConfig.conservationAbsTol = controls.balanceAbsTol;
     adapterConfig.conservationRelTol = controls.balanceRelTol;
     adapterConfig.debugKeepStateHistory = controls.debugKeepStateHistory;
@@ -231,18 +232,12 @@ function adapterConfig = makeAdapterConfig(group, controls, opts)
     switch string(group.operationFamily)
         case "PP_PU"
             adapterConfig.directTransferFamily = "PP_PU";
-            adapterConfig.Cv_PP_PU_internal = controlValueOrValidationDefault( ...
-                controls.Cv_PP_PU_internal, opts.AdapterValidationOnly);
-            adapterConfig.Cv_PU_waste = controlValueOrValidationDefault( ...
-                controls.Cv_PU_waste, opts.AdapterValidationOnly);
+            adapterConfig.Cv_directTransfer = controlValueOrValidationDefault( ...
+                controls.Cv_directTransfer, opts.AdapterValidationOnly);
         case "ADPP_BF"
             adapterConfig.directTransferFamily = "ADPP_BF";
-            adapterConfig.Cv_ADPP_feed = controlValueOrValidationDefault( ...
-                controls.Cv_ADPP_feed, opts.AdapterValidationOnly);
-            adapterConfig.Cv_ADPP_product = controlValueOrValidationDefault( ...
-                controls.Cv_ADPP_product, opts.AdapterValidationOnly);
-            adapterConfig.Cv_ADPP_BF_internal = controlValueOrValidationDefault( ...
-                controls.Cv_ADPP_BF_internal, opts.AdapterValidationOnly);
+            adapterConfig.Cv_directTransfer = controlValueOrValidationDefault( ...
+                controls.Cv_directTransfer, opts.AdapterValidationOnly);
             adapterConfig.ADPP_BF_internalSplitFraction = ...
                 controls.ADPP_BF_internalSplitFraction;
         otherwise

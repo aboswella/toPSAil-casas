@@ -103,12 +103,9 @@ function coeffs = collectValveCoefficients(report)
     coeffs.valScaleFac = getReportField(report, 'valScaleFac', NaN);
     coeffs.rawCv = getReportField(report, 'rawCv', struct());
     coeffs.effectiveCv = getReportField(report, 'effectiveCv', struct());
+    coeffs.derivedConductance = getReportField(report, 'derivedConductance', struct());
     names = [
-        "Cv_PP_PU_internal"
-        "Cv_PU_waste"
-        "Cv_ADPP_feed"
-        "Cv_ADPP_product"
-        "Cv_ADPP_BF_internal"
+        "Cv_directTransfer"
     ];
     for i = 1:numel(names)
         name = char(names(i));

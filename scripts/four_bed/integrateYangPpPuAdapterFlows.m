@@ -109,8 +109,8 @@ function rates = evaluateRates(donor, receiver, config)
     pReceiverPr = receiverPrTotal .* receiver.temps(end, 1);
     pReceiverFe = receiverFeTotal .* receiver.temps(1, 1);
 
-    cvInternal = getEffectiveCv(config, "Cv_PP_PU_internal");
-    cvWaste = getEffectiveCv(config, "Cv_PU_waste");
+    cvInternal = config.Cv_directTransfer;
+    cvWaste = getDerivedPurgeWasteCv(config);
 
     rawInternal = cvInternal .* (pDonorPr - pReceiverPr);
     if config.allowReverseInternalFlow
@@ -138,12 +138,12 @@ function rates = evaluateRates(donor, receiver, config)
     rates.receiverFeedWasteVol = -nDotWaste ./ safeDenominator(receiverFeTotal);
 end
 
-function cv = getEffectiveCv(config, fieldName)
-    fieldName = char(fieldName);
-    if isfield(config, 'effectiveCv') && isfield(config.effectiveCv, fieldName)
-        cv = config.effectiveCv.(fieldName);
+function cv = getDerivedPurgeWasteCv(config)
+    if isfield(config, 'derivedConductance') && ...
+            isfield(config.derivedConductance, 'PU_waste')
+        cv = config.derivedConductance.PU_waste;
     else
-        cv = config.(fieldName);
+        cv = 2.0 .* config.Cv_directTransfer;
     end
 end
 

@@ -88,9 +88,8 @@ function report = initializeReport(tempCase, config, validationReport)
     report.durationSeconds = config.durationSeconds;
     report.durationDimless = config.durationDimless;
     report.timeBasis = "not_resolved";
-    report.Cv_ADPP_feed = config.Cv_ADPP_feed;
-    report.Cv_ADPP_product = config.Cv_ADPP_product;
-    report.Cv_ADPP_BF_internal = config.Cv_ADPP_BF_internal;
+    report.Cv_directTransfer = config.Cv_directTransfer;
+    report.derivedConductance = config.derivedConductance;
     report.ADPP_BF_internalSplitFraction = config.ADPP_BF_internalSplitFraction;
     report.ADPP_BF_splitMode = string(config.ADPP_BF_splitMode);
     report.ADPP_BF_internalCvPolicy = string(config.ADPP_BF_internalCvPolicy);
@@ -429,7 +428,8 @@ function split = makeEmptyEffectiveSplit(config, unitBasis)
     split.requestedInternalSplitFraction = config.ADPP_BF_internalSplitFraction;
     split.componentNames = string(config.componentNames(:));
     split.byComponent = NaN(nComs, 1);
-    split.primaryControl = "fixed_internal_split_fraction";
+    split.primaryControl = "ADPP_BF_internalSplitFraction";
+    split.conductanceControl = "Cv_directTransfer";
 end
 
 function metadata = makeStateMetadata(tempCase, localIndex)

@@ -48,7 +48,7 @@ function testYangAdppBfAdapterSplitConservation()
         assert(adapterReport.flowReport.flowSigns.receiverProductEnd.positiveCount == 0);
         assert(adapterReport.flowReport.flowSigns.receiverFeedEnd.positiveCount == 0);
         assert(adapterReport.effectiveSplit.primaryControl == ...
-            "fixed_internal_split_fraction");
+            "ADPP_BF_internalSplitFraction");
         assert(abs(adapterReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
     end
 
@@ -108,11 +108,8 @@ function config = makeAdppBfConfig(validationOnly)
     config.directTransferFamily = "ADPP_BF";
     config.durationDimless = 0.01;
     config.durationSeconds = [];
-    config.Cv_ADPP_feed = 0.05;
-    config.Cv_ADPP_product = 0.02;
-    config.Cv_ADPP_BF_internal = 0.03;
+    config.Cv_directTransfer = 0.03;
     config.ADPP_BF_internalSplitFraction = 1/3;
-    config.adapterCvBasis = "scaled_dimensionless";
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
     config.allowReverseFeedFlow = false;
@@ -145,7 +142,7 @@ function assertSyntheticSplitAccounting(params, adppCase, config)
     assert(abs(flowReport.effectiveSplit.H2 - 1/3) < 1e-12);
     assert(abs(flowReport.effectiveSplit.total - 1/3) < 1e-12);
     assert(flowReport.effectiveSplit.primaryControl == ...
-        "fixed_internal_split_fraction");
+        "ADPP_BF_internalSplitFraction");
     assert(abs(flowReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
     assert(flowReport.flowSigns.donorFeedEnd.negativeCount == 0);
     assert(flowReport.flowSigns.donorProductEnd.negativeCount == 0);

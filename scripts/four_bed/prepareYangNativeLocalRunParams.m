@@ -47,7 +47,10 @@ function [params, prepReport] = prepareYangNativeLocalRunParams(tempCase, templa
 
     [params.valFeedColNorm, params.valProdColNorm, valveReport] = ...
         resolveNativeValveMatrices(tempCase, controls, params);
-    if isfield(params, 'valScaleFac') && isfinite(params.valScaleFac) && params.valScaleFac > 0
+    if all(params.valFeedColNorm(:) == 1) && all(params.valProdColNorm(:) == 1)
+        params.valFeedCol = ones(size(params.valFeedColNorm));
+        params.valProdCol = ones(size(params.valProdColNorm));
+    elseif isfield(params, 'valScaleFac') && isfinite(params.valScaleFac) && params.valScaleFac > 0
         params.valFeedCol = params.valFeedColNorm ./ params.valScaleFac;
         params.valProdCol = params.valProdColNorm ./ params.valScaleFac;
     end
@@ -57,6 +60,7 @@ function [params, prepReport] = prepareYangNativeLocalRunParams(tempCase, templa
     params = getTimeSpan(params);
     params = getEventParams(params);
     params = getNumParams(params);
+    params = ensureNativeSentinelCoefficientMatrices(params);
     params.initStates = getInitialStates(params);
 
     [params.initStates, stateRows] = injectLocalPhysicalStates(params, tempCase);
@@ -168,17 +172,18 @@ function [valFeed, valProd, report] = resolveNativeValveMatrices(tempCase, contr
     report.version = "FI8-Yang2009-native-valve-wiring-v1";
     report.family = family;
     report.defaultDimensionlessValve = defaultCv;
-    report.source = "wrapper_controls_or_commissioning_default";
+    report.nativeCvSentinelValue = 1.0;
+    report.source = "fixed_internal_native_runtime_default";
 
     switch family
         case "AD"
-            valFeed(:) = getControlValve(controls, 'Cv_AD_feed', defaultCv, params);
+            valFeed(:) = defaultCv;
         case "BD"
-            valFeed(:) = getControlValve(controls, 'Cv_BD_waste', defaultCv, params);
+            valFeed(:) = defaultCv;
         case "EQI"
-            valProd(:) = getControlValve(controls, 'Cv_EQI', defaultCv, params);
+            valProd(:) = defaultCv;
         case "EQII"
-            valProd(:) = getControlValve(controls, 'Cv_EQII', defaultCv, params);
+            valProd(:) = defaultCv;
         otherwise
             error('FI8:UnsupportedNativeOperation', ...
                 'No native valve wiring for family %s.', char(family));
@@ -187,26 +192,18 @@ function [valFeed, valProd, report] = resolveNativeValveMatrices(tempCase, contr
     report.valFeedColNorm = valFeed;
     report.valProdColNorm = valProd;
     report.controlValveBasis = ...
-        "controls Cv values are dimensional and multiplied by params.valScaleFac";
-    report.nativeControlsWired = true;
-end
-
-function value = getControlValve(controls, fieldName, defaultValue, params)
-    value = defaultValue;
-    if isstruct(controls) && isfield(controls, fieldName) && ...
-            ~isempty(controls.(fieldName)) && isfinite(controls.(fieldName))
-        value = controls.(fieldName) .* params.valScaleFac;
+        "fixed native runtime default; no top-level Yang native Cv controls";
+    report.nativeControlsWired = false;
+    report.nativeControlExposure = "not_exposed_in_minimal_yang_controls";
+    if isstruct(controls) && isfield(controls, 'Cv_directTransferAliasReport')
+        report.ignoredNativeCvFields = controls.Cv_directTransferAliasReport.ignoredNativeCvFields;
+    else
+        report.ignoredNativeCvFields = strings(0, 1);
     end
-    value = usableValve(value, fieldName);
 end
 
 function value = defaultNativeValveCoefficient(params)
     value = 1.0;
-    if isfield(params, 'yangRuntimeDefaults') && ...
-            isfield(params.yangRuntimeDefaults, 'nativeValveCoefficient') && ...
-            isfield(params, 'valScaleFac') && isfinite(params.valScaleFac)
-        value = params.yangRuntimeDefaults.nativeValveCoefficient .* params.valScaleFac;
-    end
     value = usableValve(value, "default_native_valve");
 end
 
@@ -215,11 +212,47 @@ function value = usableValve(value, label)
         error('FI8:InvalidNativeValveCoefficient', ...
             '%s must be a finite positive scalar.', char(label));
     end
-    if abs(value - 1) < 1e-12
-        error('FI8:InvalidNativeValveCoefficient', ...
-            '%s resolved to 1, which toPSAil uses as a non-Cv flag.', char(label));
-    end
     value = double(value);
+end
+
+function params = ensureNativeSentinelCoefficientMatrices(params)
+    for nS = 1:params.nSteps
+        for nC = 1:params.nCols
+            if params.typeDaeModel(nC, nS) ~= 0 || ...
+                    ~isempty(params.coefMat{nC, nS})
+                continue;
+            end
+            params.coefMat{nC, nS} = makeConstantPressureCoefficientPair( ...
+                params, nC, nS);
+        end
+    end
+end
+
+function pair = makeConstantPressureCoefficientPair(params, nC, nS)
+    lower = makeLowerConstantPressureMatrix(params.nVols);
+    upper = makeUpperConstantPressureMatrix(params.nVols);
+    flowDir = params.flowDirCol(nC, nS);
+    feedBoundary = params.volFlBoFree(nC, nS) == 1;
+    if feedBoundary && flowDir == 0
+        pair = {lower, -lower};
+    elseif ~feedBoundary && flowDir == 1
+        pair = {upper, -upper};
+    else
+        error('FI8:UnsupportedNativeSentinelValveMatrix', ...
+            ['Native step %s uses sentinel valve coefficient 1 but does ' ...
+             'not match a supported constant-pressure boundary.'], ...
+            char(string(params.sStepCol{nC, nS})));
+    end
+end
+
+function matrix = makeLowerConstantPressureMatrix(nVols)
+    matrix = eye(nVols) + diag(-ones(1, nVols - 1), -1);
+    matrix = sparse(matrix);
+end
+
+function matrix = makeUpperConstantPressureMatrix(nVols)
+    matrix = diag(ones(1, nVols - 1), +1) - eye(nVols);
+    matrix = sparse(matrix);
 end
 
 function [initStates, stateRows] = injectLocalPhysicalStates(params, tempCase)
