@@ -1,0 +1,58 @@
+operationGroupId: EQII-B-to-A
+participants: B, A
+donorBed: B
+receiverBed: A
+sourceCol: 7
+durationSec: 0.384
+resolvedNativeValve: 2.176282464083839
+valFeedColNorm: [0, 0]
+valProdColNorm: [2.176282464083839, 2.176282464083839]
+
+runReport.localRunPreparation.valveReport:
+                      version: "FI8-Yang2009-native-valve-wiring-v1"
+                       family: "EQII"
+    defaultDimensionlessValve: 2.1763
+                       source: "wrapper_controls_or_commissioning_default"
+               valFeedColNorm: [2×1 double]
+               valProdColNorm: [2×1 double]
+            controlValveBasis: "controls Cv values are dimensional and multiplied by params.valScaleFac"
+          nativeControlsWired: 1
+
+
+runReport.counterTailDeltas:
+- local 1: [0, 0, -0.0002674848205481372, -7.191147765208452e-07]
+- local 2: [0, 0, 0.0002674848205526264, 7.191147765269207e-07]
+
+ledgerExtractionReport.rawNativeCounterTailDeltas:
+- local 1: [0, 0, -0.0002674848205481372, -7.191147765208452e-07]
+- local 2: [0, 0, 0.0002674848205526264, 7.191147765269207e-07]
+
+inventoryRowsAppended: 4
+ledgerRowsAppended: 8
+warnings: paired group EQII-B-to-A uses donor source column 7 while receiver source column is 8
+
+component trace rows:
+    <strong>component</strong>    <strong>internalOutOfDonor</strong>    <strong>internalIntoReceiver</strong>    <strong>donorInventoryDelta</strong>    <strong>receiverInventoryDelta</strong>    <strong>internalMismatch</strong>    <strong>pairInventoryDelta</strong>    <strong>slotExternalResidual</strong>    <strong>slotInternalResidual</strong>    <strong>cycleExternalResidual</strong>    <strong>tolerance</strong> 
+    <strong>_________</strong>    <strong>__________________</strong>    <strong>____________________</strong>    <strong>___________________</strong>    <strong>______________________</strong>    <strong>________________</strong>    <strong>__________________</strong>    <strong>____________________</strong>    <strong>____________________</strong>    <strong>_____________________</strong>    <strong>__________</strong>
+
+      "H2"           8.2505e-05             8.2505e-05             8.2505e-05              -8.2505e-05             1.3847e-15           1.0325e-14            -1.0325e-14              1.3847e-15              3.6055e-11          1.0083e-08
+      "CO2"          2.2181e-07             2.2181e-07             2.2181e-07              -2.2181e-07              1.874e-18          -6.9389e-16             6.9389e-16               1.874e-18              1.1772e-11               1e-08
+
+
+prior touching operations:
+    <strong>operation_group_id</strong>    <strong>operation_family</strong>    <strong>source_col</strong>    <strong>participants</strong>    <strong>touching_beds</strong>
+    <strong>__________________</strong>    <strong>________________</strong>    <strong>__________</strong>    <strong>____________</strong>    <strong>_____________</strong>
+
+     "AD-A-col01"            "AD"                 1            "A"              "A"      
+     "EQI-D-to-B"            "EQI"                1            "D+B"            "B"      
+     "ADPP_BF-A-to-B"        "ADPP_BF"            2            "A+B"            "A+B"    
+     "AD-B-col03"            "AD"                 3            "B"              "B"      
+     "EQI-A-to-C"            "EQI"                3            "A+C"            "A"      
+     "ADPP_BF-B-to-C"        "ADPP_BF"            4            "B+C"            "B"      
+     "PP_PU-A-to-D"          "PP_PU"              4            "A+D"            "A"      
+     "EQII-A-to-D"           "EQII"               5            "A+D"            "A"      
+     "EQI-B-to-D"            "EQI"                5            "B+D"            "B"      
+     "BD-A-col06"            "BD"                 6            "A"              "A"      
+     "PP_PU-B-to-A"          "PP_PU"              6            "B+A"            "B+A"    
+
+

@@ -1,0 +1,264 @@
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 84 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 14 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 10 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 109 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 13 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 10 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 84 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 13 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 13 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 113 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 17 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 12 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 108 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 15 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 81 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 14 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 110 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 14 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 110 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 14 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 14 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 115 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 5 
+*Number of Linear Solves        : 22 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 14 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 90 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 5 
+*Number of Linear Solves        : 19 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 14 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 112 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 5 
+*Number of Linear Solves        : 19 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 111 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 15 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 111 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 15 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 82 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 15 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 86 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 15 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 11 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 108 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 15 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 13 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 110 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 17 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 12 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 112 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 16 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 10 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 109 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 13 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 10 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 84 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 13 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 10 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 80 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 3 
+*Number of Linear Solves        : 13 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 10 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 105 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 2 
+*Number of Linear Solves        : 12 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 12 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 109 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 4 
+*Number of Linear Solves        : 16 
+*******************************************
+
+*******************************************
+Numerical Integration Summary. 
+*Solver                         : ode15s 
+*Number of Successful Steps     : 10 
+*Number of Failed Steps         : 0 
+*Number of Function Evaluations : 108 
+*Number of Jacobian Evaluations : 1 
+*Number of LU Decompositions    : 2 
+*Number of Linear Solves        : 12 
+*******************************************

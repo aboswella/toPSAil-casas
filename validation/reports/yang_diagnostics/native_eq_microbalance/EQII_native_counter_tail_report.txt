@@ -1,0 +1,54 @@
+operationGroupId: EQII-B-to-A
+sourceCol: 7
+family: EQII
+durationSec: 0.384
+
+localRunPreparation.valveReport:
+                      version: "FI8-Yang2009-native-valve-wiring-v1"
+                       family: "EQII"
+    defaultDimensionlessValve: 2.1763
+                       source: "wrapper_controls_or_commissioning_default"
+               valFeedColNorm: [2×1 double]
+               valProdColNorm: [2×1 double]
+            controlValveBasis: "controls Cv values are dimensional and multiplied by params.valScaleFac"
+          nativeControlsWired: 1
+
+
+valFeedColNorm: [0, 0]
+valProdColNorm: [2.176282464083839, 2.176282464083839]
+
+counterTailLayout: first_nComs_feed_end_second_nComs_product_end
+counterTailBasis: native_counter_tail_delta_from_stStates
+
+counterTailDeltas by local bed:
+- local 1: [0, 0, -1.446503660710133e-05, -3.124273054153214e-06]
+- local 2: [0, 0, 1.446763203101252e-05, 3.125138195444054e-06]
+
+convertedMolesByRow: [4.461698444450569e-06, 9.636729311083022e-07, 4.46249899540262e-06, 9.639397814216761e-07]
+
+counterTailReport:
+              version: "FI3-Yang2009-counter-tail-report-v1"
+          payloadType: "yang_counter_tail_report_collection_v1"
+    persistAsBedState: 0
+    counterTailPolicy: "accounting_only_not_persistent_bed_state"
+             localMap: [2×13 table]
+              reports: {2×1 cell}
+
+
+nativeExtractionReport:
+                         version: "FI7-Yang2009-native-ledger-extraction-v1"
+                 operationFamily: "EQII"
+               counterTailLayout: "first_nComs_feed_end_second_nComs_product_end_from_getRhsFuncVals"
+               counterSignPolicy: "signed_native_boundary_convention"
+           counterSignConvention: "feed counter positive out of feed end; product counter positive into product end; ledger amounts use absolute signed deltas by default"
+      rawNativeCounterTailDeltas: {2×1 cell}
+    nativeCounterMagnitudePolicy: "abs(signed native counter delta) before physical mole scaling"
+      nativeMoleScaleFactorField: "params.nScaleFac"
+           nativeMoleScaleFactor: 0.3084
+                conversionPolicy: "ledger row moles = abs(native counter delta) * params.nScaleFac"
+                           nRows: 4
+                           basis: "physical_moles_from_native_counter_tail_delta_using_params.nScaleFac"
+                           units: "mol"
+             convertedMolesByRow: [4×1 double]
+
+
