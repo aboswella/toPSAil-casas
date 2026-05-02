@@ -25,6 +25,16 @@ The source paper's objective is high-purity hydrogen production. The constants k
 
 No native schedule was built in batch 1.
 
+## Batch 2 Parameter Builder
+
+`params/ribeiro_surrogate/buildRibeiroSurrogateTemplateParams.m` and `params/ribeiro_surrogate/finalizeRibeiroSurrogateTemplateParams.m` create an Excel-free native four-column parameter struct for the binary activated-carbon surrogate.
+
+The builder converts Ribeiro Table 5 `12.2 N m^3/h` through the batch 1 molar-flow basis, using `R = 83.14 cm^3 bar mol^-1 K^-1`, `T = 303 K`, `P = 7 bar_abs`, and `n = 0.1513 mol/s`, which gives a native feed flow of about `545 cm^3/s`.
+
+Particle values are stored in native-compatible units for later runtime use: particle density `842 kg/m^3` becomes `8.42e-4 kg/cm^3` as `params.pellDens`, and particle radius `1.17e-3 m` becomes pellet diameter `0.234 cm` as `params.diamPellet`. Particle porosity `0.566` is retained as a dimensionless particle-porosity field; the current batch uses `maTrRes = 0`, so the material-balance overall void remains the bed void fraction `0.38`.
+
+The finalizer initializes the default valve placeholders before calling `getDimLessParams` because native toPSAil reads `valFeedCol` and `valProdCol` during dimensionless setup. These are placeholders only; no Ribeiro native schedule is built in batch 2.
+
 ## Later Notes
 
 Later batches should add unit conversions, schedule details, and metric-basis caveats here as those implementation files are created.
