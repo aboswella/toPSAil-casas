@@ -1,0 +1,6 @@
+cycle_index,operation_group_id,operation_family,pair_id,donor_bed,receiver_bed,donor_source_col,receiver_source_col,duration_sec,initial_donor_feed_pressure_ratio,initial_donor_product_pressure_ratio,initial_receiver_feed_pressure_ratio,initial_receiver_product_pressure_ratio,initial_product_pressure_delta_donor_minus_receiver,initial_feed_pressure_delta_donor_minus_receiver,selection_reason
+1,PP_PU-A-to-D,PP_PU,PP_PU-A-to-D,A,D,4,5,0.384,0.826442263011767,0.826442263011541,0.720214799038467,0.720214799038815,0.106227463972726,0.1062274639733,requested_by_prompt
+1,PP_PU-B-to-A,PP_PU,PP_PU-B-to-A,B,A,6,7,0.096,0.758117604432264,0.758117604191934,0.780982863513461,0.780982863513172,-0.0228652593212378,-0.0228652590811973,requested_by_prompt
+1,PP_PU-C-to-B,PP_PU,PP_PU-C-to-B,C,B,9,9,0.096,0.724000829380697,0.724000829380608,0.74851791778464,0.748517917548018,-0.0245170881674104,-0.0245170884039431,requested_by_prompt
+1,ADPP_BF-A-to-B,ADPP_BF,ADPP_BF-A-to-B,A,B,2,2,0.576,1,1.00000000000001,0.963760226798512,0.963760226486233,0.0362397735137741,0.0362397732014896,requested_by_prompt
+1,ADPP_BF-D-to-A,ADPP_BF,ADPP_BF-D-to-A,D,A,10,10,0.48,0.704835367243632,0.704835367243953,0.773495107987104,0.773495107986785,-0.0686597407428322,-0.0686597407434721,requested_by_prompt
