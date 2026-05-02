@@ -31,7 +31,9 @@ function [terminalLocalStates, adapterReport] = runYangAdppBfAdapter(tempCase, t
     [terminalLocalStates, counterTailReport] = extractYangTerminalLocalStates( ...
         params, stStates, tempCase);
 
-    flowReport = integrateYangAdppBfAdapterFlows(params, stTime, stStates, adapterConfig);
+    sampledFlowReport = integrateYangAdppBfAdapterFlows(params, stTime, stStates, adapterConfig);
+    flowReport = buildYangAdppBfCounterFlowReport( ...
+        params, stTime, stStates, adapterConfig, sampledFlowReport);
     finalPressure = summarizeTerminalPressure(params, terminalLocalStates);
     finalInventory = computeTerminalInventories(params, terminalLocalStates);
     conservation = computeConservationDiagnostics( ...

@@ -33,6 +33,12 @@ function flowBasis = chooseYangAdapterFlowBasis(adapterReport, varargin)
         flowBasis.basis = "physical_moles";
         flowBasis.units = "mol";
         flowBasis.sourceField = "adapterReport.flowReport.moles";
+        if isfield(adapterReport.flowReport.moles, 'unitBasis')
+            flowBasis.unitBasis = string(adapterReport.flowReport.moles.unitBasis);
+        end
+        if isfield(adapterReport.flowReport, 'primaryBasis')
+            flowBasis.primaryBasis = string(adapterReport.flowReport.primaryBasis);
+        end
         return;
     end
 
@@ -44,6 +50,12 @@ function flowBasis = chooseYangAdapterFlowBasis(adapterReport, varargin)
         flowBasis.units = "native_integrated_units";
         flowBasis.sourceField = "adapterReport.flowReport.native";
         flowBasis.warning = "adapter flow basis is native/nondimensional, not physical moles";
+        if isfield(adapterReport.flowReport.native, 'unitBasis')
+            flowBasis.unitBasis = string(adapterReport.flowReport.native.unitBasis);
+        end
+        if isfield(adapterReport.flowReport, 'primaryBasis')
+            flowBasis.primaryBasis = string(adapterReport.flowReport.primaryBasis);
+        end
         return;
     end
 

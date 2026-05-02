@@ -31,7 +31,9 @@ function [terminalLocalStates, adapterReport] = runYangPpPuAdapter(tempCase, tem
     [terminalLocalStates, counterTailReport] = extractYangTerminalLocalStates( ...
         params, stStates, tempCase);
 
-    flowReport = integrateYangPpPuAdapterFlows(params, stTime, stStates, adapterConfig);
+    sampledFlowReport = integrateYangPpPuAdapterFlows(params, stTime, stStates, adapterConfig);
+    flowReport = buildYangPpPuCounterFlowReport( ...
+        params, stTime, stStates, adapterConfig, sampledFlowReport);
     finalPressure = summarizeTerminalPressure(params, terminalLocalStates);
     finalInventory = computeTerminalInventories(params, terminalLocalStates);
     conservation = computeConservationDiagnostics( ...

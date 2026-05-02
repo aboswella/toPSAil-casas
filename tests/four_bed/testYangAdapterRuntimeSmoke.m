@@ -36,7 +36,9 @@ function assertAdapterReport(terminalStates, report, params, family)
     assert(report.didInvokeNative);
     assert(report.solverRunStatus == "completed_native_runPsaCycleStep");
     assert(report.timeBasis == "seconds_converted_to_dimensionless_using_tiScaleFac");
-    assert(report.flowReport.moles.unitBasis == "physical_moles_using_params.nScaleFac");
+    assert(report.flowReport.primaryBasis == "native_counter_tail_delta");
+    assert(report.flowReport.moles.unitBasis == ...
+        "physical_moles_from_native_counter_tail_delta_using_params.nScaleFac");
     assert(isfield(report, 'terminalPhysicalStateChecksums'));
     assert(~report.sanity.hasNaN);
     for i = 1:numel(terminalStates)
