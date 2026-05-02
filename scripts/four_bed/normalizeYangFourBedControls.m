@@ -20,11 +20,23 @@ function controls = normalizeYangFourBedControls(controlsIn, templateParams)
 
     [controls.Cv_directTransfer, controls.Cv_directTransferAliasReport] = ...
         getDirectTransferCv(controlsIn, defaults.Cv_directTransfer);
+    controls.PP_PU_wasteCouplingPolicy = getWasteCouplingPolicyField(controlsIn, ...
+        'PP_PU_wasteCouplingPolicy', defaults.PP_PU_wasteCouplingPolicy);
+    controls.PP_PU_wasteCouplingAlpha = getNonnegativeNumericField(controlsIn, ...
+        'PP_PU_wasteCouplingAlpha', defaults.PP_PU_wasteCouplingAlpha);
     controls.ADPP_BF_internalSplitFraction = getFractionField(controlsIn, ...
         'ADPP_BF_internalSplitFraction', defaults.ADPP_BF_internalSplitFraction);
+    controls.ADPP_BF_externalProductPressureRatio = getOptionalNonnegativeNumericField(controlsIn, ...
+        'ADPP_BF_externalProductPressureRatio', defaults.ADPP_BF_externalProductPressureRatio);
+    controls.Cv_ADPP_feed = getNonnegativeNumericField(controlsIn, ...
+        'Cv_ADPP_feed', controls.Cv_directTransfer);
+    controls.Cv_ADPP_product = getNonnegativeNumericField(controlsIn, ...
+        'Cv_ADPP_product', controls.Cv_directTransfer);
+    controls.Cv_ADPP_BF_internal = getNonnegativeNumericField(controlsIn, ...
+        'Cv_ADPP_BF_internal', controls.Cv_directTransfer);
     controls.adapterCoefficientBasis = "scaled_dimensionless_raw_direct";
     controls.derivedConductancePolicy = ...
-        "custom adapters use raw Cv_directTransfer directly; PP->PU waste uses fixed 2x derived conductance; AD&PP feed/product/internal candidates use Cv_directTransfer";
+        "custom adapters use raw dimensionless Cv controls directly; PP->PU keeps Cv_directTransfer with configurable receiver-waste coupling; AD&PP->BF uses independent feed/product/internal conductances with diagnostic effective split";
 
     controls.nVols = getNumericField(controlsIn, 'nVols', getTemplateField(templateParams, 'nVols', NaN), true);
     controls.solverTolerances = getFieldOrDefault(controlsIn, 'solverTolerances', struct());
@@ -61,7 +73,10 @@ function defaults = defaultYangFourBedControls()
     defaults.cycleTimeSec = 240.0;
     defaults.feedVelocityCmSec = 5.2;
     defaults.Cv_directTransfer = 1.0e-6;
+    defaults.PP_PU_wasteCouplingPolicy = "pressure_driven_independent";
+    defaults.PP_PU_wasteCouplingAlpha = 1.0;
     defaults.ADPP_BF_internalSplitFraction = 1.0 / 3.0;
+    defaults.ADPP_BF_externalProductPressureRatio = [];
 end
 
 function value = getFieldOrDefault(s, name, defaultValue)
@@ -153,12 +168,7 @@ function [values, names] = collectAdapterAliasCandidates(s)
         return;
     end
 
-    directAliases = [
-        "Cv_PP_PU_internal"
-        "Cv_ADPP_feed"
-        "Cv_ADPP_product"
-        "Cv_ADPP_BF_internal"
-    ];
+    directAliases = "Cv_PP_PU_internal";
     for i = 1:numel(directAliases)
         name = char(directAliases(i));
         if isfield(s, name) && ~isempty(s.(name))
@@ -196,6 +206,45 @@ function value = getFractionField(s, name, defaultValue)
     if value < 0 || value > 1
         error('FI6:InvalidControls', ...
             'controls.%s must be between 0 and 1.', name);
+    end
+end
+
+function value = getNonnegativeNumericField(s, name, defaultValue)
+    value = getNumericField(s, name, defaultValue, false);
+    if value < 0
+        error('FI6:InvalidControls', ...
+            'controls.%s must be nonnegative.', name);
+    end
+end
+
+function value = getOptionalNonnegativeNumericField(s, name, defaultValue)
+    value = defaultValue;
+    if isstruct(s) && isfield(s, name)
+        value = s.(name);
+    end
+    if isempty(value)
+        value = [];
+        return;
+    end
+    if ~isnumeric(value) || ~isscalar(value) || ~isreal(value) || ...
+            ~isfinite(value) || value < 0
+        error('FI6:InvalidControls', ...
+            'controls.%s must be empty or a finite nonnegative real scalar.', name);
+    end
+    value = double(value);
+end
+
+function policy = getWasteCouplingPolicyField(s, name, defaultValue)
+    policy = string(getFieldOrDefault(s, name, defaultValue));
+    validPolicies = [
+        "pressure_driven_independent"
+        "gated_by_internal_flow"
+        "capped_by_internal_flow"
+    ];
+    if ~isscalar(policy) || ~any(policy == validPolicies)
+        error('FI6:InvalidControls', ...
+            'controls.%s must be one of: %s.', ...
+            name, char(strjoin(validPolicies, ", ")));
     end
 end
 

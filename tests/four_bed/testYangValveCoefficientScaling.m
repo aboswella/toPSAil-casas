@@ -19,12 +19,14 @@ function testMinimalControls()
     assert(controls.feedVelocityCmSec == 5.2);
     assert(controls.Cv_directTransfer == 1.0e-6);
     assert(controls.ADPP_BF_internalSplitFraction == 1/3);
+    assert(isfield(controls, 'ADPP_BF_externalProductPressureRatio'));
+    assert(isempty(controls.ADPP_BF_externalProductPressureRatio));
+    assert(controls.Cv_ADPP_feed == controls.Cv_directTransfer);
+    assert(controls.Cv_ADPP_product == controls.Cv_directTransfer);
+    assert(controls.Cv_ADPP_BF_internal == controls.Cv_directTransfer);
     assert(controls.adapterCoefficientBasis == "scaled_dimensionless_raw_direct");
     assert(~isfield(controls, 'Cv_PP_PU_internal'));
     assert(~isfield(controls, 'Cv_PU_waste'));
-    assert(~isfield(controls, 'Cv_ADPP_feed'));
-    assert(~isfield(controls, 'Cv_ADPP_product'));
-    assert(~isfield(controls, 'Cv_ADPP_BF_internal'));
     assert(~isfield(controls, 'adapterCvBasis'));
     assert(~isfield(controls, 'valveCoefficientBasis'));
 
@@ -36,6 +38,13 @@ function testMinimalControls()
     assert(override.adapterCoefficientBasis == "scaled_dimensionless_raw_direct");
     assert(any(override.Cv_directTransferAliasReport.ignoredControlBasisFields == "adapterCvBasis"));
     assert(any(override.Cv_directTransferAliasReport.ignoredNativeCvFields == "Cv_EQI"));
+
+    productPressureOverride = normalizeYangFourBedControls(struct( ...
+        "ADPP_BF_externalProductPressureRatio", 0.75), struct());
+    assert(productPressureOverride.ADPP_BF_externalProductPressureRatio == 0.75);
+    assertErrorIdentifier(@() normalizeYangFourBedControls(struct( ...
+        "ADPP_BF_externalProductPressureRatio", -0.1), struct()), ...
+        'FI6:InvalidControls');
 end
 
 function testLegacyAdapterAliasesCollapse()
@@ -43,14 +52,17 @@ function testLegacyAdapterAliasesCollapse()
         "Cv_PP_PU_internal", 2.0e-6, ...
         "Cv_PU_waste", 4.0e-6, ...
         "Cv_ADPP_feed", 2.0e-6, ...
-        "Cv_ADPP_product", 2.0e-6, ...
-        "Cv_ADPP_BF_internal", 2.0e-6), struct());
+        "Cv_ADPP_product", 3.0e-6, ...
+        "Cv_ADPP_BF_internal", 4.0e-6), struct());
     assert(aliased.Cv_directTransfer == 2.0e-6);
-    assert(numel(aliased.Cv_directTransferAliasReport.usedFallbackAliases) == 5);
+    assert(aliased.Cv_ADPP_feed == 2.0e-6);
+    assert(aliased.Cv_ADPP_product == 3.0e-6);
+    assert(aliased.Cv_ADPP_BF_internal == 4.0e-6);
+    assert(numel(aliased.Cv_directTransferAliasReport.usedFallbackAliases) == 2);
 
     assertErrorIdentifier(@() normalizeYangFourBedControls(struct( ...
         "Cv_PP_PU_internal", 2.0e-6, ...
-        "Cv_ADPP_product", 3.0e-6), struct()), ...
+        "Cv_PU_waste", 6.0e-6), struct()), ...
         'FI6:ConflictingLegacyCvAliases');
 end
 
@@ -83,22 +95,31 @@ function testAdppBfRawDirectBasis()
     config = makeAdppBfConfig();
     [normalized, ~] = validateYangAdppBfAdapterInputs(adppCase, params, config);
     assert(normalized.Cv_directTransfer == config.Cv_directTransfer);
+    assert(normalized.Cv_ADPP_feed == config.Cv_ADPP_feed);
+    assert(normalized.Cv_ADPP_product == config.Cv_ADPP_product);
+    assert(normalized.Cv_ADPP_BF_internal == config.Cv_ADPP_BF_internal);
     assert(normalized.rawCv.Cv_directTransfer == config.Cv_directTransfer);
+    assert(normalized.rawCv.Cv_ADPP_feed == config.Cv_ADPP_feed);
+    assert(normalized.rawCv.Cv_ADPP_product == config.Cv_ADPP_product);
+    assert(normalized.rawCv.Cv_ADPP_BF_internal == config.Cv_ADPP_BF_internal);
     assert(normalized.effectiveCv.Cv_directTransfer == config.Cv_directTransfer);
     assert(normalized.valveCoefficientBasis == "scaled_dimensionless_raw_direct");
     assert(~normalized.adapterCvScalingApplied);
     assert(isnan(normalized.valScaleFac));
-    assert(normalized.derivedConductance.ADPP_feed == config.Cv_directTransfer);
-    assert(normalized.derivedConductance.ADPP_productCandidate == config.Cv_directTransfer);
-    assert(normalized.derivedConductance.ADPP_BF_internalCandidate == config.Cv_directTransfer);
+    assert(normalized.derivedConductance.ADPP_feed == config.Cv_ADPP_feed);
+    assert(normalized.derivedConductance.ADPP_product == config.Cv_ADPP_product);
+    assert(normalized.derivedConductance.ADPP_BF_internal == config.Cv_ADPP_BF_internal);
 
     [~, report] = runYangDirectCouplingAdapter(adppCase, params, ...
         setfield(config, 'validationOnly', true)); %#ok<SFLD>
     assert(report.Cv_directTransfer == config.Cv_directTransfer);
+    assert(report.Cv_ADPP_feed == config.Cv_ADPP_feed);
+    assert(report.Cv_ADPP_product == config.Cv_ADPP_product);
+    assert(report.Cv_ADPP_BF_internal == config.Cv_ADPP_BF_internal);
     assert(report.effectiveCv.Cv_directTransfer == config.Cv_directTransfer);
     assert(report.valveCoefficientBasis == "scaled_dimensionless_raw_direct");
     assert(~report.adapterCvScalingApplied);
-    assert(report.effectiveSplit.primaryControl == "ADPP_BF_internalSplitFraction");
+    assert(report.effectiveSplit.primaryControl == "pressure_driven_independent_branches");
 end
 
 function [params, tempCase] = buildAdapterContext(family)
@@ -178,6 +199,9 @@ function config = makeAdppBfConfig()
     config.durationDimless = 0.01;
     config.durationSeconds = [];
     config.Cv_directTransfer = 2.0e-6;
+    config.Cv_ADPP_feed = 2.0e-6;
+    config.Cv_ADPP_product = 3.0e-6;
+    config.Cv_ADPP_BF_internal = 4.0e-6;
     config.ADPP_BF_internalSplitFraction = 1/3;
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;

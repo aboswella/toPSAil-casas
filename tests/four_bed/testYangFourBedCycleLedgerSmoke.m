@@ -12,7 +12,8 @@ function testYangFourBedCycleLedgerSmoke()
         "cycleTimeSec", 240, ...
         "nativeRunner", @spyNativeRunnerUnchangedWithFlows, ...
         "adapterValidationOnly", true, ...
-        "Cv_directTransfer", 1e-6);
+        "Cv_directTransfer", 1e-6, ...
+        "ADPP_BF_externalProductPressureRatio", 0.75);
 
     [~, report] = runYangFourBedCycle(makePhysicalContainer(params), params, controls);
     rows = report.ledger.streamRows;
@@ -29,8 +30,29 @@ function testYangFourBedCycleLedgerSmoke()
 
     productRows = rows(rows.stream_scope == "external_product", :);
     assert(~any(productRows.stream_scope == "internal_transfer"));
+    assertAdppBfProductPressureControl(report, 0.75);
 
     fprintf('FI-7 cycle ledger smoke passed: one spy cycle emits all wrapper stream scopes.\n');
+end
+
+function assertAdppBfProductPressureControl(report, expectedRatio)
+    families = strings(numel(report.operationReports), 1);
+    for i = 1:numel(report.operationReports)
+        families(i) = string(report.operationReports(i).operationFamily);
+    end
+    adppReports = report.operationReports(families == "ADPP_BF");
+    ppReports = report.operationReports(families == "PP_PU");
+    assert(~isempty(adppReports));
+    for i = 1:numel(adppReports)
+        runReport = adppReports(i).runReport;
+        assert(isfield(runReport, 'externalProductPressureRatio'));
+        assert(runReport.externalProductPressureRatio == expectedRatio);
+        assert(runReport.externalProductPressureBasis == ...
+            "controls.ADPP_BF_externalProductPressureRatio");
+    end
+    for i = 1:numel(ppReports)
+        assert(~isfield(ppReports(i).runReport, 'externalProductPressureRatio'));
+    end
 end
 
 function [terminalLocalStates, nativeReport] = spyNativeRunnerUnchangedWithFlows(tempCase, params, ~, group)

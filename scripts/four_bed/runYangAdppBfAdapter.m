@@ -89,8 +89,13 @@ function report = initializeReport(tempCase, config, validationReport)
     report.durationDimless = config.durationDimless;
     report.timeBasis = "not_resolved";
     report.Cv_directTransfer = config.Cv_directTransfer;
+    report.Cv_ADPP_feed = config.Cv_ADPP_feed;
+    report.Cv_ADPP_product = config.Cv_ADPP_product;
+    report.Cv_ADPP_BF_internal = config.Cv_ADPP_BF_internal;
     report.derivedConductance = config.derivedConductance;
     report.ADPP_BF_internalSplitFraction = config.ADPP_BF_internalSplitFraction;
+    report.ADPP_BF_internalSplitFractionRole = ...
+        string(config.ADPP_BF_internalSplitFractionRole);
     report.ADPP_BF_splitMode = string(config.ADPP_BF_splitMode);
     report.ADPP_BF_internalCvPolicy = string(config.ADPP_BF_internalCvPolicy);
     report.rawCv = config.rawCv;
@@ -426,10 +431,13 @@ function split = makeEmptyEffectiveSplit(config, unitBasis)
     split.H2 = NaN;
     split.total = NaN;
     split.requestedInternalSplitFraction = config.ADPP_BF_internalSplitFraction;
+    split.requestedInternalSplitFractionRole = ...
+        "legacy_unused_diagnostic_not_rate_control";
+    split.legacyInternalSplitFraction = config.ADPP_BF_internalSplitFraction;
     split.componentNames = string(config.componentNames(:));
     split.byComponent = NaN(nComs, 1);
-    split.primaryControl = "ADPP_BF_internalSplitFraction";
-    split.conductanceControl = "Cv_directTransfer";
+    split.primaryControl = "pressure_driven_independent_branches";
+    split.conductanceControl = "Cv_ADPP_feed/Cv_ADPP_product/Cv_ADPP_BF_internal";
 end
 
 function metadata = makeStateMetadata(tempCase, localIndex)

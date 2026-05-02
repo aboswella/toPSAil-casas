@@ -112,6 +112,21 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         "allowReverseInternalFlow", false);
     adapterConfig.allowReverseWasteFlow = getLogicalField(adapterConfig, ...
         "allowReverseWasteFlow", false);
+    adapterConfig.PP_PU_wasteCouplingPolicy = validateWasteCouplingPolicy( ...
+        getStringField(adapterConfig, "PP_PU_wasteCouplingPolicy", ...
+        "pressure_driven_independent"));
+    adapterConfig.PP_PU_wasteCouplingAlpha = getNumericScalarWithDefault(adapterConfig, ...
+        "PP_PU_wasteCouplingAlpha", 1.0);
+    if adapterConfig.PP_PU_wasteCouplingAlpha < 0
+        error('FI4:InvalidAdapterConfig', ...
+            'adapterConfig.PP_PU_wasteCouplingAlpha must be nonnegative.');
+    end
+    if adapterConfig.allowReverseWasteFlow && ...
+            adapterConfig.PP_PU_wasteCouplingPolicy ~= "pressure_driven_independent"
+        error('FI4:UnsupportedPpPuWasteCouplingReverseFlow', ...
+            ['PP->PU coupled waste policies require allowReverseWasteFlow=false; ' ...
+            'use pressure_driven_independent for the legacy reverse-waste mode.']);
+    end
     adapterConfig.componentNames = resolveComponentNames(templateParams, adapterConfig);
     adapterConfig.conservationAbsTol = getNumericScalarWithDefault(adapterConfig, ...
         "conservationAbsTol", 1e-8);
@@ -240,6 +255,20 @@ function value = getStringField(config, fieldName, defaultValue)
     value = defaultValue;
     if isfield(config, char(fieldName)) && ~isempty(config.(char(fieldName)))
         value = string(config.(char(fieldName)));
+    end
+end
+
+function policy = validateWasteCouplingPolicy(policy)
+    policy = string(policy);
+    validPolicies = [
+        "pressure_driven_independent"
+        "gated_by_internal_flow"
+        "capped_by_internal_flow"
+    ];
+    if ~isscalar(policy) || ~any(policy == validPolicies)
+        error('FI4:InvalidAdapterConfig', ...
+            'adapterConfig.PP_PU_wasteCouplingPolicy must be one of: %s.', ...
+            char(strjoin(validPolicies, ", ")));
     end
 end
 

@@ -13,6 +13,11 @@ function testYangAdppBfAdapterContract()
         adppCase, params, config);
     assert(validation.pass);
     assert(normalizedConfig.directTransferFamily == "ADPP_BF");
+    assert(normalizedConfig.Cv_ADPP_feed == config.Cv_ADPP_feed);
+    assert(normalizedConfig.Cv_ADPP_product == config.Cv_ADPP_product);
+    assert(normalizedConfig.Cv_ADPP_BF_internal == config.Cv_ADPP_BF_internal);
+    assert(normalizedConfig.ADPP_BF_splitMode == ...
+        "pressure_driven_independent_branches");
 
     assert(adppCase.native.nativeRunnable == false);
     assert(adppCase.localMap.local_index(1) == 1);
@@ -45,8 +50,11 @@ function testYangAdppBfAdapterContract()
     assert(all(adapterReport.flows.externalWasteByComponent == 0));
     assert(isfield(adapterReport, 'effectiveSplit'));
     assert(adapterReport.effectiveSplit.primaryControl == ...
-        "ADPP_BF_internalSplitFraction");
-    assert(abs(adapterReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
+        "pressure_driven_independent_branches");
+    assert(adapterReport.effectiveSplit.conductanceControl == ...
+        "Cv_ADPP_feed/Cv_ADPP_product/Cv_ADPP_BF_internal");
+    assert(adapterReport.ADPP_BF_internalSplitFractionRole == ...
+        "legacy_unused_diagnostic_not_rate_control");
 
     assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, normalizedConfig);
 
@@ -120,6 +128,9 @@ function config = makeAdppBfConfig(validationOnly)
     config.durationDimless = 0.01;
     config.durationSeconds = [];
     config.Cv_directTransfer = 0.03;
+    config.Cv_ADPP_feed = 0.03;
+    config.Cv_ADPP_product = 0.02;
+    config.Cv_ADPP_BF_internal = 0.04;
     config.ADPP_BF_internalSplitFraction = 1/3;
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
@@ -182,16 +193,52 @@ function assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, config)
 
     totalProductEnd = base.native.totalExternalProduct + base.native.totalInternalTransferOut;
     assert(totalProductEnd > 0);
-    assert(abs(base.native.totalInternalTransferOut / totalProductEnd - 1/3) < 1e-12);
-    assert(base.effectiveSplit.primaryControl == "ADPP_BF_internalSplitFraction");
+    expectedSplit = expectedIndependentSplit(params, adppCase, config);
+    assert(abs(base.native.totalInternalTransferOut / totalProductEnd - expectedSplit) < 1e-12);
+    assert(base.effectiveSplit.primaryControl == "pressure_driven_independent_branches");
 
-    splitConfig = config;
-    splitConfig.ADPP_BF_internalSplitFraction = 0.5;
-    [splitConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, splitConfig);
-    splitChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, splitConfig);
-    splitTotal = splitChanged.native.totalExternalProduct + ...
-        splitChanged.native.totalInternalTransferOut;
-    assert(abs(splitChanged.native.totalInternalTransferOut / splitTotal - 0.5) < 1e-12);
+    legacySplitConfig = config;
+    legacySplitConfig.ADPP_BF_internalSplitFraction = 0.5;
+    [legacySplitConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, legacySplitConfig);
+    legacySplitChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, legacySplitConfig);
+    assert(abs(legacySplitChanged.effectiveSplit.total - base.effectiveSplit.total) < 1e-12);
+
+    branchConfig = config;
+    branchConfig.Cv_ADPP_BF_internal = 0.01;
+    [branchConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, branchConfig);
+    branchChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, branchConfig);
+    branchExpectedSplit = expectedIndependentSplit(params, adppCase, branchConfig);
+    assert(abs(branchChanged.effectiveSplit.total - branchExpectedSplit) < 1e-12);
+    assert(abs(branchChanged.effectiveSplit.total - base.effectiveSplit.total) > 1e-6);
+end
+
+function expectedSplit = expectedIndependentSplit(params, adppCase, config)
+    donorProductPressure = endpointPressureRatio(params, ...
+        adppCase.localStates{1}.stateVector, "product_end");
+    receiverProductPressure = endpointPressureRatio(params, ...
+        adppCase.localStates{2}.stateVector, "product_end");
+    expectedProductRate = config.Cv_ADPP_product .* ...
+        max(0, donorProductPressure - config.externalProductPressureRatio);
+    expectedInternalRate = config.Cv_ADPP_BF_internal .* ...
+        max(0, donorProductPressure - receiverProductPressure);
+    expectedSplit = expectedInternalRate ./ ...
+        (expectedInternalRate + expectedProductRate);
+end
+
+function pressureRatio = endpointPressureRatio(params, stateVector, endpoint)
+    bed = reshape(stateVector(:), params.nStates, params.nVols).';
+    switch string(endpoint)
+        case "feed_end"
+            idx = 1;
+        case "product_end"
+            idx = params.nVols;
+        otherwise
+            error('test:UnsupportedEndpoint', ...
+                'Unsupported endpoint %s.', char(endpoint));
+    end
+    gasTotal = sum(bed(idx, 1:params.nComs));
+    temperature = bed(idx, 2*params.nComs+1);
+    pressureRatio = gasTotal .* temperature;
 end
 
 function col = makeBoundaryColumnStruct(params, adppCase)

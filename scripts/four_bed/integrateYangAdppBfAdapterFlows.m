@@ -128,34 +128,31 @@ function rates = evaluateRates(params, donor, receiver, config)
     pDonorFe = donorFeTotal .* donor.temps(1, 1);
     pDonorPr = donorPrTotal .* donor.temps(end, 1);
     pReceiverPr = receiverPrTotal .* receiver.temps(end, 1);
-    cvDirect = config.Cv_directTransfer;
-    internalSplit = getInternalSplitFraction(config);
+    cvFeed = getBranchCv(config, 'Cv_ADPP_feed');
+    cvProduct = getBranchCv(config, 'Cv_ADPP_product');
+    cvInternal = getBranchCv(config, 'Cv_ADPP_BF_internal');
 
-    rawFeed = cvDirect .* (config.feedPressureRatio - pDonorFe);
+    rawFeed = cvFeed .* (config.feedPressureRatio - pDonorFe);
     if config.allowReverseFeedFlow
         nDotFeed = rawFeed;
     else
         nDotFeed = max(0, rawFeed);
     end
 
-    rawExternalProductCandidate = cvDirect .* ...
+    rawExternalProduct = cvProduct .* ...
         (pDonorPr - config.externalProductPressureRatio);
     if config.allowReverseProductFlow
-        nDotExternalProductCandidate = rawExternalProductCandidate;
+        nDotExternalProduct = rawExternalProduct;
     else
-        nDotExternalProductCandidate = max(0, rawExternalProductCandidate);
+        nDotExternalProduct = max(0, rawExternalProduct);
     end
 
-    rawInternalCandidate = cvDirect .* (pDonorPr - pReceiverPr);
+    rawInternal = cvInternal .* (pDonorPr - pReceiverPr);
     if config.allowReverseInternalFlow
-        nDotInternalCandidate = rawInternalCandidate;
+        nDotInternal = rawInternal;
     else
-        nDotInternalCandidate = max(0, rawInternalCandidate);
+        nDotInternal = max(0, rawInternal);
     end
-
-    nDotProductTotal = nDotExternalProductCandidate + nDotInternalCandidate;
-    nDotInternal = internalSplit .* nDotProductTotal;
-    nDotExternalProduct = (1 - internalSplit) .* nDotProductTotal;
 
     yFeed = resolveFeedMoleFractions(params);
     yDonorPr = donorPrGas ./ safeDenominator(donorPrTotal);
@@ -165,12 +162,13 @@ function rates = evaluateRates(params, donor, receiver, config)
     rates.externalProductByComponent = yDonorPr .* nDotExternalProduct;
     rates.internalByComponent = yDonorPr .* nDotInternal;
     rates.donorFeedVol = nDotFeed ./ safeDenominator(donorFeTotal);
-    rates.donorProductVol = nDotProductTotal ./ safeDenominator(donorPrTotal);
+    rates.donorProductVol = (nDotExternalProduct + nDotInternal) ./ ...
+        safeDenominator(donorPrTotal);
     rates.receiverProductVol = -nDotInternal ./ safeDenominator(receiverPrTotal);
     rates.receiverFeedVol = 0;
 end
 
-function split = getInternalSplitFraction(config)
+function split = getLegacyInternalSplitFraction(config)
     if isfield(config, 'ADPP_BF_internalSplitFraction') && ...
             ~isempty(config.ADPP_BF_internalSplitFraction)
         split = config.ADPP_BF_internalSplitFraction;
@@ -183,6 +181,23 @@ function split = getInternalSplitFraction(config)
             'adapterConfig.ADPP_BF_internalSplitFraction must be between 0 and 1.');
     end
     split = double(split);
+end
+
+function cv = getBranchCv(config, fieldName)
+    if isfield(config, fieldName) && ~isempty(config.(fieldName))
+        cv = config.(fieldName);
+    elseif isfield(config, 'Cv_directTransfer') && ~isempty(config.Cv_directTransfer)
+        cv = config.Cv_directTransfer;
+    else
+        error('FI5:InvalidAdapterConfig', ...
+            'adapterConfig.%s or adapterConfig.Cv_directTransfer is required.', fieldName);
+    end
+    if ~isnumeric(cv) || ~isscalar(cv) || ~isreal(cv) || ...
+            ~isfinite(cv) || cv < 0
+        error('FI5:InvalidAdapterConfig', ...
+            'adapterConfig.%s must be a finite nonnegative real scalar.', fieldName);
+    end
+    cv = double(cv);
 end
 
 function y = resolveFeedMoleFractions(params)
@@ -249,11 +264,14 @@ function split = computeEffectiveSplit(nativeFlows, config)
     split.unitBasis = nativeFlows.unitBasis;
     split.H2 = byComponent(h2Index);
     split.total = total;
-    split.requestedInternalSplitFraction = getInternalSplitFraction(config);
+    split.requestedInternalSplitFraction = getLegacyInternalSplitFraction(config);
+    split.requestedInternalSplitFractionRole = ...
+        "legacy_unused_diagnostic_not_rate_control";
+    split.legacyInternalSplitFraction = split.requestedInternalSplitFraction;
     split.componentNames = componentNames;
     split.byComponent = byComponent;
-    split.primaryControl = "ADPP_BF_internalSplitFraction";
-    split.conductanceControl = "Cv_directTransfer";
+    split.primaryControl = "pressure_driven_independent_branches";
+    split.conductanceControl = "Cv_ADPP_feed/Cv_ADPP_product/Cv_ADPP_BF_internal";
 end
 
 function den = safeDenominator(value)

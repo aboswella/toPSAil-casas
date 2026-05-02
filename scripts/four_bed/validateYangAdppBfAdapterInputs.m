@@ -83,13 +83,21 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
     adapterConfig.durationDimless = getOptionalField(adapterConfig, "durationDimless", []);
     validateDuration(adapterConfig.durationSeconds, adapterConfig.durationDimless);
 
-    adapterConfig.Cv_directTransfer = getRequiredNumericScalar( ...
-        adapterConfig, "Cv_directTransfer");
+    [adapterConfig.Cv_directTransfer, hasCvDirectTransfer] = ...
+        getOptionalNonnegativeNumericScalar(adapterConfig, "Cv_directTransfer", NaN);
+    adapterConfig.Cv_ADPP_feed = getBranchCvWithFallback(adapterConfig, ...
+        "Cv_ADPP_feed", adapterConfig.Cv_directTransfer, hasCvDirectTransfer);
+    adapterConfig.Cv_ADPP_product = getBranchCvWithFallback(adapterConfig, ...
+        "Cv_ADPP_product", adapterConfig.Cv_directTransfer, hasCvDirectTransfer);
+    adapterConfig.Cv_ADPP_BF_internal = getBranchCvWithFallback(adapterConfig, ...
+        "Cv_ADPP_BF_internal", adapterConfig.Cv_directTransfer, hasCvDirectTransfer);
     adapterConfig.ADPP_BF_internalSplitFraction = getFractionWithDefault( ...
         adapterConfig, "ADPP_BF_internalSplitFraction", 1.0 / 3.0);
-    adapterConfig.ADPP_BF_splitMode = "fixed_internal_split_fraction";
+    adapterConfig.ADPP_BF_splitMode = "pressure_driven_independent_branches";
     adapterConfig.ADPP_BF_internalCvPolicy = ...
-        "single Cv_directTransfer forms feed, product, and internal candidates; split fraction controls final branch allocation";
+        "independent feed/product/internal conductances; effective split is diagnostic";
+    adapterConfig.ADPP_BF_internalSplitFractionRole = ...
+        "legacy_unused_diagnostic_not_rate_control";
     adapterConfig = resolveAdppBfConductanceBasis(adapterConfig);
 
     [adapterConfig.feedPressureRatio, adapterConfig.feedPressureBasis] = ...
@@ -122,17 +130,24 @@ end
 
 function adapterConfig = resolveAdppBfConductanceBasis(adapterConfig)
     cv = adapterConfig.Cv_directTransfer;
+    cvFeed = adapterConfig.Cv_ADPP_feed;
+    cvProduct = adapterConfig.Cv_ADPP_product;
+    cvInternal = adapterConfig.Cv_ADPP_BF_internal;
     adapterConfig.adapterCoefficientBasis = "scaled_dimensionless_raw_direct";
     adapterConfig.valveCoefficientBasis = adapterConfig.adapterCoefficientBasis;
-    adapterConfig.rawCv = struct("Cv_directTransfer", cv);
-    adapterConfig.effectiveCv = struct("Cv_directTransfer", cv);
+    adapterConfig.rawCv = struct( ...
+        "Cv_directTransfer", cv, ...
+        "Cv_ADPP_feed", cvFeed, ...
+        "Cv_ADPP_product", cvProduct, ...
+        "Cv_ADPP_BF_internal", cvInternal);
+    adapterConfig.effectiveCv = adapterConfig.rawCv;
     adapterConfig.adapterCvScalingApplied = false;
     adapterConfig.valScaleFac = NaN;
     adapterConfig.derivedConductance = struct( ...
-        "ADPP_feed", cv, ...
-        "ADPP_productCandidate", cv, ...
-        "ADPP_BF_internalCandidate", cv, ...
-        "derivation", "all ADPP conductance candidates use Cv_directTransfer");
+        "ADPP_feed", cvFeed, ...
+        "ADPP_product", cvProduct, ...
+        "ADPP_BF_internal", cvInternal, ...
+        "derivation", "ADPP_BF branches use independent pressure-driven conductances");
 end
 
 function validateDuration(durationSeconds, durationDimless)
@@ -247,6 +262,38 @@ function value = getRequiredNumericScalar(config, fieldName)
         error('FI5:InvalidAdapterConfig', ...
             'adapterConfig.%s must be nonnegative.', char(fieldName));
     end
+end
+
+function [value, supplied] = getOptionalNonnegativeNumericScalar(config, fieldName, defaultValue)
+    supplied = isfield(config, char(fieldName)) && ...
+        ~isempty(config.(char(fieldName)));
+    if supplied
+        value = validateNumericScalar(config.(char(fieldName)), fieldName);
+        if value < 0
+            error('FI5:InvalidAdapterConfig', ...
+                'adapterConfig.%s must be nonnegative.', char(fieldName));
+        end
+    else
+        value = defaultValue;
+    end
+end
+
+function value = getBranchCvWithFallback(config, fieldName, fallbackValue, hasFallback)
+    if isfield(config, char(fieldName)) && ~isempty(config.(char(fieldName)))
+        value = validateNumericScalar(config.(char(fieldName)), fieldName);
+        if value < 0
+            error('FI5:InvalidAdapterConfig', ...
+                'adapterConfig.%s must be nonnegative.', char(fieldName));
+        end
+        return;
+    end
+    if hasFallback
+        value = fallbackValue;
+        return;
+    end
+    error('FI5:MissingAdapterConfigField', ...
+        ['adapterConfig.%s is required for AD&PP->BF when ' ...
+        'adapterConfig.Cv_directTransfer is not supplied.'], char(fieldName));
 end
 
 function value = getNumericScalarWithDefault(config, fieldName, defaultValue, allowNaN)

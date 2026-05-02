@@ -48,8 +48,7 @@ function testYangAdppBfAdapterSplitConservation()
         assert(adapterReport.flowReport.flowSigns.receiverProductEnd.positiveCount == 0);
         assert(adapterReport.flowReport.flowSigns.receiverFeedEnd.positiveCount == 0);
         assert(adapterReport.effectiveSplit.primaryControl == ...
-            "ADPP_BF_internalSplitFraction");
-        assert(abs(adapterReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
+            "pressure_driven_independent_branches");
     end
 
     assertSyntheticSplitAccounting(params, adppCase, config);
@@ -109,6 +108,9 @@ function config = makeAdppBfConfig(validationOnly)
     config.durationDimless = 0.01;
     config.durationSeconds = [];
     config.Cv_directTransfer = 0.03;
+    config.Cv_ADPP_feed = 0.03;
+    config.Cv_ADPP_product = 0.02;
+    config.Cv_ADPP_BF_internal = 0.04;
     config.ADPP_BF_internalSplitFraction = 1/3;
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
@@ -139,15 +141,48 @@ function assertSyntheticSplitAccounting(params, adppCase, config)
         flowReport.native.internalTransferInByComponent, inf) <= eps);
     assert(flowReport.native.externalProductByComponent(1) > 0);
     assert(flowReport.native.internalTransferOutByComponent(1) > 0);
-    assert(abs(flowReport.effectiveSplit.H2 - 1/3) < 1e-12);
-    assert(abs(flowReport.effectiveSplit.total - 1/3) < 1e-12);
+    expectedSplit = expectedIndependentSplit(params, adppCase, config);
+    assert(abs(flowReport.effectiveSplit.H2 - expectedSplit) < 1e-12);
+    assert(abs(flowReport.effectiveSplit.total - expectedSplit) < 1e-12);
     assert(flowReport.effectiveSplit.primaryControl == ...
-        "ADPP_BF_internalSplitFraction");
-    assert(abs(flowReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
+        "pressure_driven_independent_branches");
+    assert(flowReport.effectiveSplit.conductanceControl == ...
+        "Cv_ADPP_feed/Cv_ADPP_product/Cv_ADPP_BF_internal");
+    assert(flowReport.native.totalExternalProduct > 0);
+    assert(flowReport.native.totalInternalTransferOut > 0);
     assert(flowReport.flowSigns.donorFeedEnd.negativeCount == 0);
     assert(flowReport.flowSigns.donorProductEnd.negativeCount == 0);
     assert(flowReport.flowSigns.receiverProductEnd.positiveCount == 0);
     assert(flowReport.flowSigns.receiverFeedEnd.positiveCount == 0);
+end
+
+function expectedSplit = expectedIndependentSplit(params, adppCase, config)
+    donorProductPressure = endpointPressureRatio(params, ...
+        adppCase.localStates{1}.stateVector, "product_end");
+    receiverProductPressure = endpointPressureRatio(params, ...
+        adppCase.localStates{2}.stateVector, "product_end");
+    expectedProductRate = config.Cv_ADPP_product .* ...
+        max(0, donorProductPressure - config.externalProductPressureRatio);
+    expectedInternalRate = config.Cv_ADPP_BF_internal .* ...
+        max(0, donorProductPressure - receiverProductPressure);
+    expectedSplit = expectedInternalRate ./ ...
+        (expectedInternalRate + expectedProductRate);
+end
+
+function pressureRatio = endpointPressureRatio(params, stateVector, endpoint)
+    bed = reshape(stateVector(:), params.nStates, params.nVols).';
+    switch string(endpoint)
+        case "feed_end"
+            idx = 1;
+        case "product_end"
+            idx = params.nVols;
+        otherwise
+            error('test:UnsupportedEndpoint', ...
+                'Unsupported endpoint %s.', char(endpoint));
+    end
+    gasTotal = sum(bed(idx, 1:params.nComs));
+    temperature = bed(idx, 2*params.nComs+1);
+    pressureRatio = gasTotal .* temperature;
 end
 
 function row = makeTwoBedNativeRow(params, adppCase)

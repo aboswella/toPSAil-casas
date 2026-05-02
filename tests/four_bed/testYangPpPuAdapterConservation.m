@@ -8,6 +8,7 @@ function testYangPpPuAdapterConservation()
 
     [params, ppCase] = buildAdapterTestContext();
     config = makeAdapterConfig(false);
+    assertCappedWasteCouplingBlocksZeroInternalPurge(params);
 
     try
         [terminalLocalStates, adapterReport] = runYangPpPuAdapter(ppCase, params, config);
@@ -98,6 +99,8 @@ function config = makeAdapterConfig(validationOnly)
     config.receiverWastePressureClass = "P4";
     config.allowReverseInternalFlow = false;
     config.allowReverseWasteFlow = false;
+    config.PP_PU_wasteCouplingPolicy = "pressure_driven_independent";
+    config.PP_PU_wasteCouplingAlpha = 1.0;
     config.componentNames = ["H2"; "CO2"];
     config.conservationAbsTol = 1e-8;
     config.conservationRelTol = 1e-6;
@@ -105,4 +108,42 @@ function config = makeAdapterConfig(validationOnly)
     config.validationOnly = validationOnly;
     config.cycleIndex = NaN;
     config.slotIndex = NaN;
+end
+
+function assertCappedWasteCouplingBlocksZeroInternalPurge(params)
+    y = [0.7697228145; 0.2302771855];
+    donor = makePhysicalPayload(params, 0.45, y, 0.02);
+    receiver = makePhysicalPayload(params, 1.00, y, 0.03);
+    row = makeTwoBedNativeRow(params, donor, receiver);
+    stTime = [0; 0.01];
+    stStates = [row; row];
+
+    independentConfig = makeAdapterConfig(false);
+    independentConfig.PP_PU_wasteCouplingPolicy = "pressure_driven_independent";
+    independentReport = integrateYangPpPuAdapterFlows( ...
+        params, stTime, stStates, independentConfig);
+
+    cappedConfig = independentConfig;
+    cappedConfig.PP_PU_wasteCouplingPolicy = "capped_by_internal_flow";
+    cappedConfig.PP_PU_wasteCouplingAlpha = 1.0;
+    cappedReport = integrateYangPpPuAdapterFlows( ...
+        params, stTime, stStates, cappedConfig);
+
+    smallTol = 100 * eps;
+    assert(independentReport.native.totalInternalTransferOut <= smallTol);
+    assert(independentReport.native.totalExternalWaste > smallTol);
+    assert(cappedReport.native.totalInternalTransferOut <= smallTol);
+    assert(cappedReport.native.totalExternalWaste <= smallTol);
+end
+
+function row = makeTwoBedNativeRow(params, donorPayload, receiverPayload)
+    donor = [
+        donorPayload.stateVector(:)
+        zeros(2*params.nComs, 1)
+    ];
+    receiver = [
+        receiverPayload.stateVector(:)
+        zeros(2*params.nComs, 1)
+    ];
+    row = [donor; receiver].';
 end

@@ -13,6 +13,8 @@ function testYangPpPuAdapterContract()
         ppCase, params, config);
     assert(validation.pass);
     assert(normalizedConfig.directTransferFamily == "PP_PU");
+    assert(normalizedConfig.PP_PU_wasteCouplingPolicy == "pressure_driven_independent");
+    assert(normalizedConfig.PP_PU_wasteCouplingAlpha == 1.0);
 
     assert(ppCase.native.nativeRunnable == false);
     assert(ppCase.localMap.local_index(1) == 1);
@@ -35,6 +37,8 @@ function testYangPpPuAdapterContract()
     assert(adapterReport.noFourBedRhsDae);
     assert(adapterReport.noCoreAdsorberPhysicsRewrite);
     assert(adapterReport.solverRunStatus == "validation_only_no_native_solver_invocation");
+    assert(adapterReport.PP_PU_wasteCouplingPolicy == "pressure_driven_independent");
+    assert(adapterReport.PP_PU_wasteCouplingAlpha == 1.0);
     assert(all(adapterReport.flows.externalProductByComponent == 0));
     assertPpPuFlowLawSigns(params, ppCase, normalizedConfig);
     assertPpPuFlowIntegratorShape(params, ppCase, normalizedConfig);
@@ -42,6 +46,13 @@ function testYangPpPuAdapterContract()
     missingControl = rmfield(config, 'Cv_directTransfer');
     assertErrorIdentifier(@() validateYangDirectCouplingAdapterInputs( ...
         ppCase, params, missingControl), 'FI4:MissingAdapterConfigField');
+
+    reverseCoupledWaste = config;
+    reverseCoupledWaste.allowReverseWasteFlow = true;
+    reverseCoupledWaste.PP_PU_wasteCouplingPolicy = "capped_by_internal_flow";
+    assertErrorIdentifier(@() validateYangDirectCouplingAdapterInputs( ...
+        ppCase, params, reverseCoupledWaste), ...
+        'FI4:UnsupportedPpPuWasteCouplingReverseFlow');
 
     unsupported = ppCase;
     unsupported.directTransferFamily = "EQI";
@@ -112,6 +123,8 @@ function config = makeAdapterConfig(validationOnly)
     config.receiverWastePressureClass = "P4";
     config.allowReverseInternalFlow = false;
     config.allowReverseWasteFlow = false;
+    config.PP_PU_wasteCouplingPolicy = "pressure_driven_independent";
+    config.PP_PU_wasteCouplingAlpha = 1.0;
     config.componentNames = ["H2"; "CO2"];
     config.conservationAbsTol = 1e-8;
     config.conservationRelTol = 1e-6;

@@ -22,11 +22,7 @@ function [volumetricFlow, flowState] = calcYangPpPuBoundaryFlows(params, col, nS
 
     rawWaste = cvWaste .* ...
         (state.receiver.feed.pressureRatio - config.receiverWastePressureRatio);
-    if config.allowReverseWasteFlow
-        nDotWaste = rawWaste;
-    else
-        nDotWaste = max(0, rawWaste);
-    end
+    nDotWaste = applyWasteCouplingPolicy(rawWaste, nDotInternal, config);
 
     switch endpoint
         case "donor_product_end"
@@ -50,6 +46,66 @@ function [volumetricFlow, flowState] = calcYangPpPuBoundaryFlows(params, col, nS
     flowState.endpoint = endpoint;
     flowState.donor = state.donor;
     flowState.receiver = state.receiver;
+end
+
+function nDotWaste = applyWasteCouplingPolicy(rawWaste, nDotInternal, config)
+    policy = getWasteCouplingPolicy(config);
+    alpha = getWasteCouplingAlpha(config);
+    allowReverseWasteFlow = getAllowReverseWasteFlow(config);
+
+    if policy == "pressure_driven_independent"
+        if allowReverseWasteFlow
+            nDotWaste = rawWaste;
+        else
+            nDotWaste = max(0, rawWaste);
+        end
+        return;
+    end
+
+    if allowReverseWasteFlow
+        error('FI4:UnsupportedPpPuWasteCouplingReverseFlow', ...
+            ['PP->PU coupled waste policies require allowReverseWasteFlow=false; ' ...
+            'use pressure_driven_independent for the legacy reverse-waste mode.']);
+    end
+
+    pressureDrivenWaste = max(0, rawWaste);
+    switch policy
+        case "gated_by_internal_flow"
+            tiny = 10 .* eps(class(nDotInternal));
+            nDotWaste = pressureDrivenWaste;
+            nDotWaste(abs(nDotInternal) <= tiny) = 0;
+        case "capped_by_internal_flow"
+            nDotWaste = min(pressureDrivenWaste, alpha .* max(0, nDotInternal));
+        otherwise
+            error('FI4:InvalidAdapterConfig', ...
+                'Unsupported PP->PU waste coupling policy %s.', char(policy));
+    end
+end
+
+function policy = getWasteCouplingPolicy(config)
+    if isfield(config, 'PP_PU_wasteCouplingPolicy') && ...
+            ~isempty(config.PP_PU_wasteCouplingPolicy)
+        policy = string(config.PP_PU_wasteCouplingPolicy);
+    else
+        policy = "pressure_driven_independent";
+    end
+end
+
+function alpha = getWasteCouplingAlpha(config)
+    if isfield(config, 'PP_PU_wasteCouplingAlpha') && ...
+            ~isempty(config.PP_PU_wasteCouplingAlpha)
+        alpha = config.PP_PU_wasteCouplingAlpha;
+    else
+        alpha = 1.0;
+    end
+end
+
+function value = getAllowReverseWasteFlow(config)
+    if isfield(config, 'allowReverseWasteFlow') && ~isempty(config.allowReverseWasteFlow)
+        value = logical(config.allowReverseWasteFlow);
+    else
+        value = false;
+    end
 end
 
 function cv = getDerivedPurgeWasteCv(config)
