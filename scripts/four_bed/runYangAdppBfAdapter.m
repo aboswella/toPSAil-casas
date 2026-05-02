@@ -91,6 +91,9 @@ function report = initializeReport(tempCase, config, validationReport)
     report.Cv_ADPP_feed = config.Cv_ADPP_feed;
     report.Cv_ADPP_product = config.Cv_ADPP_product;
     report.Cv_ADPP_BF_internal = config.Cv_ADPP_BF_internal;
+    report.ADPP_BF_internalSplitFraction = config.ADPP_BF_internalSplitFraction;
+    report.ADPP_BF_splitMode = string(config.ADPP_BF_splitMode);
+    report.ADPP_BF_internalCvPolicy = string(config.ADPP_BF_internalCvPolicy);
     report.rawCv = config.rawCv;
     report.effectiveCv = config.effectiveCv;
     report.valveCoefficientBasis = string(config.valveCoefficientBasis);
@@ -423,9 +426,10 @@ function split = makeEmptyEffectiveSplit(config, unitBasis)
     split.unitBasis = unitBasis;
     split.H2 = NaN;
     split.total = NaN;
+    split.requestedInternalSplitFraction = config.ADPP_BF_internalSplitFraction;
     split.componentNames = string(config.componentNames(:));
     split.byComponent = NaN(nComs, 1);
-    split.primaryControl = "valve_coefficients_not_hard_coded_split_ratio";
+    split.primaryControl = "fixed_internal_split_fraction";
 end
 
 function metadata = makeStateMetadata(tempCase, localIndex)

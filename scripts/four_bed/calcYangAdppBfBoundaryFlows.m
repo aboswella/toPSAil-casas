@@ -12,6 +12,7 @@ function [volumetricFlow, flowState] = calcYangAdppBfBoundaryFlows(params, col, 
     cvFeed = getEffectiveCv(config, "Cv_ADPP_feed");
     cvProduct = getEffectiveCv(config, "Cv_ADPP_product");
     cvInternal = getEffectiveCv(config, "Cv_ADPP_BF_internal");
+    internalSplit = getInternalSplitFraction(config);
 
     rawFeed = cvFeed .* ...
         (config.feedPressureRatio - state.donor.feed.pressureRatio);
@@ -21,21 +22,25 @@ function [volumetricFlow, flowState] = calcYangAdppBfBoundaryFlows(params, col, 
         nDotFeed = max(0, rawFeed);
     end
 
-    rawExternalProduct = cvProduct .* ...
+    rawExternalProductCandidate = cvProduct .* ...
         (state.donor.product.pressureRatio - config.externalProductPressureRatio);
     if config.allowReverseProductFlow
-        nDotExternalProduct = rawExternalProduct;
+        nDotExternalProductCandidate = rawExternalProductCandidate;
     else
-        nDotExternalProduct = max(0, rawExternalProduct);
+        nDotExternalProductCandidate = max(0, rawExternalProductCandidate);
     end
 
-    rawInternal = cvInternal .* ...
+    rawInternalCandidate = cvInternal .* ...
         (state.donor.product.pressureRatio - state.receiver.product.pressureRatio);
     if config.allowReverseInternalFlow
-        nDotInternal = rawInternal;
+        nDotInternalCandidate = rawInternalCandidate;
     else
-        nDotInternal = max(0, rawInternal);
+        nDotInternalCandidate = max(0, rawInternalCandidate);
     end
+
+    nDotProductTotal = nDotExternalProductCandidate + nDotInternalCandidate;
+    nDotInternal = internalSplit .* nDotProductTotal;
+    nDotExternalProduct = (1 - internalSplit) .* nDotProductTotal;
 
     switch endpoint
         case "donor_feed_end"
@@ -55,11 +60,19 @@ function [volumetricFlow, flowState] = calcYangAdppBfBoundaryFlows(params, col, 
 
     flowState = struct();
     flowState.rawFeed = rawFeed;
-    flowState.rawExternalProduct = rawExternalProduct;
-    flowState.rawInternal = rawInternal;
+    flowState.rawExternalProductCandidate = rawExternalProductCandidate;
+    flowState.rawInternalCandidate = rawInternalCandidate;
+    flowState.nDotExternalProductCandidate = nDotExternalProductCandidate;
+    flowState.nDotInternalCandidate = nDotInternalCandidate;
+    flowState.nDotProductTotal = nDotProductTotal;
+    flowState.rawProductTotal = rawExternalProductCandidate + rawInternalCandidate;
+    flowState.rawExternalProduct = (1 - internalSplit) .* flowState.rawProductTotal;
+    flowState.rawInternal = internalSplit .* flowState.rawProductTotal;
     flowState.nDotFeed = nDotFeed;
     flowState.nDotExternalProduct = nDotExternalProduct;
     flowState.nDotInternal = nDotInternal;
+    flowState.internalSplitFraction = internalSplit;
+    flowState.splitMode = "fixed_internal_split_fraction";
     flowState.endpoint = endpoint;
     flowState.donor = state.donor;
     flowState.receiver = state.receiver;
@@ -72,6 +85,21 @@ function cv = getEffectiveCv(config, fieldName)
     else
         cv = config.(fieldName);
     end
+end
+
+function split = getInternalSplitFraction(config)
+    if isfield(config, 'ADPP_BF_internalSplitFraction') && ...
+            ~isempty(config.ADPP_BF_internalSplitFraction)
+        split = config.ADPP_BF_internalSplitFraction;
+    else
+        split = 1.0 / 3.0;
+    end
+    if ~isnumeric(split) || ~isscalar(split) || ~isreal(split) || ...
+            ~isfinite(split) || split < 0 || split > 1
+        error('FI5:InvalidAdapterConfig', ...
+            'adapterConfig.ADPP_BF_internalSplitFraction must be between 0 and 1.');
+    end
+    split = double(split);
 end
 
 function state = getEndpointState(params, col)

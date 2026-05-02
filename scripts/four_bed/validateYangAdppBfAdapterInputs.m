@@ -89,6 +89,11 @@ function adapterConfig = normalizeConfig(tempCase, templateParams, adapterConfig
         adapterConfig, "Cv_ADPP_product");
     adapterConfig.Cv_ADPP_BF_internal = getRequiredNumericScalar( ...
         adapterConfig, "Cv_ADPP_BF_internal");
+    adapterConfig.ADPP_BF_internalSplitFraction = getFractionWithDefault( ...
+        adapterConfig, "ADPP_BF_internalSplitFraction", 1.0 / 3.0);
+    adapterConfig.ADPP_BF_splitMode = "fixed_internal_split_fraction";
+    adapterConfig.ADPP_BF_internalCvPolicy = ...
+        "Cv_ADPP_BF_internal contributes to total product-end outflow candidate; split fraction controls final branch allocation";
     adapterConfig = resolveAdppBfValveBasis(templateParams, adapterConfig);
 
     [adapterConfig.feedPressureRatio, adapterConfig.feedPressureBasis] = ...
@@ -133,7 +138,8 @@ function adapterConfig = resolveAdppBfValveBasis(templateParams, adapterConfig)
         "Cv_ADPP_product", resolveYangValveCoefficient( ...
             adapterConfig.Cv_ADPP_product, templateParams, adapterConfig, "Cv_ADPP_product"), ...
         "Cv_ADPP_BF_internal", resolveYangValveCoefficient( ...
-            adapterConfig.Cv_ADPP_BF_internal, templateParams, adapterConfig, "Cv_ADPP_BF_internal"));
+            adapterConfig.Cv_ADPP_BF_internal, templateParams, adapterConfig, ...
+            "Cv_ADPP_BF_internal"));
     adapterConfig.adapterCvScalingApplied = ...
         adapterConfig.adapterCvBasis == "dimensional_kmol_per_bar_s";
     adapterConfig.valScaleFac = getValveScaleFactor(templateParams);
@@ -284,6 +290,14 @@ function value = getNumericScalarWithDefault(config, fieldName, defaultValue, al
         value = defaultValue;
     end
     value = validateNumericScalar(value, fieldName, allowNaN);
+end
+
+function value = getFractionWithDefault(config, fieldName, defaultValue)
+    value = getNumericScalarWithDefault(config, fieldName, defaultValue);
+    if value < 0 || value > 1
+        error('FI5:InvalidAdapterConfig', ...
+            'adapterConfig.%s must be between 0 and 1.', char(fieldName));
+    end
 end
 
 function value = validateNumericScalar(value, fieldName, allowNaN)

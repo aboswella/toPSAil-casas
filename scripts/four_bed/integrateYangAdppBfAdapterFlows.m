@@ -128,10 +128,10 @@ function rates = evaluateRates(params, donor, receiver, config)
     pDonorFe = donorFeTotal .* donor.temps(1, 1);
     pDonorPr = donorPrTotal .* donor.temps(end, 1);
     pReceiverPr = receiverPrTotal .* receiver.temps(end, 1);
-
     cvFeed = getEffectiveCv(config, "Cv_ADPP_feed");
     cvProduct = getEffectiveCv(config, "Cv_ADPP_product");
     cvInternal = getEffectiveCv(config, "Cv_ADPP_BF_internal");
+    internalSplit = getInternalSplitFraction(config);
 
     rawFeed = cvFeed .* (config.feedPressureRatio - pDonorFe);
     if config.allowReverseFeedFlow
@@ -140,20 +140,24 @@ function rates = evaluateRates(params, donor, receiver, config)
         nDotFeed = max(0, rawFeed);
     end
 
-    rawExternalProduct = cvProduct .* ...
+    rawExternalProductCandidate = cvProduct .* ...
         (pDonorPr - config.externalProductPressureRatio);
     if config.allowReverseProductFlow
-        nDotExternalProduct = rawExternalProduct;
+        nDotExternalProductCandidate = rawExternalProductCandidate;
     else
-        nDotExternalProduct = max(0, rawExternalProduct);
+        nDotExternalProductCandidate = max(0, rawExternalProductCandidate);
     end
 
-    rawInternal = cvInternal .* (pDonorPr - pReceiverPr);
+    rawInternalCandidate = cvInternal .* (pDonorPr - pReceiverPr);
     if config.allowReverseInternalFlow
-        nDotInternal = rawInternal;
+        nDotInternalCandidate = rawInternalCandidate;
     else
-        nDotInternal = max(0, rawInternal);
+        nDotInternalCandidate = max(0, rawInternalCandidate);
     end
+
+    nDotProductTotal = nDotExternalProductCandidate + nDotInternalCandidate;
+    nDotInternal = internalSplit .* nDotProductTotal;
+    nDotExternalProduct = (1 - internalSplit) .* nDotProductTotal;
 
     yFeed = resolveFeedMoleFractions(params);
     yDonorPr = donorPrGas ./ safeDenominator(donorPrTotal);
@@ -163,8 +167,7 @@ function rates = evaluateRates(params, donor, receiver, config)
     rates.externalProductByComponent = yDonorPr .* nDotExternalProduct;
     rates.internalByComponent = yDonorPr .* nDotInternal;
     rates.donorFeedVol = nDotFeed ./ safeDenominator(donorFeTotal);
-    rates.donorProductVol = (nDotExternalProduct + nDotInternal) ./ ...
-        safeDenominator(donorPrTotal);
+    rates.donorProductVol = nDotProductTotal ./ safeDenominator(donorPrTotal);
     rates.receiverProductVol = -nDotInternal ./ safeDenominator(receiverPrTotal);
     rates.receiverFeedVol = 0;
 end
@@ -176,6 +179,21 @@ function cv = getEffectiveCv(config, fieldName)
     else
         cv = config.(fieldName);
     end
+end
+
+function split = getInternalSplitFraction(config)
+    if isfield(config, 'ADPP_BF_internalSplitFraction') && ...
+            ~isempty(config.ADPP_BF_internalSplitFraction)
+        split = config.ADPP_BF_internalSplitFraction;
+    else
+        split = 1.0 / 3.0;
+    end
+    if ~isnumeric(split) || ~isscalar(split) || ~isreal(split) || ...
+            ~isfinite(split) || split < 0 || split > 1
+        error('FI5:InvalidAdapterConfig', ...
+            'adapterConfig.ADPP_BF_internalSplitFraction must be between 0 and 1.');
+    end
+    split = double(split);
 end
 
 function y = resolveFeedMoleFractions(params)
@@ -242,9 +260,10 @@ function split = computeEffectiveSplit(nativeFlows, config)
     split.unitBasis = nativeFlows.unitBasis;
     split.H2 = byComponent(h2Index);
     split.total = total;
+    split.requestedInternalSplitFraction = getInternalSplitFraction(config);
     split.componentNames = componentNames;
     split.byComponent = byComponent;
-    split.primaryControl = "valve_coefficients_not_hard_coded_split_ratio";
+    split.primaryControl = "fixed_internal_split_fraction";
 end
 
 function den = safeDenominator(value)

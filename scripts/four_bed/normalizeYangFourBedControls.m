@@ -26,6 +26,8 @@ function controls = normalizeYangFourBedControls(controlsIn, templateParams)
     controls.Cv_ADPP_feed = getNumericField(controlsIn, 'Cv_ADPP_feed', defaults.Cv_ADPP_feed, false);
     controls.Cv_ADPP_product = getNumericField(controlsIn, 'Cv_ADPP_product', defaults.Cv_ADPP_product, false);
     controls.Cv_ADPP_BF_internal = getNumericField(controlsIn, 'Cv_ADPP_BF_internal', defaults.Cv_ADPP_BF_internal, false);
+    controls.ADPP_BF_internalSplitFraction = getFractionField(controlsIn, ...
+        'ADPP_BF_internalSplitFraction', defaults.ADPP_BF_internalSplitFraction);
     controls.Cv_BD_waste = getNumericField(controlsIn, 'Cv_BD_waste', defaults.Cv_BD_waste, false);
     controls.adapterCvBasis = getValveBasis(controlsIn, defaults.adapterCvBasis);
     controls.valveCoefficientBasis = controls.adapterCvBasis;
@@ -70,6 +72,7 @@ function defaults = defaultYangFourBedControls()
     defaults.Cv_ADPP_feed = 1.0e-6;
     defaults.Cv_ADPP_product = 1.0e-6;
     defaults.Cv_ADPP_BF_internal = 5.0e-7;
+    defaults.ADPP_BF_internalSplitFraction = 1.0 / 3.0;
     defaults.Cv_EQI = 1.0e-6;
     defaults.Cv_EQII = 1.0e-6;
     defaults.Cv_PP_PU_internal = 1.0e-6;
@@ -116,6 +119,14 @@ function value = getLogicalField(s, name, defaultValue)
     if ~islogical(value) || ~isscalar(value)
         error('FI6:InvalidControls', ...
             'controls.%s must be a scalar logical.', name);
+    end
+end
+
+function value = getFractionField(s, name, defaultValue)
+    value = getNumericField(s, name, defaultValue, false);
+    if value < 0 || value > 1
+        error('FI6:InvalidControls', ...
+            'controls.%s must be between 0 and 1.', name);
     end
 end
 

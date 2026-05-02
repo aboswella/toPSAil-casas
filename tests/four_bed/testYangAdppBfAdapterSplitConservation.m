@@ -48,7 +48,8 @@ function testYangAdppBfAdapterSplitConservation()
         assert(adapterReport.flowReport.flowSigns.receiverProductEnd.positiveCount == 0);
         assert(adapterReport.flowReport.flowSigns.receiverFeedEnd.positiveCount == 0);
         assert(adapterReport.effectiveSplit.primaryControl == ...
-            "valve_coefficients_not_hard_coded_split_ratio");
+            "fixed_internal_split_fraction");
+        assert(abs(adapterReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
     end
 
     assertSyntheticSplitAccounting(params, adppCase, config);
@@ -110,6 +111,7 @@ function config = makeAdppBfConfig(validationOnly)
     config.Cv_ADPP_feed = 0.05;
     config.Cv_ADPP_product = 0.02;
     config.Cv_ADPP_BF_internal = 0.03;
+    config.ADPP_BF_internalSplitFraction = 1/3;
     config.adapterCvBasis = "scaled_dimensionless";
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
@@ -140,10 +142,11 @@ function assertSyntheticSplitAccounting(params, adppCase, config)
         flowReport.native.internalTransferInByComponent, inf) <= eps);
     assert(flowReport.native.externalProductByComponent(1) > 0);
     assert(flowReport.native.internalTransferOutByComponent(1) > 0);
-    assert(flowReport.effectiveSplit.H2 > 0);
-    assert(flowReport.effectiveSplit.H2 < 1);
+    assert(abs(flowReport.effectiveSplit.H2 - 1/3) < 1e-12);
+    assert(abs(flowReport.effectiveSplit.total - 1/3) < 1e-12);
     assert(flowReport.effectiveSplit.primaryControl == ...
-        "valve_coefficients_not_hard_coded_split_ratio");
+        "fixed_internal_split_fraction");
+    assert(abs(flowReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
     assert(flowReport.flowSigns.donorFeedEnd.negativeCount == 0);
     assert(flowReport.flowSigns.donorProductEnd.negativeCount == 0);
     assert(flowReport.flowSigns.receiverProductEnd.positiveCount == 0);

@@ -45,13 +45,15 @@ function testYangAdppBfAdapterContract()
     assert(all(adapterReport.flows.externalWasteByComponent == 0));
     assert(isfield(adapterReport, 'effectiveSplit'));
     assert(adapterReport.effectiveSplit.primaryControl == ...
-        "valve_coefficients_not_hard_coded_split_ratio");
+        "fixed_internal_split_fraction");
+    assert(abs(adapterReport.effectiveSplit.requestedInternalSplitFraction - 1/3) < eps);
 
     assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, normalizedConfig);
 
-    missingControl = rmfield(config, 'Cv_ADPP_BF_internal');
+    invalidControl = config;
+    invalidControl.ADPP_BF_internalSplitFraction = 1.1;
     assertErrorIdentifier(@() validateYangAdppBfAdapterInputs( ...
-        adppCase, params, missingControl), 'FI5:MissingAdapterConfigField');
+        adppCase, params, invalidControl), 'FI5:InvalidAdapterConfig');
 
     ppConfig = makePpPuConfig(true);
     [~, ppReport] = runYangDirectCouplingAdapter(ppCase, params, ppConfig);
@@ -120,6 +122,7 @@ function config = makeAdppBfConfig(validationOnly)
     config.Cv_ADPP_feed = 0.05;
     config.Cv_ADPP_product = 0.02;
     config.Cv_ADPP_BF_internal = 0.03;
+    config.ADPP_BF_internalSplitFraction = 1/3;
     config.adapterCvBasis = "scaled_dimensionless";
     config.feedPressureRatio = 1.20;
     config.externalProductPressureRatio = 0.80;
@@ -182,21 +185,18 @@ function assertAdppBfFlowLawSignsAndSensitivity(params, adppCase, config)
     stStates = [row; row];
     base = integrateYangAdppBfAdapterFlows(params, stTime, stStates, config);
 
-    productConfig = config;
-    productConfig.Cv_ADPP_product = config.Cv_ADPP_product * 2;
-    [productConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, productConfig);
-    productChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, productConfig);
-    assert(productChanged.native.totalExternalProduct > base.native.totalExternalProduct);
-    assert(norm(productChanged.native.internalTransferOutByComponent - ...
-        base.native.internalTransferOutByComponent, inf) <= eps);
+    totalProductEnd = base.native.totalExternalProduct + base.native.totalInternalTransferOut;
+    assert(totalProductEnd > 0);
+    assert(abs(base.native.totalInternalTransferOut / totalProductEnd - 1/3) < 1e-12);
+    assert(base.effectiveSplit.primaryControl == "fixed_internal_split_fraction");
 
-    internalConfig = config;
-    internalConfig.Cv_ADPP_BF_internal = config.Cv_ADPP_BF_internal * 2;
-    [internalConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, internalConfig);
-    internalChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, internalConfig);
-    assert(internalChanged.native.totalInternalTransferOut > base.native.totalInternalTransferOut);
-    assert(norm(internalChanged.native.externalProductByComponent - ...
-        base.native.externalProductByComponent, inf) <= eps);
+    splitConfig = config;
+    splitConfig.ADPP_BF_internalSplitFraction = 0.5;
+    [splitConfig, ~] = validateYangAdppBfAdapterInputs(adppCase, params, splitConfig);
+    splitChanged = integrateYangAdppBfAdapterFlows(params, stTime, stStates, splitConfig);
+    splitTotal = splitChanged.native.totalExternalProduct + ...
+        splitChanged.native.totalInternalTransferOut;
+    assert(abs(splitChanged.native.totalInternalTransferOut / splitTotal - 0.5) < 1e-12);
 end
 
 function col = makeBoundaryColumnStruct(params, adppCase)
