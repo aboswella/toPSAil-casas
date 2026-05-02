@@ -7,6 +7,7 @@ function testYangFourBedSimulationCssPlumbing()
 % states.
 
     params = buildYangH2Co2AcTemplateParams('NVols', 2, 'NCols', 2, 'NSteps', 1);
+    params.nScaleFac = 1.0;
     initial = makePhysicalContainer(params);
 
     unchangedControls = struct( ...

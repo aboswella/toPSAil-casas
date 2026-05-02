@@ -76,6 +76,14 @@ function [nextContainer, cycleReport] = runYangFourBedCycle(container, templateP
         inventoryRows = appendYangBedInventoryDeltaRows(group, initialInventory, ...
             terminalInventory, controls, 'CycleIndex', opts.CycleIndex);
         ledgerRows = [ledgerRows; inventoryRows]; %#ok<AGROW>
+        ledgerClosureReport = emptyLedgerClosureReport();
+        if shouldApplyNativeAdFeedClosure(group, runReport)
+            [ledgerRows, ledgerClosureReport] = appendYangNativeAdFeedClosureRows( ...
+                ledgerRows, group, controls, ...
+                'CycleIndex', opts.CycleIndex, ...
+                'AbsTol', opts.BalanceAbsTol, ...
+                'RelTol', opts.BalanceRelTol);
+        end
         ledger = appendRowsToLedger(ledger, ledgerRows);
 
         opReport = emptyOperationReport();
@@ -89,6 +97,7 @@ function [nextContainer, cycleReport] = runYangFourBedCycle(container, templateP
         opReport.selectionLocalMap = selection.localMap;
         opReport.runReport = runReport;
         opReport.ledgerExtractionReport = ledgerExtractionReport;
+        opReport.ledgerClosureReport = ledgerClosureReport;
         opReport.inventoryRowsAppended = height(inventoryRows);
         opReport.ledgerRowsAppended = height(ledgerRows);
         opReport.writebackReport = writebackReport;
@@ -138,6 +147,12 @@ function [nextContainer, cycleReport] = runYangFourBedCycle(container, templateP
     cycleReport.warnings = warnings;
     cycleReport.errors = errors;
     cycleReport.architecture = architectureFlags();
+end
+
+function tf = shouldApplyNativeAdFeedClosure(group, runReport)
+    tf = string(group.operationFamily) == "AD" && ...
+        isstruct(runReport) && isfield(runReport, 'didInvokeNative') && ...
+        logical(runReport.didInvokeNative);
 end
 
 function [terminalLocalStates, runReport, ledgerRows, extractionReport, auditStatus] = ...
@@ -357,6 +372,7 @@ function report = emptyOperationReport()
     report.selectionLocalMap = table();
     report.runReport = struct();
     report.ledgerExtractionReport = struct();
+    report.ledgerClosureReport = emptyLedgerClosureReport();
     report.inventoryRowsAppended = 0;
     report.ledgerRowsAppended = 0;
     report.writebackReport = struct();
@@ -364,4 +380,14 @@ function report = emptyOperationReport()
     report.nonParticipantsUnchanged = false;
     report.warnings = strings(0, 1);
     report.stateHistory = [];
+end
+
+function report = emptyLedgerClosureReport()
+    report = struct();
+    report.version = "FI7-Yang2009-ledger-closure-not-applied-v1";
+    report.applied = false;
+    report.nRowsAppended = 0;
+    report.basis = "";
+    report.units = "";
+    report.notes = "No wrapper ledger closure rows appended.";
 end

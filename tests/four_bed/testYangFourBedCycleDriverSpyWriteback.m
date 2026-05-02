@@ -7,6 +7,7 @@ function testYangFourBedCycleDriverSpyWriteback()
 % four-bed/global-RHS architecture drift.
 
     params = buildYangH2Co2AcTemplateParams('NVols', 2, 'NCols', 2, 'NSteps', 1);
+    params.nScaleFac = 1.0;
     container = makePhysicalContainer(params);
     controls = struct( ...
         "cycleTimeSec", 240, ...

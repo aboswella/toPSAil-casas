@@ -18,11 +18,13 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
     opts = parser.Results;
 
     validateCounterParams(templateParams);
+    nativeMoleScale = validateNativeMoleScale(templateParams);
     componentNames = string(opts.ComponentNames(:));
     family = string(group.operationFamily);
     localMap = group.localMap;
     nLocal = height(localMap);
     counterDeltas = resolveCounterDeltas(nativeReport, templateParams, nLocal);
+    rowBasis = "physical_moles_from_native_counter_tail_delta_using_params.nScaleFac";
 
     tmpLedger = makeYangFourBedLedger(componentNames, 'LedgerNote', "FI-7 native extraction temporary ledger");
     common = {'CycleIndex', opts.CycleIndex, ...
@@ -32,15 +34,15 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
         'PairId', string(group.pairId), ...
         'StageLabel', string(group.stageLabel), ...
         'DirectTransferFamily', string(group.directTransferFamily), ...
-        'Basis', "native_counter_tail_delta", ...
-        'Units', "native_integrated_units", ...
-        'Notes', "FI-7 native ledger extraction from signed column counter tails"};
+        'Basis', rowBasis, ...
+        'Units', "mol", ...
+        'Notes', "FI-7 native ledger extraction from signed column counter tails scaled by params.nScaleFac"};
 
     switch family
         case "AD"
             [feedTail, productTail] = splitCounterTail(templateParams, counterDeltas{1});
-            feedTail = counterAmount(feedTail, -1, "AD feed-end counter", opts.CounterSignPolicy);
-            productTail = counterAmount(productTail, -1, "AD product-end counter", opts.CounterSignPolicy);
+            feedTail = counterMoles(feedTail, -1, "AD feed-end counter", opts.CounterSignPolicy, nativeMoleScale);
+            productTail = counterMoles(productTail, -1, "AD product-end counter", opts.CounterSignPolicy, nativeMoleScale);
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, feedTail, ...
                 common, localMap, 1, "external_feed", "in", "feed_end");
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, productTail, ...
@@ -48,7 +50,7 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
 
         case "BD"
             [feedTail, ~] = splitCounterTail(templateParams, counterDeltas{1});
-            feedTail = counterAmount(feedTail, 1, "BD feed-end waste counter", opts.CounterSignPolicy);
+            feedTail = counterMoles(feedTail, 1, "BD feed-end waste counter", opts.CounterSignPolicy, nativeMoleScale);
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, feedTail, ...
                 common, localMap, 1, "external_waste", "out", "feed_end");
 
@@ -59,10 +61,10 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
             end
             [~, donorProduct] = splitCounterTail(templateParams, counterDeltas{1});
             [~, receiverProduct] = splitCounterTail(templateParams, counterDeltas{2});
-            donorProduct = counterAmount(donorProduct, -1, ...
-                family + " donor product-end counter", opts.CounterSignPolicy);
-            receiverProduct = counterAmount(receiverProduct, 1, ...
-                family + " receiver product-end counter", opts.CounterSignPolicy);
+            donorProduct = counterMoles(donorProduct, -1, ...
+                family + " donor product-end counter", opts.CounterSignPolicy, nativeMoleScale);
+            receiverProduct = counterMoles(receiverProduct, 1, ...
+                family + " receiver product-end counter", opts.CounterSignPolicy, nativeMoleScale);
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, donorProduct, ...
                 common, localMap, 1, "internal_transfer", "out_of_donor", "product_end");
             tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, receiverProduct, ...
@@ -82,8 +84,17 @@ function [rows, nativeLedgerReport] = extractYangNativeLedgerRows(nativeReport, 
     nativeLedgerReport.counterSignPolicy = string(opts.CounterSignPolicy);
     nativeLedgerReport.counterSignConvention = ...
         "feed counter positive out of feed end; product counter positive into product end; ledger amounts use absolute signed deltas by default";
+    nativeLedgerReport.rawNativeCounterTailDeltas = counterDeltas;
+    nativeLedgerReport.nativeCounterMagnitudePolicy = ...
+        "abs(signed native counter delta) before physical mole scaling";
+    nativeLedgerReport.nativeMoleScaleFactorField = "params.nScaleFac";
+    nativeLedgerReport.nativeMoleScaleFactor = nativeMoleScale;
+    nativeLedgerReport.conversionPolicy = ...
+        "ledger row moles = abs(native counter delta) * params.nScaleFac";
     nativeLedgerReport.nRows = height(rows);
-    nativeLedgerReport.basis = "native_counter_tail_delta";
+    nativeLedgerReport.basis = rowBasis;
+    nativeLedgerReport.units = "mol";
+    nativeLedgerReport.convertedMolesByRow = rows.moles;
 end
 
 function validateCounterParams(params)
@@ -99,6 +110,20 @@ function validateCounterParams(params)
             'Native counter tail length is %d; expected 2*nComs = %d.', ...
             actualTail, expectedTail);
     end
+end
+
+function nScaleFac = validateNativeMoleScale(params)
+    if ~isfield(params, 'nScaleFac') || isempty(params.nScaleFac)
+        error('FI7:MissingNativeMoleScaleFactor', ...
+            'templateParams.nScaleFac is required to convert native counter-tail deltas to physical moles.');
+    end
+    nScaleFac = params.nScaleFac;
+    if ~isnumeric(nScaleFac) || ~isscalar(nScaleFac) || ...
+            ~isfinite(nScaleFac) || nScaleFac <= 0
+        error('FI7:InvalidNativeMoleScaleFactor', ...
+            'templateParams.nScaleFac must be a finite positive scalar.');
+    end
+    nScaleFac = double(nScaleFac);
 end
 
 function counterDeltas = resolveCounterDeltas(nativeReport, params, nLocal)
@@ -181,6 +206,10 @@ function amount = counterAmount(values, expectedSign, label, policy)
             '%s contains negative counter deltas under nonnegative policy.', char(label));
     end
     amount = values;
+end
+
+function amount = counterMoles(values, expectedSign, label, policy, nativeMoleScale)
+    amount = nativeMoleScale .* counterAmount(values, expectedSign, label, policy);
 end
 
 function tmpLedger = appendNativeLocalRows(tmpLedger, componentNames, amounts, common, localMap, localIndex, scope, direction, endpoint)

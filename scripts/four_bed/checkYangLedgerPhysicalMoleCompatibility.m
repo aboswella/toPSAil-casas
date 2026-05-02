@@ -46,8 +46,15 @@ function report = checkYangLedgerPhysicalMoleCompatibility(rows, scopes)
     end
 
     basisText = lower(string(selected.basis));
+    allowedConvertedNativeBasis = ...
+        "physical_moles_from_native_counter_tail_delta_using_params.nscalefac";
+    nativeMask = contains(basisText, "native");
+    if any(nativeMask & (basisText ~= allowedConvertedNativeBasis))
+        report = fail(report, "selected rows contain incompatible basis token 'native'");
+        return;
+    end
+
     incompatibleTokens = [
-        "native"
         "unknown"
         "not_available"
         "validation_only"
