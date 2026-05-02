@@ -157,8 +157,8 @@ end
 
 function tol = defaultYangSolverTolerances()
     tol = struct();
-    tol.relativeTolerance = 1e-6;
-    tol.absoluteTolerance = 1e-8;
+    tol.relativeTolerance = 3e-4;
+    tol.absoluteTolerance = 1e-5;
 end
 
 function q = evaluateYangSourceDslLoading(basis, pressureAtm, temperatureK, y)

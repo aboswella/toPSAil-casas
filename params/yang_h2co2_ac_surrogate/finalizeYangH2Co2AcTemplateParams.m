@@ -139,9 +139,9 @@ function params = ensureRuntimeDesignDefaults(params, opts)
     params.numZero = 1e-10;
     params.numIntSolv = "ode15s";
     params.odeRelTol = getTolerance(params.solverTolerances, ...
-        'relativeTolerance', 1e-6);
+        'relativeTolerance', 3e-4);
     params.odeAbsTol = getTolerance(params.solverTolerances, ...
-        'absoluteTolerance', 1e-8);
+        'absoluteTolerance', 1e-5);
     params.nRows = 1;
     params.valFeedCol = opts.NativeValveCoefficient * ones(params.nCols, params.nSteps);
     params.valProdCol = opts.NativeValveCoefficient * ones(params.nCols, params.nSteps);
