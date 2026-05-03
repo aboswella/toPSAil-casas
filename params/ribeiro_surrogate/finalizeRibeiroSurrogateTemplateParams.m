@@ -18,12 +18,14 @@ params.presRaTa = params.presColHigh;
 params.presExTa = params.presColLow;
 params.presAmbi = params.presColLow;
 params.presDoSt = params.presColLow;
+params.presStan = 1.01325;
 params = getPresRats(params);
 
 params.tempAmbi = 303.0;
 params.tempCol = 303.0;
 params.tempFeed = 303.0;
 params.tempRefIso = 303.0;
+params.tempStan = 273.15;
 params.tempAmbiNorm = 1;
 params.tempColNorm = 1;
 params.tempFeedNorm = 1;
@@ -48,8 +50,17 @@ params.numIntSolv = "ode15s";
 params.odeRelTol = 3e-4;
 params.odeAbsTol = 1e-5;
 params.nRows = 1;
+params.isEntEffFeComp = 1.0;
+params.isEntEffExComp = 1.0;
+params.isEntEffPump = 1.0;
+params.inConBed = ones(params.nCols, 1);
+params.inConFeTa = 1;
+params.inConRaTa = 1;
+params.inConExTa = 2;
+params.sColNums = makeIndexedNames('n', params.nCols);
+params.sComNums = makeIndexedNames('C', params.nComs);
 
-params.ldfMtc = params.ldfMassTransferPerSec * ones(params.nComs, 1);
+params.ldfMtc = expandComponentVector(params.ldfMassTransferPerSec, params.nComs);
 params.compFacC = ones(params.nComs, 1);
 params.gasCons = 83.14;
 params.htCapCpC = [28.84; 37.14];
@@ -77,6 +88,29 @@ params = getFeHtCapRatio(params);
 params = getFeMixCompFac(params);
 params = getScaleFacs(params);
 params = getDimLessParams(params);
+
+end
+
+function names = makeIndexedNames(prefix, count)
+
+names = cell(count, 1);
+for idx = 1:count
+    names{idx} = sprintf('%s%d', prefix, idx);
+end
+
+end
+
+function values = expandComponentVector(value, nComs)
+
+if isscalar(value)
+    values = value * ones(nComs, 1);
+else
+    values = value(:);
+end
+if numel(values) ~= nComs
+    error('RibeiroSurrogate:InvalidComponentVector', ...
+        'Expected scalar or %d component values.', nComs);
+end
 
 end
 

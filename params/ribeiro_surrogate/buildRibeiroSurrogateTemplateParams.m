@@ -11,7 +11,9 @@ addParameter(parser, 'TFeedSec', 40, @mustBePositiveNumericScalar);
 addParameter(parser, 'Isothermal', true, @mustBeLogicalScalar);
 addParameter(parser, 'FinalizeForRuntime', true, @mustBeLogicalScalar);
 addParameter(parser, 'NativeValveCoefficient', 1e-6, @mustBePositiveNumericScalar);
-addParameter(parser, 'LdfMassTransferPerSec', 0.05, @mustBePositiveNumericScalar);
+addParameter(parser, 'FeedValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'PurgeValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'LdfMassTransferPerSec', [], @mustBeEmptyPositiveScalarOrBinaryVector);
 parse(parser, varargin{:});
 opts = parser.Results;
 
@@ -27,6 +29,11 @@ end
 
 basis = ribeiroSurrogateConstants();
 basis.feed.totalVolumetricFlowCm3Sec = convertMolarFeedToVolumetricFeed(basis);
+ldfMassTransferPerSec = resolveLdfMassTransfer(opts.LdfMassTransferPerSec, basis);
+feedValveCoefficient = resolveValveCoefficientDefault( ...
+    opts.FeedValveCoefficient, basis.valves.feedValveCoefficientDefault);
+purgeValveCoefficient = resolveValveCoefficientDefault( ...
+    opts.PurgeValveCoefficient, basis.valves.purgeValveCoefficientDefault);
 
 params = struct();
 params.parameterPackVersion = "Ribeiro2008-H2CO2-AC-surrogate-params-v1";
@@ -46,6 +53,7 @@ params.yExC = [0; 1];
 
 params.nVols = opts.NVols;
 params.nCols = opts.NCols;
+params.sColNums = makeIndexedNames('n', params.nCols);
 params.nCycles = opts.NCycles;
 params.nSteps = 16;
 params.nTiPts = opts.NTimePoints;
@@ -74,14 +82,29 @@ params.diamPellet = 2 * basis.adsorbent.particleRadiusM * 100;
 params.modSp = [3; 1; 1; 1; 0; 0; 0];
 params.qSatC = basis.adsorbent.multisiteLangmuir.qMaxMolKg;
 params.aC = basis.adsorbent.multisiteLangmuir.a;
-params.KC = basis.adsorbent.multisiteLangmuir.kInfPaInv;
+params.KCSourceKInfBarInv = basis.adsorbent.multisiteLangmuir.kInfPaInv * 1e5;
+params.KC = calcEffectiveIsothermalKCBasis(basis);
+params.KCBasis = [
+    "Effective isothermal native MSL coefficient at 303 K."
+    "KC = a_i * k_inf(Pa^-1) * 1e5 * exp(deltaH_i/(R*T))."
+    "The a_i multiplier adapts Ribeiro Eq. (1) to native funcMultiSiteLang, which already uses a_i only as the vacancy exponent."
+];
+params.KCTemperatureK = basis.feed.temperatureK;
+params.KCIncludesRibeiroMultiplicity = true;
+params.KCIncludesHeatFactor = true;
 params.isoStHtC = 1000 * basis.adsorbent.multisiteLangmuir.heatOfAdsorptionKJMol;
 params.funcIso = @(paramsIn, states, nAds) calcIsothermMultiSiteLang(paramsIn, states, nAds);
 params.isothermCaveat = ...
     "Ribeiro Table 4 activated-carbon H2/CO2 subset only; excludes zeolite and CH4/CO/N2";
 
 params.nativeValveCoefficient = opts.NativeValveCoefficient;
-params.ldfMassTransferPerSec = opts.LdfMassTransferPerSec;
+params.feedValveCoefficient = feedValveCoefficient;
+params.purgeValveCoefficient = purgeValveCoefficient;
+params.valveCoefficientBasis = ...
+    "NativeValveCoefficient is the fallback Cv; FeedValveCoefficient overrides HP-FEE-RAF feed-end valves; PurgeValveCoefficient overrides LP-ATM-RAF product-end valves. Defaults are one-cycle source-flow calibration values, not Ribeiro paper constants.";
+params.ldfMassTransferPerSec = ldfMassTransferPerSec;
+params.ldfMassTransferBasis = ...
+    "Ribeiro Table 6 H2/CO2 activated-carbon LDF values by default; scalar overrides are expanded to both components";
 
 if opts.FinalizeForRuntime
     params = finalizeRibeiroSurrogateTemplateParams(params);
@@ -112,6 +135,43 @@ end
 
 end
 
+function kEffBarInv = calcEffectiveIsothermalKCBasis(basis)
+
+gasConstantJMolK = 8.31446261815324;
+temperatureK = basis.feed.temperatureK;
+msl = basis.adsorbent.multisiteLangmuir;
+
+kInfBarInv = msl.kInfPaInv(:) * 1e5;
+aFactor = msl.a(:);
+heatFactor = exp((1000 * msl.heatOfAdsorptionKJMol(:)) ...
+    ./ (gasConstantJMolK * temperatureK));
+
+kEffBarInv = aFactor .* kInfBarInv .* heatFactor;
+
+end
+
+function ldfMassTransferPerSec = resolveLdfMassTransfer(value, basis)
+
+if isempty(value)
+    ldfMassTransferPerSec = basis.adsorbent.ldf.massTransferPerSec(:);
+elseif isscalar(value)
+    ldfMassTransferPerSec = value * ones(basis.nComs, 1);
+else
+    ldfMassTransferPerSec = value(:);
+end
+
+end
+
+function valveCoefficient = resolveValveCoefficientDefault(value, defaultValue)
+
+if isempty(value)
+    valveCoefficient = defaultValue;
+else
+    valveCoefficient = value;
+end
+
+end
+
 function mustBePositiveIntegerScalar(value)
 
 if ~isnumeric(value) || ~isscalar(value) || ~isfinite(value) || ...
@@ -122,11 +182,39 @@ end
 
 end
 
+function mustBeEmptyPositiveScalarOrBinaryVector(value)
+
+if isempty(value)
+    return;
+end
+if ~isnumeric(value) || any(~isfinite(value(:))) || any(value(:) <= 0)
+    error('RibeiroSurrogate:InvalidPositiveScalarOrVector', ...
+        'Value must be empty, a positive scalar, or a positive two-element vector.');
+end
+if ~(isscalar(value) || numel(value) == 2)
+    error('RibeiroSurrogate:InvalidPositiveScalarOrVector', ...
+        'Value must be empty, a positive scalar, or a positive two-element vector.');
+end
+
+end
+
 function mustBePositiveNumericScalar(value)
 
 if ~isnumeric(value) || ~isscalar(value) || ~isfinite(value) || value <= 0
     error('RibeiroSurrogate:InvalidPositiveScalar', ...
         'Value must be a positive numeric scalar.');
+end
+
+end
+
+function mustBeEmptyOrPositiveNumericScalar(value)
+
+if isempty(value)
+    return;
+end
+if ~isnumeric(value) || ~isscalar(value) || ~isfinite(value) || value <= 0
+    error('RibeiroSurrogate:InvalidPositiveScalar', ...
+        'Value must be empty or a positive numeric scalar.');
 end
 
 end

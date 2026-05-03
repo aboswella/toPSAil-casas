@@ -5,5 +5,11 @@
 *.csv
 *.mat
 *.pdf
+*.zip
+CW*.txt
+2_simulation_outputs/
+diagnostic_outputs/
+validation/reports/
+~$*
 !sources/**/*.csv
 !sources/**/*.pdf

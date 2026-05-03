@@ -64,6 +64,12 @@ sources/yang_h2co2_ac_surrogate/
   buildYangH2Co2AcTemplateParams.m, and finalizeYangH2Co2AcTemplateParams.m.
 ```
 
+## Active design and soft-validation basis
+
+Use the Ribeiro paper design parameters listed above as the active design basis until the simulator has achieved soft validation against those values. In this guide, "soft validation" means the native toPSAil surrogate can run stably with the Ribeiro cycle timing, source-backed feed, pressure, geometry, activated-carbon H2/CO2 isotherm subset, and provisional H2 purity/recovery reporting, without claiming paper-exact reproduction of the full five-component layered non-isothermal model.
+
+Do not substitute the older `[0.7048; 0.2952]`, `0.489 mol/s`, or `10 bar_abs` basis, tune constants, or introduce an alternate operating point before that soft-validation checkpoint. If a different Ribeiro design case is later required, add its source evidence under `sources/ribeiro_surrogate/` and treat it as a documented post-baseline variant.
+
 ## Non-negotiable implementation strategy
 
 Do this:
@@ -170,6 +176,7 @@ native toPSAil CSTR-in-series adsorber model
 native toPSAil tanks
 native toPSAil equalization
 native toPSAil performance output plus explicit Ribeiro summary
+soft validation against the source-backed Ribeiro design parameters before alternate operating points
 ```
 
 ## Excluded

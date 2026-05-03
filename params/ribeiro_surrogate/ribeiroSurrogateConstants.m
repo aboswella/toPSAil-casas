@@ -56,6 +56,21 @@ basis.adsorbent.multisiteLangmuir.heatOfAdsorptionKJMol = [12.843; 29.084];
 basis.adsorbent.particlePorosity = 0.566;
 basis.adsorbent.particleDensityKgM3 = 842;
 basis.adsorbent.particleRadiusM = 1.17e-3;
+basis.adsorbent.ldf.componentOrder = ["H2"; "CO2"];
+basis.adsorbent.ldf.massTransferPerSec = [8.89e-2; 1.24e-2];
+basis.adsorbent.ldf.source = ...
+    "Ribeiro Table 6 activated-carbon micropore LDF values at feed inlet conditions";
+
+basis.purge.sourceFlowNm3Hr = 3.5;
+basis.purge.sourcePurgeToFullFeedH2Ratio = 0.097;
+basis.purge.sourceBasis = ...
+    "Ribeiro Table 5 purge flow and purge/H2-feed ratio for the full five-component feed";
+
+basis.valves.nativeFallbackCoefficient = 1e-6;
+basis.valves.feedValveCoefficientDefault = 4.65e-3;
+basis.valves.purgeValveCoefficientDefault = 8.0e-4;
+basis.valves.defaultBasis = ...
+    "Native source-flow calibration for the binary surrogate; feed/purge Cv values are not Ribeiro paper constants";
 
 basis.scope.binaryOnly = true;
 basis.scope.humidFeed = false;
