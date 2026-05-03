@@ -3,9 +3,9 @@ function params = buildRibeiroSurrogateTemplateParams(varargin)
 
 parser = inputParser;
 parser.FunctionName = mfilename;
-addParameter(parser, 'NVols', 8, @mustBePositiveIntegerScalar);
+addParameter(parser, 'NVols', 3, @mustBePositiveIntegerScalar);
 addParameter(parser, 'NCols', 4, @mustBePositiveIntegerScalar);
-addParameter(parser, 'NCycles', 10, @mustBePositiveIntegerScalar);
+addParameter(parser, 'NCycles', 1, @mustBePositiveIntegerScalar);
 addParameter(parser, 'NTimePoints', 2, @mustBePositiveIntegerScalar);
 addParameter(parser, 'TFeedSec', 40, @mustBePositiveNumericScalar);
 addParameter(parser, 'Isothermal', true, @mustBeLogicalScalar);
@@ -13,7 +13,14 @@ addParameter(parser, 'FinalizeForRuntime', true, @mustBeLogicalScalar);
 addParameter(parser, 'NativeValveCoefficient', 1e-6, @mustBePositiveNumericScalar);
 addParameter(parser, 'FeedValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
 addParameter(parser, 'PurgeValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'BlowdownValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'EqualizationValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'PressurizationValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
 addParameter(parser, 'LdfMassTransferPerSec', [], @mustBeEmptyPositiveScalarOrBinaryVector);
+addParameter(parser, 'BoundaryMode', "ribeiro_fixed_non_eq", @mustBeValidBoundaryMode);
+addParameter(parser, 'BlowdownGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
+addParameter(parser, 'PressurizationGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
+addParameter(parser, 'MaxBoundaryMolarFlowMolSec', 0.5, @mustBeNonnegativeNumericScalar);
 parse(parser, varargin{:});
 opts = parser.Results;
 
@@ -34,6 +41,12 @@ feedValveCoefficient = resolveValveCoefficientDefault( ...
     opts.FeedValveCoefficient, basis.valves.feedValveCoefficientDefault);
 purgeValveCoefficient = resolveValveCoefficientDefault( ...
     opts.PurgeValveCoefficient, basis.valves.purgeValveCoefficientDefault);
+blowdownValveCoefficient = resolveValveCoefficientDefault( ...
+    opts.BlowdownValveCoefficient, opts.NativeValveCoefficient);
+equalizationValveCoefficient = resolveValveCoefficientDefault( ...
+    opts.EqualizationValveCoefficient, basis.valves.equalizationValveCoefficientDefault);
+pressurizationValveCoefficient = resolveValveCoefficientDefault( ...
+    opts.PressurizationValveCoefficient, opts.NativeValveCoefficient);
 
 params = struct();
 params.parameterPackVersion = "Ribeiro2008-H2CO2-AC-surrogate-params-v1";
@@ -100,11 +113,15 @@ params.isothermCaveat = ...
 params.nativeValveCoefficient = opts.NativeValveCoefficient;
 params.feedValveCoefficient = feedValveCoefficient;
 params.purgeValveCoefficient = purgeValveCoefficient;
+params.blowdownValveCoefficient = blowdownValveCoefficient;
+params.equalizationValveCoefficient = equalizationValveCoefficient;
+params.pressurizationValveCoefficient = pressurizationValveCoefficient;
 params.valveCoefficientBasis = ...
-    "NativeValveCoefficient is the fallback Cv; FeedValveCoefficient overrides HP-FEE-RAF feed-end valves; PurgeValveCoefficient overrides LP-ATM-RAF product-end valves. Defaults are one-cycle source-flow calibration values, not Ribeiro paper constants.";
+    "NativeValveCoefficient is the fallback Cv; feed/purge/blowdown/equalization/pressurization overrides are native pressure-flow audit knobs, not Ribeiro paper constants.";
 params.ldfMassTransferPerSec = ldfMassTransferPerSec;
 params.ldfMassTransferBasis = ...
     "Ribeiro Table 6 H2/CO2 activated-carbon LDF values by default; scalar overrides are expanded to both components";
+params.ribeiroBoundary = makeRibeiroBoundaryOptions(opts);
 
 if opts.FinalizeForRuntime
     params = finalizeRibeiroSurrogateTemplateParams(params);
@@ -172,6 +189,61 @@ end
 
 end
 
+function boundary = makeRibeiroBoundaryOptions(opts)
+
+boundary = struct();
+boundary.mode = string(validatestring( ...
+    char(opts.BoundaryMode), {'native_valves', 'ribeiro_fixed_non_eq'}));
+boundary.modeBasis = ...
+    "Ribeiro fixed non-equalization boundary mode overrides feed, blowdown, purge, and pressurization while leaving native EQ-XXX-APR intact.";
+boundary.feedBoundaryBasis = ...
+    "HP-FEE-RAF uses prescribed Ribeiro Table 5 binary feed molar flow and H2/CO2 composition.";
+boundary.purgeBoundaryBasis = ...
+    "LP-ATM-RAF uses prescribed Ribeiro Table 5 pure-H2 purge molar flow at the product end.";
+boundary.blowdownBoundaryBasis = ...
+    "DP-ATM-XXX uses a fixed 1 bar sink with a pressure-relief controller gain.";
+boundary.pressurizationBoundaryBasis = ...
+    "RP-XXX-RAF uses a fixed pure-H2 product-end source with a high-pressure controller gain.";
+boundary.equalizationBoundaryBasis = ...
+    "native column-to-column EQ-XXX-APR retained";
+boundary.blowdownGainMolSecBar = resolveBoundaryGain( ...
+    opts.BlowdownGainMolSecBar, 0.30);
+boundary.pressurizationGainMolSecBar = resolveBoundaryGain( ...
+    opts.PressurizationGainMolSecBar, 0.18);
+boundary.maxBoundaryMolarFlowMolSec = opts.MaxBoundaryMolarFlowMolSec;
+boundary = updateBoundaryBasisText(boundary);
+
+end
+
+function gain = resolveBoundaryGain(inputValue, defaultValue)
+
+if isempty(inputValue)
+    gain = defaultValue;
+else
+    gain = inputValue;
+end
+
+end
+
+function boundary = updateBoundaryBasisText(boundary)
+
+if boundary.mode == "native_valves"
+    boundary.modeBasis = ...
+        "Native toPSAil valves and dynamic tanks define all boundary flows.";
+    boundary.feedBoundaryBasis = ...
+        "HP-FEE-RAF uses native feed tank composition and feed valve flow.";
+    boundary.purgeBoundaryBasis = ...
+        "LP-ATM-RAF uses native raffinate tank composition and product-end valve flow.";
+    boundary.blowdownBoundaryBasis = ...
+        "DP-ATM-XXX uses native feed-end valve flow to low-pressure waste.";
+    boundary.pressurizationBoundaryBasis = ...
+        "RP-XXX-RAF uses native raffinate tank composition and product-end valve flow.";
+    boundary.equalizationBoundaryBasis = ...
+        "native column-to-column EQ-XXX-APR retained";
+end
+
+end
+
 function mustBePositiveIntegerScalar(value)
 
 if ~isnumeric(value) || ~isscalar(value) || ~isfinite(value) || ...
@@ -215,6 +287,30 @@ end
 if ~isnumeric(value) || ~isscalar(value) || ~isfinite(value) || value <= 0
     error('RibeiroSurrogate:InvalidPositiveScalar', ...
         'Value must be empty or a positive numeric scalar.');
+end
+
+end
+
+function mustBeValidBoundaryMode(value)
+
+validatestring(char(value), {'native_valves', 'ribeiro_fixed_non_eq'});
+
+end
+
+function mustBeEmptyOrNonnegativeNumericScalar(value)
+
+if isempty(value)
+    return;
+end
+mustBeNonnegativeNumericScalar(value);
+
+end
+
+function mustBeNonnegativeNumericScalar(value)
+
+if ~isnumeric(value) || ~isscalar(value) || isnan(value) || value < 0
+    error('RibeiroSurrogate:InvalidNonnegativeScalar', ...
+        'Value must be a nonnegative numeric scalar.');
 end
 
 end

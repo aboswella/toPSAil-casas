@@ -6,6 +6,13 @@ parser.FunctionName = mfilename;
 addParameter(parser, 'NativeValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
 addParameter(parser, 'FeedValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
 addParameter(parser, 'PurgeValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'BlowdownValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'EqualizationValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'PressurizationValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
+addParameter(parser, 'BoundaryMode', [], @mustBeEmptyOrValidBoundaryMode);
+addParameter(parser, 'BlowdownGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
+addParameter(parser, 'PressurizationGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
+addParameter(parser, 'MaxBoundaryMolarFlowMolSec', [], @mustBeEmptyOrNonnegativeNumericScalar);
 parse(parser, varargin{:});
 opts = parser.Results;
 
@@ -45,19 +52,36 @@ feedValveCoefficient = resolveValveCoefficient( ...
     opts.FeedValveCoefficient, params, 'feedValveCoefficient', nativeValveCoefficient);
 purgeValveCoefficient = resolveValveCoefficient( ...
     opts.PurgeValveCoefficient, params, 'purgeValveCoefficient', nativeValveCoefficient);
+blowdownValveCoefficient = resolveValveCoefficient( ...
+    opts.BlowdownValveCoefficient, params, 'blowdownValveCoefficient', nativeValveCoefficient);
+equalizationValveCoefficient = resolveValveCoefficient( ...
+    opts.EqualizationValveCoefficient, params, 'equalizationValveCoefficient', nativeValveCoefficient);
+pressurizationValveCoefficient = resolveValveCoefficient( ...
+    opts.PressurizationValveCoefficient, params, 'pressurizationValveCoefficient', nativeValveCoefficient);
 
 params.valFeedCol = nativeValveCoefficient * ones(4, 16);
 params.valProdCol = nativeValveCoefficient * ones(4, 16);
 params.valFeedCol(strcmp(params.sStepCol, 'HP-FEE-RAF')) = feedValveCoefficient;
 params.valProdCol(strcmp(params.sStepCol, 'LP-ATM-RAF')) = purgeValveCoefficient;
+params.valFeedCol(strcmp(params.sStepCol, 'DP-ATM-XXX')) = blowdownValveCoefficient;
+params.valProdCol(strcmp(params.sStepCol, 'EQ-XXX-APR')) = equalizationValveCoefficient;
+params.valProdCol(strcmp(params.sStepCol, 'RP-XXX-RAF')) = pressurizationValveCoefficient;
 params.valFeedColNorm = params.valFeedCol .* params.valScaleFac;
 params.valProdColNorm = params.valProdCol .* params.valScaleFac;
 params.nativeValveCoefficient = nativeValveCoefficient;
 params.feedValveCoefficient = feedValveCoefficient;
 params.purgeValveCoefficient = purgeValveCoefficient;
+params.blowdownValveCoefficient = blowdownValveCoefficient;
+params.equalizationValveCoefficient = equalizationValveCoefficient;
+params.pressurizationValveCoefficient = pressurizationValveCoefficient;
 
 params = getFlowSheetValves(params);
 params = getColBoundConds(params);
+params = applyRibeiroBoundaryConditions(params, schedule, ...
+    "BoundaryMode", opts.BoundaryMode, ...
+    "BlowdownGainMolSecBar", opts.BlowdownGainMolSecBar, ...
+    "PressurizationGainMolSecBar", opts.PressurizationGainMolSecBar, ...
+    "MaxBoundaryMolarFlowMolSec", opts.MaxBoundaryMolarFlowMolSec);
 params = getTimeSpan(params);
 params = getEventParams(params);
 params = getNumParams(params);
@@ -70,6 +94,9 @@ params.ribeiroRuntimeFinalization = struct( ...
     "nativeValveCoefficient", nativeValveCoefficient, ...
     "feedValveCoefficient", feedValveCoefficient, ...
     "purgeValveCoefficient", purgeValveCoefficient, ...
+    "blowdownValveCoefficient", blowdownValveCoefficient, ...
+    "equalizationValveCoefficient", equalizationValveCoefficient, ...
+    "pressurizationValveCoefficient", pressurizationValveCoefficient, ...
     "notes", "getStringParams intentionally skipped; numeric schedule matrices are explicit.");
 
 end
@@ -151,6 +178,27 @@ end
 if ~isnumeric(value) || ~isscalar(value) || ~isfinite(value) || value <= 0
     error('RibeiroSurrogate:InvalidPositiveScalar', ...
         'Value must be empty or a positive numeric scalar.');
+end
+
+end
+
+function mustBeEmptyOrValidBoundaryMode(value)
+
+if isempty(value)
+    return;
+end
+validatestring(char(value), {'native_valves', 'ribeiro_fixed_non_eq'});
+
+end
+
+function mustBeEmptyOrNonnegativeNumericScalar(value)
+
+if isempty(value)
+    return;
+end
+if ~isnumeric(value) || ~isscalar(value) || isnan(value) || value < 0
+    error('RibeiroSurrogate:InvalidNonnegativeScalar', ...
+        'Value must be empty or a nonnegative numeric scalar.');
 end
 
 end

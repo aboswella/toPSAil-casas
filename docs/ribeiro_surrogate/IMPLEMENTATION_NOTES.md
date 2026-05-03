@@ -124,3 +124,78 @@ The default source-flow calibration values are `FeedValveCoefficient = 4.65e-3` 
 - Tank dimensions reuse the column dimensions for a minimal native runtime. Source-backed tank volumes have not been recovered.
 - External Ribeiro metrics are now final-cycle Eq. 2/Eq. 3-style counters with signed raw product-end counter output. The native sign convention is still an audit item if future schedule changes alter counter signs.
 - The surrogate is binary H2/CO2 activated carbon only. It deliberately omits Ribeiro's CH4/CO/N2, zeolite layer, water, and full non-isothermal model.
+
+## Batch 10 Boundary-Condition Overlay
+
+Batch 10 adds a Ribeiro-specific boundary mode, `ribeiro_fixed_non_eq`, while keeping the native four-bed, sixteen-slot schedule intact. The prior native valve mode is retained as `native_valves` for comparisons.
+
+`scripts/ribeiro_surrogate/applyRibeiroBoundaryConditions.m` is called immediately after `getColBoundConds(params)` in `applyRibeiroNativeSchedule.m`. It saves the native `funcVol`, `funcVolUnits`, `volFlBo`, and `volFlBoFree` handles for audit, then overrides only non-equalization boundary flow handles:
+
+- `HP-FEE-RAF`: fixed Ribeiro Table 5 feed molar flow at the feed end.
+- `DP-ATM-XXX`: fixed 1 bar sink with a pressure-relief controller gain.
+- `LP-ATM-RAF`: fixed Ribeiro Table 5 pure-H2 purge molar flow at the product end.
+- `RP-XXX-RAF`: fixed pure-H2 product-end pressurization source with a high-pressure controller gain.
+- `EQ-XXX-APR`: unchanged native column-to-column equalization.
+
+`calcRibeiroVolFlowsWithFixedBoundaries.m` wraps the saved native volumetric-flow model. Before native flow calculation it calls `applyRibeiroBoundaryCompositionOverrides.m`, which imposes fixed feed, pure-H2 purge, pure-H2 pressurization, and local inert blowdown boundary compositions without altering equalization compositions.
+
+The new runner/builder options are:
+
+- `BoundaryMode`, default `ribeiro_fixed_non_eq`.
+- `BlowdownGainMolSecBar`, default `0.05` when empty.
+- `PressurizationGainMolSecBar`, default `0.05` when empty.
+- `MaxBoundaryMolarFlowMolSec`, default `Inf`.
+
+The blowdown and pressurization gains are numerical pressure-endpoint controller gains only. They are not Ribeiro source constants and should not be tuned against purity or recovery.
+
+The summary now records `boundaryMode`, `boundaryModeBasis`, `feedBoundaryBasis`, `purgeBoundaryBasis`, `blowdownBoundaryBasis`, `pressurizationBoundaryBasis`, and `equalizationBoundaryBasis`. For the validation-facing default, `equalizationBoundaryBasis` is `native column-to-column EQ-XXX-APR retained`.
+
+The pre-existing pressure audit scaffold remains available as `scripts/ribeiro_surrogate/computeRibeiroPressureAudit.m`; its earlier native-valve findings are historical diagnostics for why this boundary override was needed.
+
+## Batch 11 Boundary Accounting And Pressure Gates
+
+Batch 11 adds validation-facing Ribeiro boundary accounting for `BoundaryMode = ribeiro_fixed_non_eq`. The old native tank counters are no longer used as the Ribeiro Eq. 2/Eq. 3 feed/product basis in that mode; they remain diagnostic only.
+
+`scripts/ribeiro_surrogate/computeRibeiroBoundaryMetrics.m` computes the final-cycle accounting denominator from the prescribed Ribeiro Table 5 binary feed:
+
+```matlab
+expectedFeed = feed.totalMolarFlowMolSec * (4*tfeed) * feed.moleFractions(:).'
+```
+
+Ribeiro Eq. 2 H2 purity uses H2 divided by total gas leaving the product end during `HP-FEE-RAF` slots. Ribeiro Eq. 3 H2 recovery subtracts the absolute H2 crossing the product end during `RP-XXX-RAF` pressurization and `LP-ATM-RAF` purge from the feed-step H2 product, then divides by prescribed binary H2 feed.
+
+`scripts/ribeiro_surrogate/getRibeiroColumnStepCounterMoles.m` is the shared final-cycle counter extractor. It reads `sol.Step*.col.n*.cumMol.prod(end,:)` or `.feed(end,:)`, groups by native step label, and dimensionalizes with `params.nScaleFac`.
+
+`scripts/ribeiro_surrogate/getRibeiroPressureAudit.m` reports first-pass pressure gates on final-cycle endpoint pressures:
+
+- feed/high-pressure steps near `7 bara`
+- blowdown and purge steps near `1 bara`
+- pressurization endpoint near `7 bara`
+
+The audit reports per-column endpoint pressures and max gate errors as `maxFeedPressureErrorBar`, `maxLowPressureErrorBar`, and `maxPressurizationErrorBar`. These gates are pressure/source-basis soft verification checks only; passing them does not make the binary activated-carbon surrogate a reproduction of Ribeiro's full five-component, layered, non-isothermal model.
+
+`writeRibeiroRunSummary.m` now labels the source-feed denominator as accounting feed, reports boundary-counter purge H2 with its relative error against the analytical source purge, and states that native toPSAil tank metrics are diagnostic only under the fixed Ribeiro boundary mode.
+
+## Batch 12 Native Equalization Opening
+
+Batch 12 opens native product-end equalization from the old fallback `1e-6` to `2e-5` by default. Equalization remains native `EQ-XXX-APR`; this coefficient is a pressure-staging knob for the binary surrogate, not a Ribeiro source constant.
+
+## Batch 13 Fixed-Boundary Pressure Defaults
+
+Batch 13 changes only active fixed-boundary pressure controller defaults. In `ribeiro_fixed_non_eq`, blowdown and pressurization valve coefficients are not the active pressure knobs; `BlowdownGainMolSecBar`, `PressurizationGainMolSecBar`, and `MaxBoundaryMolarFlowMolSec` are.
+
+The initial `0.15` blowdown-gain smoke still left the low-pressure gate high, so the Batch 13 follow-up set the default blowdown gain to `0.25`. A subsequent local adjustment moved the default blowdown gain to `0.30` to clear the remaining low-pressure gate. The follow-up pressurization smoke still left the high-pressure gate low, so the default pressurization gain is `0.18`; the controller cap remains `0.5 mol/s`.
+
+## Batch 14 Column Feed-Boundary Audit
+
+Batch 14 reports the prescribed Ribeiro source-feed denominator separately from the actual native column feed-end boundary counter. The Eq. 3 accounting denominator remains the prescribed Table 5 binary source feed, while validation-facing achieved-feed fields now use the final-cycle `HP-FEE-RAF` feed-end counter with native sign convention corrected for gas entering the bed.
+
+## Runtime Defaults
+
+After the Batch 11 pressure-gain sweep proved slow, the Ribeiro runner and builder defaults were reduced to smoke-run settings:
+
+- `NCycles = 1`
+- `NVols = 3`
+- `NTimePoints = 2`
+
+Longer soft-verification cases should be requested explicitly, for example `NCycles = 20, NVols = 4`. The smaller defaults are intended to keep future iteration from accidentally launching a multi-cycle validation run.

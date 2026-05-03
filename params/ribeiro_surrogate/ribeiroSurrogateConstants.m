@@ -69,8 +69,11 @@ basis.purge.sourceBasis = ...
 basis.valves.nativeFallbackCoefficient = 1e-6;
 basis.valves.feedValveCoefficientDefault = 4.65e-3;
 basis.valves.purgeValveCoefficientDefault = 8.0e-4;
+basis.valves.blowdownValveCoefficientDefault = basis.valves.nativeFallbackCoefficient;
+basis.valves.equalizationValveCoefficientDefault = 2.0e-5;
+basis.valves.pressurizationValveCoefficientDefault = basis.valves.nativeFallbackCoefficient;
 basis.valves.defaultBasis = ...
-    "Native source-flow calibration for the binary surrogate; feed/purge Cv values are not Ribeiro paper constants";
+    "Native source-flow and pressure-staging calibration for the binary surrogate; Cv values are not Ribeiro paper constants";
 
 basis.scope.binaryOnly = true;
 basis.scope.humidFeed = false;

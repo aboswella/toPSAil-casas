@@ -1,6 +1,11 @@
 function metrics = computeRibeiroExternalMetrics(params, schedule, sol)
 %COMPUTERIBEIROEXTERNALMETRICS Compute final-cycle Ribeiro Eq. 2/3 counters.
 
+if useRibeiroBoundaryAccounting(params)
+    metrics = computeRibeiroBoundaryMetrics(params, schedule, sol);
+    return;
+end
+
 metrics = struct();
 metrics.version = "Ribeiro2008-surrogate-eq2-eq3-metrics-v2";
 metrics.lastCompleteCycle = resolveLastCompleteCycle(params, sol);
@@ -305,5 +310,15 @@ else
     lastCycle = params.nCycles;
 end
 lastCycle = max(0, min(params.nCycles, lastCycle));
+
+end
+
+function tf = useRibeiroBoundaryAccounting(params)
+
+tf = false;
+if isfield(params, 'ribeiroBoundary') && isstruct(params.ribeiroBoundary) && ...
+        isfield(params.ribeiroBoundary, 'mode')
+    tf = string(params.ribeiroBoundary.mode) == "ribeiro_fixed_non_eq";
+end
 
 end
