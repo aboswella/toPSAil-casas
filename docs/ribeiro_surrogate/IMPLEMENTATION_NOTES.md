@@ -1,5 +1,23 @@
 # Ribeiro Surrogate Implementation Notes
 
+## Current Soft-Verification State
+
+- Current canonical smoke artifact: `diagnostic_outputs/ribeiro_surrogate_current_gate/summary.md` generated with `BoundaryMode = ribeiro_fixed_non_eq`, `NVols = 3`, `NCycles = 3`, `NTimePoints = 2`, and `TFeedSec = 40`.
+- Pressure gate status: passing in that smoke artifact. The final-cycle max pressure errors are about `0.152 bar` for feed/high, `0.447 bar` for blowdown/purge low, and `0.338 bar` for pressurization.
+- Feed/purge gate status: passing in that smoke artifact. The active binary feed boundary delivers `24.208 mol/cycle`, and the pure-H2 purge boundary delivers `1.7350 mol/cycle`.
+- CSS gate status: not passed in the three-cycle smoke artifact. Purity drift is still about `0.0178` absolute from cycle 2 to cycle 3, so the values are transient smoke results, not validation-grade performance.
+- Comparison scope: the active model form is `binary_ac_surrogate`. It is not directly comparable to Ribeiro's full five-component, layered, non-isothermal target of `0.999958` H2 purity and `0.5211` H2 recovery.
+- Productivity scope: the summary reports an AC-only productivity diagnostic from the Eq. 3 net H2 product and the four-bed activated-carbon mass. It is marked non-comparable to Ribeiro's layered AC/zeolite productivity target.
+
+The active boundary-cap default is now resolved in the boundary options: callers may request `Inf` explicitly, but leaving `MaxBoundaryMolarFlowMolSec` empty uses the finite effective default of `0.5 mol/s`. Summaries print both `maxBoundaryMolarFlowMolSecRequested` and `maxBoundaryMolarFlowMolSecEffective`.
+
+The active feed basis defaults to `full_total_renormalized_binary`, which keeps the full `12.2 N m^3/h` total source flow and uses renormalized H2/CO2 mole fractions. The alternate `source_h2co2_partial_flow` mode keeps only Ribeiro's H2 and CO2 partial molar flows while dropping CH4/CO/N2 from the active binary total.
+
+Two lightweight follow-up helpers are available but were not used for a long validation run in the current smoke pass:
+
+- `scripts/ribeiro_surrogate/runRibeiroConvergenceSweep.m` runs the pressure-gated `NVols = [3, 8, 16, 32]` sweep when explicitly requested.
+- `scripts/ribeiro_surrogate/auditRibeiroIsothermBasis.m` checks H2/CO2 ordering, LDF ordering, and the Ribeiro Table 4 `K_inf` to native effective `KC` conversion.
+
 ## Batch 0 Bootstrap
 
 - Active guide: `Overall Implementation Guide.md`.
@@ -142,9 +160,9 @@ Batch 10 adds a Ribeiro-specific boundary mode, `ribeiro_fixed_non_eq`, while ke
 The new runner/builder options are:
 
 - `BoundaryMode`, default `ribeiro_fixed_non_eq`.
-- `BlowdownGainMolSecBar`, default `0.05` when empty.
-- `PressurizationGainMolSecBar`, default `0.05` when empty.
-- `MaxBoundaryMolarFlowMolSec`, default `Inf`.
+- `BlowdownGainMolSecBar`, current default `0.30` when empty.
+- `PressurizationGainMolSecBar`, current default `0.18` when empty.
+- `MaxBoundaryMolarFlowMolSec`, superseded by the current resolver described above: empty means an effective finite cap of `0.5 mol/s`; explicit `Inf` remains available for diagnostics only.
 
 The blowdown and pressurization gains are numerical pressure-endpoint controller gains only. They are not Ribeiro source constants and should not be tuned against purity or recovery.
 

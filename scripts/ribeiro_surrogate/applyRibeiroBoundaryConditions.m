@@ -90,7 +90,26 @@ if ~isempty(opts.PressurizationGainMolSecBar)
     params.ribeiroBoundary.pressurizationGainMolSecBar = opts.PressurizationGainMolSecBar;
 end
 if ~isempty(opts.MaxBoundaryMolarFlowMolSec)
-    params.ribeiroBoundary.maxBoundaryMolarFlowMolSec = opts.MaxBoundaryMolarFlowMolSec;
+    params.ribeiroBoundary.maxBoundaryMolarFlowMolSecRequested = ...
+        opts.MaxBoundaryMolarFlowMolSec;
+    params.ribeiroBoundary.maxBoundaryMolarFlowMolSecEffective = ...
+        opts.MaxBoundaryMolarFlowMolSec;
+    params.ribeiroBoundary.maxBoundaryMolarFlowMolSec = ...
+        opts.MaxBoundaryMolarFlowMolSec;
+elseif ~isfield(params.ribeiroBoundary, 'maxBoundaryMolarFlowMolSecEffective') || ...
+        isempty(params.ribeiroBoundary.maxBoundaryMolarFlowMolSecEffective)
+    if isfield(params.ribeiroBoundary, 'maxBoundaryMolarFlowMolSec') && ...
+            ~isempty(params.ribeiroBoundary.maxBoundaryMolarFlowMolSec)
+        params.ribeiroBoundary.maxBoundaryMolarFlowMolSecEffective = ...
+            params.ribeiroBoundary.maxBoundaryMolarFlowMolSec;
+    else
+        params.ribeiroBoundary.maxBoundaryMolarFlowMolSecEffective = 0.5;
+    end
+    params.ribeiroBoundary.maxBoundaryMolarFlowMolSec = ...
+        params.ribeiroBoundary.maxBoundaryMolarFlowMolSecEffective;
+end
+if ~isfield(params.ribeiroBoundary, 'maxBoundaryMolarFlowMolSecRequested')
+    params.ribeiroBoundary.maxBoundaryMolarFlowMolSecRequested = [];
 end
 
 params.ribeiroBoundary.mode = validatestring( ...
@@ -119,7 +138,10 @@ boundary.equalizationBoundaryBasis = ...
     "native column-to-column EQ-XXX-APR retained";
 boundary.blowdownGainMolSecBar = 0.30;
 boundary.pressurizationGainMolSecBar = 0.18;
-boundary.maxBoundaryMolarFlowMolSec = 0.5;
+boundary.maxBoundaryMolarFlowMolSecRequested = [];
+boundary.maxBoundaryMolarFlowMolSecEffective = 0.5;
+boundary.maxBoundaryMolarFlowMolSec = ...
+    boundary.maxBoundaryMolarFlowMolSecEffective;
 
 end
 

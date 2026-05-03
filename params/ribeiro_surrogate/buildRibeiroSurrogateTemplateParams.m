@@ -18,9 +18,11 @@ addParameter(parser, 'EqualizationValveCoefficient', [], @mustBeEmptyOrPositiveN
 addParameter(parser, 'PressurizationValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
 addParameter(parser, 'LdfMassTransferPerSec', [], @mustBeEmptyPositiveScalarOrBinaryVector);
 addParameter(parser, 'BoundaryMode', "ribeiro_fixed_non_eq", @mustBeValidBoundaryMode);
+addParameter(parser, 'FeedBasisMode', "full_total_renormalized_binary", ...
+    @mustBeValidFeedBasisMode);
 addParameter(parser, 'BlowdownGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
 addParameter(parser, 'PressurizationGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
-addParameter(parser, 'MaxBoundaryMolarFlowMolSec', 0.5, @mustBeNonnegativeNumericScalar);
+addParameter(parser, 'MaxBoundaryMolarFlowMolSec', [], @mustBeEmptyOrNonnegativeNumericScalar);
 parse(parser, varargin{:});
 opts = parser.Results;
 
@@ -34,7 +36,7 @@ if ~opts.Isothermal
         'Batch 2 only supports the isothermal Ribeiro surrogate.');
 end
 
-basis = ribeiroSurrogateConstants();
+basis = ribeiroSurrogateConstants("FeedBasisMode", opts.FeedBasisMode);
 basis.feed.totalVolumetricFlowCm3Sec = convertMolarFeedToVolumetricFeed(basis);
 ldfMassTransferPerSec = resolveLdfMassTransfer(opts.LdfMassTransferPerSec, basis);
 feedValveCoefficient = resolveValveCoefficientDefault( ...
@@ -210,8 +212,22 @@ boundary.blowdownGainMolSecBar = resolveBoundaryGain( ...
     opts.BlowdownGainMolSecBar, 0.30);
 boundary.pressurizationGainMolSecBar = resolveBoundaryGain( ...
     opts.PressurizationGainMolSecBar, 0.18);
-boundary.maxBoundaryMolarFlowMolSec = opts.MaxBoundaryMolarFlowMolSec;
+boundary.maxBoundaryMolarFlowMolSecRequested = opts.MaxBoundaryMolarFlowMolSec;
+boundary.maxBoundaryMolarFlowMolSecEffective = resolveMaxBoundaryMolarFlow( ...
+    opts.MaxBoundaryMolarFlowMolSec);
+boundary.maxBoundaryMolarFlowMolSec = ...
+    boundary.maxBoundaryMolarFlowMolSecEffective;
 boundary = updateBoundaryBasisText(boundary);
+
+end
+
+function maxFlow = resolveMaxBoundaryMolarFlow(inputValue)
+
+if isempty(inputValue)
+    maxFlow = 0.5;
+else
+    maxFlow = inputValue;
+end
 
 end
 
@@ -294,6 +310,13 @@ end
 function mustBeValidBoundaryMode(value)
 
 validatestring(char(value), {'native_valves', 'ribeiro_fixed_non_eq'});
+
+end
+
+function mustBeValidFeedBasisMode(value)
+
+validatestring(char(value), ...
+    {'full_total_renormalized_binary', 'source_h2co2_partial_flow'});
 
 end
 

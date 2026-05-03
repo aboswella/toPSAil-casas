@@ -1,5 +1,15 @@
-function basis = ribeiroSurrogateConstants()
+function basis = ribeiroSurrogateConstants(varargin)
 %RIBEIROSURROGATECONSTANTS Source-backed constants for the Ribeiro surrogate.
+
+parser = inputParser;
+parser.FunctionName = mfilename;
+addParameter(parser, 'FeedBasisMode', "full_total_renormalized_binary", ...
+    @mustBeValidFeedBasisMode);
+parse(parser, varargin{:});
+opts = parser.Results;
+
+feedBasisMode = string(validatestring(char(opts.FeedBasisMode), ...
+    {'full_total_renormalized_binary', 'source_h2co2_partial_flow'}));
 
 basis.version = "Ribeiro2008-H2CO2-AC-surrogate-constants-v1";
 basis.sourceName = "Ribeiro et al. 2008, Chemical Engineering Science 63, 5258-5273";
@@ -17,7 +27,30 @@ basis.feed.moleFractions = [0.8153503893; 0.1846496107];
 basis.feed.moleFractionBasis = ...
     "H2/CO2 renormalized from Ribeiro Table 5 full five-component feed";
 basis.feed.sourceFlowNm3Hr = 12.2;
-basis.feed.totalMolarFlowMolSec = 0.1513;
+basis.feed.originalFullFeedTotalMolarFlowMolSec = 0.1513;
+basis.feed.h2co2PartialTotalMolarFlowMolSec = ...
+    basis.feed.originalFullFeedTotalMolarFlowMolSec ...
+    * sum(basis.feed.fullSourceMoleFractions(1:2));
+basis.feed.feedBasisMode = feedBasisMode;
+basis.feed.activeSurrogateFeedBasis = feedBasisMode;
+switch feedBasisMode
+    case "full_total_renormalized_binary"
+        basis.feed.totalMolarFlowMolSec = ...
+            basis.feed.originalFullFeedTotalMolarFlowMolSec;
+        basis.feed.feedBasisDescription = ...
+            "Full 12.2 N m^3/h source total retained, with H2/CO2 mole fractions renormalized after dropping CH4/CO/N2.";
+    case "source_h2co2_partial_flow"
+        basis.feed.totalMolarFlowMolSec = ...
+            basis.feed.h2co2PartialTotalMolarFlowMolSec;
+        basis.feed.feedBasisDescription = ...
+            "Only Ribeiro source H2 and CO2 partial molar flows retained; CH4/CO/N2 flow is dropped from the active binary total.";
+end
+basis.feed.fullSourceH2MolarFlowMolSec = ...
+    basis.feed.originalFullFeedTotalMolarFlowMolSec ...
+    * basis.feed.fullSourceMoleFractions(1);
+basis.feed.fullSourceCO2MolarFlowMolSec = ...
+    basis.feed.originalFullFeedTotalMolarFlowMolSec ...
+    * basis.feed.fullSourceMoleFractions(2);
 basis.feed.pressureBarAbs = 7.0;
 basis.feed.temperatureK = 303.0;
 
@@ -25,7 +58,13 @@ basis.pressure.basis = "bar_abs";
 basis.pressure.highBarAbs = 7.0;
 basis.pressure.lowBarAbs = 1.0;
 
-basis.target.h2Purity = 0.9999;
+basis.target.h2Purity = 0.999958;
+basis.target.h2Recovery = 0.5211;
+basis.target.fullRibeiroTargetPurityH2 = 0.999958;
+basis.target.fullRibeiroTargetRecoveryH2 = 0.5211;
+basis.target.isFullRibeiroTargetComparable = false;
+basis.target.comparisonBasis = ...
+    "Binary activated-carbon-only surrogate is not directly comparable to Ribeiro's five-component layered non-isothermal model.";
 
 basis.cycle.nBeds = 4;
 basis.cycle.logicalStepLabels = [
@@ -79,5 +118,13 @@ basis.scope.binaryOnly = true;
 basis.scope.humidFeed = false;
 basis.scope.fullFiveComponentMultisiteLangmuirModel = false;
 basis.scope.fullRibeiroReproduction = false;
+basis.scope.modelForm = "binary_ac_surrogate";
+
+end
+
+function mustBeValidFeedBasisMode(value)
+
+validatestring(char(value), ...
+    {'full_total_renormalized_binary', 'source_h2co2_partial_flow'});
 
 end

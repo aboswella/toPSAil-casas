@@ -15,14 +15,14 @@ addParameter(parser, 'EqualizationValveCoefficient', [], @mustBeEmptyOrPositiveN
 addParameter(parser, 'PressurizationValveCoefficient', [], @mustBeEmptyOrPositiveNumericScalar);
 addParameter(parser, 'LdfMassTransferPerSec', [], @mustBeEmptyPositiveScalarOrBinaryVector);
 addParameter(parser, 'BoundaryMode', "ribeiro_fixed_non_eq", @mustBeValidBoundaryMode);
+addParameter(parser, 'FeedBasisMode', "full_total_renormalized_binary", ...
+    @mustBeValidFeedBasisMode);
 addParameter(parser, 'BlowdownGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
 addParameter(parser, 'PressurizationGainMolSecBar', [], @mustBeEmptyOrNonnegativeNumericScalar);
-addParameter(parser, 'MaxBoundaryMolarFlowMolSec', Inf, @mustBeNonnegativeNumericScalar);
+addParameter(parser, 'MaxBoundaryMolarFlowMolSec', [], @mustBeEmptyOrNonnegativeNumericScalar);
 addParameter(parser, 'StopAfterBuild', false, @mustBeLogicalScalar);
 parse(parser, varargin{:});
 opts = parser.Results;
-
-basis = ribeiroSurrogateConstants();
 
 params = buildRibeiroSurrogateTemplateParams( ...
     "NCycles", opts.NCycles, ...
@@ -37,6 +37,7 @@ params = buildRibeiroSurrogateTemplateParams( ...
     "PressurizationValveCoefficient", opts.PressurizationValveCoefficient, ...
     "LdfMassTransferPerSec", opts.LdfMassTransferPerSec, ...
     "BoundaryMode", opts.BoundaryMode, ...
+    "FeedBasisMode", opts.FeedBasisMode, ...
     "BlowdownGainMolSecBar", opts.BlowdownGainMolSecBar, ...
     "PressurizationGainMolSecBar", opts.PressurizationGainMolSecBar, ...
     "MaxBoundaryMolarFlowMolSec", opts.MaxBoundaryMolarFlowMolSec, ...
@@ -65,7 +66,7 @@ summary = summarizeRibeiroRun(params, schedule, sol);
 
 out = struct();
 out.version = "Ribeiro2008-surrogate-run-v1";
-out.basis = basis;
+out.basis = params.ribeiroBasis;
 out.params = params;
 out.schedule = schedule;
 out.sol = sol;
@@ -123,6 +124,13 @@ end
 function mustBeValidBoundaryMode(value)
 
 validatestring(char(value), {'native_valves', 'ribeiro_fixed_non_eq'});
+
+end
+
+function mustBeValidFeedBasisMode(value)
+
+validatestring(char(value), ...
+    {'full_total_renormalized_binary', 'source_h2co2_partial_flow'});
 
 end
 

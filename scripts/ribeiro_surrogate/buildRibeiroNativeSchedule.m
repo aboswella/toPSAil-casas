@@ -40,6 +40,7 @@ numAdsEqPrEnd = zeros(nCols, nNativeSteps);
 numAdsEqFeEnd = zeros(nCols, nNativeSteps);
 eqRoleByCol = repmat("none", nCols, nNativeSteps);
 eqPairBySlot = repmat("none", nNativeSteps, 2);
+eqPairRoleBySlot = repmat("none", nNativeSteps, 2);
 
 for slot = 1:nNativeSteps
     for col = 1:nCols
@@ -63,6 +64,7 @@ for slot = 1:nNativeSteps
         numAdsEqPrEnd(eqCols(1), slot) = eqCols(2);
         numAdsEqPrEnd(eqCols(2), slot) = eqCols(1);
         eqPairBySlot(slot, :) = columnNames(eqCols).';
+        eqPairRoleBySlot(slot, :) = eqRoleByCol(eqCols, slot).';
     end
 end
 
@@ -85,6 +87,8 @@ schedule.numAdsEqPrEnd = numAdsEqPrEnd;
 schedule.numAdsEqFeEnd = numAdsEqFeEnd;
 schedule.eqRoleByCol = eqRoleByCol;
 schedule.eqPairBySlot = eqPairBySlot;
+schedule.eqPairRoleBySlot = eqPairRoleBySlot;
+schedule.slotMetadata = makeSlotMetadata(schedule);
 schedule.pressurizationSource = "raffinate_product_tank";
 schedule.notes = [
     "16 native slots represent the eight logical Ribeiro steps."
@@ -93,6 +97,42 @@ schedule.notes = [
 ];
 
 validateSchedule(schedule);
+
+end
+
+function metadata = makeSlotMetadata(schedule)
+
+metadata = repmat(struct( ...
+    'slotIndex', NaN, ...
+    'logicalRolesByColumn', strings(1, 0), ...
+    'nativeStepLabelsByColumn', strings(1, 0), ...
+    'equalizationPair', strings(1, 0), ...
+    'equalizationRoles', strings(1, 0), ...
+    'depressurizingBed', "", ...
+    'pressurizingBed', ""), schedule.nNativeSteps, 1);
+
+for slot = 1:schedule.nNativeSteps
+    metadata(slot).slotIndex = slot;
+    metadata(slot).logicalRolesByColumn = schedule.logicalLabelsByCol(:, slot).';
+    metadata(slot).nativeStepLabelsByColumn = schedule.nativeStepCol(:, slot).';
+
+    eqCols = find(schedule.nativeStepCol(:, slot) == "EQ-XXX-APR");
+    if isempty(eqCols)
+        continue;
+    end
+
+    metadata(slot).equalizationPair = schedule.columnNames(eqCols).';
+    metadata(slot).equalizationRoles = schedule.eqRoleByCol(eqCols, slot).';
+
+    donorMask = startsWith(schedule.eqRoleByCol(eqCols, slot), "donor");
+    receiverMask = startsWith(schedule.eqRoleByCol(eqCols, slot), "receiver");
+    if any(donorMask)
+        metadata(slot).depressurizingBed = schedule.columnNames(eqCols(donorMask));
+    end
+    if any(receiverMask)
+        metadata(slot).pressurizingBed = schedule.columnNames(eqCols(receiverMask));
+    end
+end
 
 end
 
@@ -156,6 +196,17 @@ for slot = 1:schedule.nNativeSteps
     if ~(nEq == 0 || nEq == 2)
         error('RibeiroSurrogate:InvalidEqualizationCoverage', ...
             'Native slot %d must have zero or two equalization columns.', slot);
+    end
+    if nEq == 2
+        roles = schedule.eqRoleByCol(schedule.nativeStepCol(:, slot) == "EQ-XXX-APR", slot);
+        if any(roles == "donor_d1") && ~any(roles == "receiver_p2")
+            error('RibeiroSurrogate:InvalidEqualizationPairing', ...
+                'Native slot %d must pair D1 with P2.', slot);
+        end
+        if any(roles == "donor_d2") && ~any(roles == "receiver_p1")
+            error('RibeiroSurrogate:InvalidEqualizationPairing', ...
+                'Native slot %d must pair D2 with P1.', slot);
+        end
     end
 end
 

@@ -57,10 +57,13 @@ feedBoundaryDelivered = -cleanNearZero(feedBoundarySigned, params.numZero);
 pressSigned = cleanNearZero(pressSigned, params.numZero);
 purgeSigned = cleanNearZero(purgeSigned, params.numZero);
 
-h2Press = abs(pressSigned(1));
-h2Purge = abs(purgeSigned(1));
+pressDebit = abs(pressSigned);
+purgeDebit = abs(purgeSigned);
+h2Press = pressDebit(1);
+h2Purge = purgeDebit(1);
 
 metrics.feedStepProductMolesFinalCycle = feedProduct;
+metrics.feedStepProductSignedMolesFinalCycle = feedProduct;
 metrics.feedBoundarySignedMolesFinalCycle = feedBoundarySigned;
 metrics.feedBoundaryDeliveredMolesFinalCycle = feedBoundaryDelivered;
 metrics.feedBoundaryDeliveredTotalMolesFinalCycle = sum(feedBoundaryDelivered);
@@ -73,11 +76,18 @@ metrics.achievedTotalFeedMolesFinalCycle = ...
     metrics.feedBoundaryDeliveredTotalMolesFinalCycle;
 metrics.achievedBinaryH2FeedMolesFinalCycle = ...
     metrics.feedBoundaryDeliveredBinaryH2MolesFinalCycle;
+metrics.accountingTotalFeedMolesFinalCycle = ...
+    metrics.feedBoundaryDeliveredTotalMolesFinalCycle;
+metrics.accountingFeedMolesFinalCycle = feedBoundaryDelivered;
+metrics.accountingBinaryH2FeedMolesFinalCycle = feedBoundaryDelivered(1);
+metrics.feedMolesFinalCycle = feedBoundaryDelivered;
 metrics.feedMolesRelativeError = metrics.feedBoundaryDeliveredRelativeError;
 metrics.totalFeedMolesRelativeError = ...
     metrics.feedBoundaryDeliveredTotalRelativeError;
 metrics.pressurizationProductEndMolesSignedFinalCycle = pressSigned;
 metrics.purgeProductEndMolesSignedFinalCycle = purgeSigned;
+metrics.pressurizationDebitMolesFinalCycle = pressDebit;
+metrics.purgeDebitMolesFinalCycle = purgeDebit;
 metrics.h2ProductDuringFeedFinalCycle = feedProduct(1);
 metrics.h2UsedForPressurizationFinalCycle = h2Press;
 metrics.h2UsedForPurgeFinalCycle = h2Purge;
@@ -88,7 +98,7 @@ metrics.purgeH2RelativeError = relativeError(h2Purge, expectedPurgeH2);
 metrics.expectedPurgeToBinaryFeedH2Ratio = safeDivide(expectedPurgeH2, expectedFeed(1));
 metrics.expectedPurgeToFullSourceFeedH2Ratio = safeDivide( ...
     expectedPurgeH2, metrics.expectedFullSourceH2FeedMolesFinalCycle);
-metrics.purgeToFeedH2Ratio = safeDivide(h2Purge, expectedFeed(1));
+metrics.purgeToFeedH2Ratio = safeDivide(h2Purge, feedBoundaryDelivered(1));
 metrics.achievedPurgeToBinaryFeedH2Ratio = metrics.purgeToFeedH2Ratio;
 metrics.purgeToBinaryFeedH2RatioError = ...
     metrics.achievedPurgeToBinaryFeedH2Ratio - metrics.expectedPurgeToBinaryFeedH2Ratio;
@@ -98,6 +108,9 @@ if isfield(params.ribeiroBasis.purge, 'sourcePurgeToFullFeedH2Ratio')
 end
 
 totalFeedProduct = sum(feedProduct);
+metrics.ribeiroEq2DenominatorFinalCycle = totalFeedProduct;
+metrics.ribeiroEq3NumeratorFinalCycle = feedProduct(1) - h2Press - h2Purge;
+metrics.ribeiroEq3DenominatorFinalCycle = feedBoundaryDelivered(1);
 if isfinite(totalFeedProduct) && abs(totalFeedProduct) > params.numZero
     metrics.ribeiroEq2PurityH2 = feedProduct(1) / totalFeedProduct;
     metrics.purityH2 = metrics.ribeiroEq2PurityH2;
@@ -105,14 +118,16 @@ else
     metrics.warnings(end+1, 1) = "Feed-step product total was zero or non-finite.";
 end
 
-if isfinite(expectedFeed(1)) && abs(expectedFeed(1)) > params.numZero
+if isfinite(feedBoundaryDelivered(1)) && ...
+        feedBoundaryDelivered(1) > params.numZero
     metrics.ribeiroEq3RecoveryH2 = ...
-        (feedProduct(1) - h2Press - h2Purge) / expectedFeed(1);
+        metrics.ribeiroEq3NumeratorFinalCycle / feedBoundaryDelivered(1);
     metrics.recoveryH2 = metrics.ribeiroEq3RecoveryH2;
 else
-    metrics.warnings(end+1, 1) = "Expected binary H2 feed denominator was zero or non-finite.";
+    metrics.warnings(end+1, 1) = "Delivered binary H2 feed denominator was zero, negative, or non-finite.";
 end
 
+metrics = addCycleStabilityMetrics(params, sol, metrics);
 metrics = addNativeDiagnosticCounters(params, sol, metrics);
 metrics = auditBoundaryMetrics(params, metrics);
 
@@ -180,6 +195,20 @@ metrics.expectedPurgeToBinaryFeedH2Ratio = NaN;
 metrics.expectedPurgeToFullSourceFeedH2Ratio = NaN;
 metrics.sourceTable5PurgeToFullFeedH2Ratio = NaN;
 metrics.purgeToBinaryFeedH2RatioError = NaN;
+metrics.feedStepProductSignedMolesFinalCycle = NaN(1, params.nComs);
+metrics.pressurizationDebitMolesFinalCycle = NaN(1, params.nComs);
+metrics.purgeDebitMolesFinalCycle = NaN(1, params.nComs);
+metrics.ribeiroEq2DenominatorFinalCycle = NaN;
+metrics.ribeiroEq3NumeratorFinalCycle = NaN;
+metrics.ribeiroEq3DenominatorFinalCycle = NaN;
+metrics.purityH2LastCycle = NaN;
+metrics.purityH2PreviousCycle = NaN;
+metrics.recoveryH2LastCycle = NaN;
+metrics.recoveryH2PreviousCycle = NaN;
+metrics.purityH2AbsDriftLastCycle = NaN;
+metrics.recoveryH2AbsDriftLastCycle = NaN;
+metrics.purityH2LastThreeCycles = NaN(1, 3);
+metrics.recoveryH2LastThreeCycles = NaN(1, 3);
 metrics.purityH2 = NaN;
 metrics.recoveryH2 = NaN;
 
@@ -206,8 +235,28 @@ end
 function expectedH2 = getExpectedFullSourceH2Feed(params, expectedTotalFeed)
 
 expectedH2 = NaN;
-if isfield(params.ribeiroBasis.feed, 'fullSourceMoleFractions')
+feed = params.ribeiroBasis.feed;
+if isfield(feed, 'originalFullFeedTotalMolarFlowMolSec') && ...
+        isfield(feed, 'fullSourceMoleFractions')
+    expectedH2 = feed.originalFullFeedTotalMolarFlowMolSec ...
+        * resolveCycleTimeSec(params) ...
+        * feed.fullSourceMoleFractions(1);
+elseif isfield(feed, 'fullSourceMoleFractions')
     expectedH2 = expectedTotalFeed * params.ribeiroBasis.feed.fullSourceMoleFractions(1);
+end
+
+end
+
+function cycleTimeSec = resolveCycleTimeSec(params)
+
+if isfield(params, 'cycleTimeSec') && ~isempty(params.cycleTimeSec)
+    cycleTimeSec = params.cycleTimeSec;
+elseif isfield(params, 'tFeedSec') && ~isempty(params.tFeedSec)
+    cycleTimeSec = 4 * params.tFeedSec;
+elseif isfield(params, 'durStep') && ~isempty(params.durStep)
+    cycleTimeSec = sum(params.durStep);
+else
+    cycleTimeSec = 160;
 end
 
 end
@@ -234,11 +283,105 @@ end
 
 end
 
+function metrics = addCycleStabilityMetrics(params, sol, metrics)
+
+lastCycle = metrics.lastCompleteCycle;
+if isempty(sol) || lastCycle < 1
+    return;
+end
+
+lastLedger = computeCycleLedger(params, sol, lastCycle);
+metrics.purityH2LastCycle = lastLedger.purityH2;
+metrics.recoveryH2LastCycle = lastLedger.recoveryH2;
+
+if lastCycle >= 2
+    previousLedger = computeCycleLedger(params, sol, lastCycle - 1);
+    metrics.purityH2PreviousCycle = previousLedger.purityH2;
+    metrics.recoveryH2PreviousCycle = previousLedger.recoveryH2;
+    metrics.purityH2AbsDriftLastCycle = absFinite( ...
+        metrics.purityH2LastCycle - metrics.purityH2PreviousCycle);
+    metrics.recoveryH2AbsDriftLastCycle = absFinite( ...
+        metrics.recoveryH2LastCycle - metrics.recoveryH2PreviousCycle);
+end
+
+firstCycle = max(1, lastCycle - 2);
+cycleIds = firstCycle:lastCycle;
+purities = NaN(1, 3);
+recoveries = NaN(1, 3);
+offset = 3 - numel(cycleIds);
+for idx = 1:numel(cycleIds)
+    ledger = computeCycleLedger(params, sol, cycleIds(idx));
+    purities(offset + idx) = ledger.purityH2;
+    recoveries(offset + idx) = ledger.recoveryH2;
+end
+metrics.purityH2LastThreeCycles = purities;
+metrics.recoveryH2LastThreeCycles = recoveries;
+
+end
+
+function ledger = computeCycleLedger(params, sol, cycleIdx)
+
+ledger = struct();
+ledger.purityH2 = NaN;
+ledger.recoveryH2 = NaN;
+
+try
+    feedProduct = cleanNearZero(getRibeiroColumnStepCounterMoles( ...
+        params, sol, cycleIdx, "HP-FEE-RAF", "prod"), params.numZero);
+    feedBoundarySigned = cleanNearZero(getRibeiroColumnStepCounterMoles( ...
+        params, sol, cycleIdx, "HP-FEE-RAF", "feed"), params.numZero);
+    pressSigned = cleanNearZero(getRibeiroColumnStepCounterMoles( ...
+        params, sol, cycleIdx, "RP-XXX-RAF", "prod"), params.numZero);
+    purgeSigned = cleanNearZero(getRibeiroColumnStepCounterMoles( ...
+        params, sol, cycleIdx, "LP-ATM-RAF", "prod"), params.numZero);
+catch
+    return;
+end
+
+feedDelivered = -feedBoundarySigned;
+eq2Denominator = sum(feedProduct);
+eq3Denominator = feedDelivered(1);
+eq3Numerator = feedProduct(1) - abs(pressSigned(1)) - abs(purgeSigned(1));
+
+if isfinite(eq2Denominator) && abs(eq2Denominator) > params.numZero
+    ledger.purityH2 = feedProduct(1) / eq2Denominator;
+end
+if isfinite(eq3Denominator) && eq3Denominator > params.numZero
+    ledger.recoveryH2 = eq3Numerator / eq3Denominator;
+end
+
+end
+
+function value = absFinite(value)
+
+if ~isfinite(value)
+    value = NaN;
+else
+    value = abs(value);
+end
+
+end
+
 function metrics = auditBoundaryMetrics(params, metrics)
+
+if any(metrics.feedBoundaryDeliveredMolesFinalCycle < -params.numZero)
+    metrics.warnings(end+1, 1) = ...
+        "Feed-boundary delivered moles are negative; stop and audit feed-end sign mapping.";
+end
 
 if any(metrics.feedStepProductMolesFinalCycle < -params.numZero)
     metrics.warnings(end+1, 1) = ...
         "Feed-step product-end counters are negative; stop and audit endpoint/sign mapping.";
+end
+
+if any(metrics.pressurizationDebitMolesFinalCycle(2:end) > params.numZero)
+    metrics.warnings(end+1, 1) = ...
+        "Pure-H2 pressurization has nonzero non-H2 debit; stop and audit boundary composition.";
+end
+
+if any(metrics.purgeDebitMolesFinalCycle(2:end) > params.numZero)
+    metrics.warnings(end+1, 1) = ...
+        "Pure-H2 purge has nonzero non-H2 debit; stop and audit boundary composition.";
 end
 
 if isfinite(metrics.purgeH2RelativeError) && metrics.purgeH2RelativeError > 0.05
